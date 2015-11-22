@@ -23,3 +23,9 @@ const (
 	RXTimingSetupAns CID = 0x08
 	// 0x80 to 0xFF reserved for proprietary network command extensions
 )
+
+// LinkCheckAnsPayload represents the LinkCheckAns payload.
+type LinkCheckAnsPayload struct {
+	Margin uint8
+	GwCnt  uint8
+}
