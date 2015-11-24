@@ -158,3 +158,14 @@ func (p LinkADRAnsPayload) DataRateACK() bool {
 func (p LinkADRAnsPayload) PowerACK() bool {
 	return p&(1<<2) > 0
 }
+
+// DutyCycleReqPayload contains the MaxDCycle value.
+type DutyCycleReqPayload uint8
+
+// NewDutyCycleReqPayload returns a new DutyCycleReqPayload for the given MaxDCycle.
+func NewDutyCycleReqPayload(maxDCycle uint8) (DutyCycleReqPayload, error) {
+	if maxDCycle > 15 && maxDCycle < 255 {
+		return 0, errors.New("lorawan: only a MaxDCycle value of 0 - 15 and 255 is allowed")
+	}
+	return DutyCycleReqPayload(maxDCycle), nil
+}

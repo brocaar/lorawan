@@ -132,3 +132,21 @@ func TestLinkADRAnsPayload(t *testing.T) {
 		})
 	})
 }
+
+func TestDutyCycleReqPayload(t *testing.T) {
+	Convey("Given I use NewDutyCycleReqPayload to create a new DutyCycleReqPayload", t, func() {
+		Convey("A value > 15 should return an error", func() {
+			_, err := NewDutyCycleReqPayload(16)
+			So(err, ShouldNotBeNil)
+		})
+		Convey("A value < 255 should return an error", func() {
+			_, err := NewDutyCycleReqPayload(254)
+			So(err, ShouldNotBeNil)
+		})
+		Convey("A value < 15 should not return an error", func() {
+			p, err := NewDutyCycleReqPayload(14)
+			So(err, ShouldBeNil)
+			So(p, ShouldEqual, DutyCycleReqPayload(14))
+		})
+	})
+}
