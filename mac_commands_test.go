@@ -150,3 +150,61 @@ func TestDutyCycleReqPayload(t *testing.T) {
 		})
 	})
 }
+
+func TestDLsettings(t *testing.T) {
+	Convey("Given an empty DLsettings", t, func() {
+		var s DLsettings
+		Convey("RX2DataRate and RX1DRoffset should both be 0", func() {
+			So(s.RX1DRoffset(), ShouldEqual, 0)
+			So(s.RX2DataRate(), ShouldEqual, 0)
+		})
+
+	})
+
+	Convey("Given I use NewDLsettings to create a new NewDLsettings", t, func() {
+		Convey("When calling NewDLsettings(15, 7)", func() {
+			s, err := NewDLsettings(15, 7)
+			So(err, ShouldBeNil)
+
+			Convey("Then RX2DataRate should be 15", func() {
+				So(s.RX2DataRate(), ShouldEqual, 15)
+			})
+			Convey("Then RX1DRoffset should be 7", func() {
+				So(s.RX1DRoffset(), ShouldEqual, 7)
+			})
+		})
+
+		Convey("A RX2DataRate > 15 should return an error", func() {
+			_, err := NewDLsettings(16, 0)
+			So(err, ShouldNotBeNil)
+		})
+		Convey("A RX1DRoffset > 7 should return an error", func() {
+			_, err := NewDLsettings(0, 8)
+			So(err, ShouldNotBeNil)
+		})
+	})
+
+}
+
+func TestFrequency(t *testing.T) {
+	Convey("Given an empty Frequency", t, func() {
+		var f Frequency
+		Convey("It's uint32 representation should be 0", func() {
+			So(f.Uint32(), ShouldEqual, 0)
+		})
+	})
+
+	Convey("Given I use NewFrequency to create a new Frequency", t, func() {
+		Convey("When calling NewFrequency(2^24-1)", func() {
+			f, err := NewFrequency(2 ^ 24 - 1)
+			So(err, ShouldBeNil)
+			Convey("Then it's uint32 representation should equal 2^24-1", func() {
+				So(f.Uint32(), ShouldEqual, 2^24-1)
+			})
+		})
+		Convey("A frequency >= 2^24 returns an error", func() {
+			_, err := NewFrequency(2 ^ 24)
+			So(err, ShouldNotBeNil)
+		})
+	})
+}

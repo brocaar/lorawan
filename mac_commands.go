@@ -1,6 +1,9 @@
 package lorawan
 
-import "errors"
+import (
+	"encoding/binary"
+	"errors"
+)
 
 // CID defines the MAC command identifier.
 type CID byte
@@ -127,6 +130,7 @@ type LinkADRReqPayload struct {
 	Redundacy       Redundacy
 }
 
+// LinkADRAnsPayload represents the LinkADRAns payload.
 type LinkADRAnsPayload byte
 
 // NewLinkADRAnsPayload returns a new LinkADRAnsPayload containing the given options.
@@ -149,7 +153,7 @@ func (p LinkADRAnsPayload) ChMaskACK() bool {
 	return p&(1<<0) > 0
 }
 
-// LinkADRAnsPayload returns if the data rate was successfylly set.
+// DataRateACK returns if the data rate was successfylly set.
 func (p LinkADRAnsPayload) DataRateACK() bool {
 	return p&(1<<1) > 0
 }
@@ -168,4 +172,63 @@ func NewDutyCycleReqPayload(maxDCycle uint8) (DutyCycleReqPayload, error) {
 		return 0, errors.New("lorawan: only a MaxDCycle value of 0 - 15 and 255 is allowed")
 	}
 	return DutyCycleReqPayload(maxDCycle), nil
+}
+
+// DLsettings represents the downlink settings.
+type DLsettings byte
+
+// RX2DataRate returns the requested data rate.
+func (s DLsettings) RX2DataRate() uint8 {
+	var mask DLsettings = (1 << 3) ^ (1 << 2) ^ (1 << 1) ^ (1 << 0)
+	return uint8(s & mask)
+}
+
+// RX1DRoffset returns the offset between uplink data rate and the downlink data rate.
+func (s DLsettings) RX1DRoffset() uint8 {
+	var mask DLsettings = (1 << 6) ^ (1 << 5) ^ (1 << 4)
+	return uint8(s&mask) >> 4
+}
+
+// NewDLsettings returns a new DLsettings for the given RX2DataRate and RX1DRoffset.
+func NewDLsettings(rx2DataRate, rx1DRoffset uint8) (DLsettings, error) {
+	if rx2DataRate > 15 {
+		return 0, errors.New("lorawan: max value for rx2DataRate is 15")
+	}
+	if rx1DRoffset > 7 {
+		return 0, errors.New("lorawan: max value for rx1DRoffset is 7")
+	}
+	return DLsettings(rx2DataRate ^ (rx1DRoffset << 4)), nil
+}
+
+// Frequency defines the frequency which is a 24 bits unsigned integer.
+type Frequency [3]byte
+
+// NewFrequency returns a new Frequency. Note that the max. allowed value is
+// 24 bit (thus 2^24 - 1).
+func NewFrequency(frequency uint32) (Frequency, error) {
+	var freq Frequency
+	if frequency >= 2^24 {
+		return freq, errors.New("lorawan: max value for frequency is 2^24-1")
+	}
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, frequency)
+	for i := 0; i < 3; i++ {
+		freq[0] = b[0]
+	}
+	return freq, nil
+}
+
+// Uint32 returns the frequency value as an uint32.
+func (f Frequency) Uint32() uint32 {
+	b := make([]byte, 4)
+	for i, v := range f {
+		b[i] = v
+	}
+	return binary.LittleEndian.Uint32(b)
+}
+
+// RX2SetupReqPayload represents the second receive window parameters.
+type RX2SetupReqPayload struct {
+	DLsettings DLsettings
+	Frequency  Frequency
 }
