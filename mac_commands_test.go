@@ -92,3 +92,43 @@ func TestChMask(t *testing.T) {
 		})
 	})
 }
+
+func TestLinkADRAnsPayload(t *testing.T) {
+	Convey("Given an empty LinkADRAnsPayload", t, func() {
+		var p LinkADRAnsPayload
+		Convey("ChMaskACK, DataRateACK and PowerACK should be false", func() {
+			So(p.ChMaskACK(), ShouldBeFalse)
+			So(p.DataRateACK(), ShouldBeFalse)
+			So(p.PowerACK(), ShouldBeFalse)
+		})
+	})
+
+	Convey("Given I use NewLinkADRAnsPayload to create a new LinkADRAnsPayload", t, func() {
+		Convey("Given I call NewLinkADRAnsPayload(true, false, false)", func() {
+			p := NewLinkADRAnsPayload(true, false, false)
+			Convey("ChMaskACK should be true", func() {
+				So(p.ChMaskACK(), ShouldBeTrue)
+				So(p.DataRateACK(), ShouldBeFalse)
+				So(p.PowerACK(), ShouldBeFalse)
+			})
+		})
+
+		Convey("Given I call NewLinkADRAnsPayload(true, true, false)", func() {
+			p := NewLinkADRAnsPayload(true, true, false)
+			Convey("ChMaskACK and DataRateACK should be true", func() {
+				So(p.ChMaskACK(), ShouldBeTrue)
+				So(p.DataRateACK(), ShouldBeTrue)
+				So(p.PowerACK(), ShouldBeFalse)
+			})
+		})
+
+		Convey("Given I call NewLinkADRAnsPayload(true, true, true)", func() {
+			p := NewLinkADRAnsPayload(true, true, true)
+			Convey("ChMaskACK DataRateACK and PowerACK should be true", func() {
+				So(p.ChMaskACK(), ShouldBeTrue)
+				So(p.DataRateACK(), ShouldBeTrue)
+				So(p.PowerACK(), ShouldBeTrue)
+			})
+		})
+	})
+}

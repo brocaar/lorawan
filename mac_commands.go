@@ -126,3 +126,35 @@ type LinkADRReqPayload struct {
 	ChMask          ChMask
 	Redundacy       Redundacy
 }
+
+type LinkADRAnsPayload byte
+
+// NewLinkADRAnsPayload returns a new LinkADRAnsPayload containing the given options.
+func NewLinkADRAnsPayload(chMaskACK, dataRateACK, powerACK bool) LinkADRAnsPayload {
+	var p LinkADRAnsPayload
+	if chMaskACK {
+		p = p ^ (1 << 0)
+	}
+	if dataRateACK {
+		p = p ^ (1 << 1)
+	}
+	if powerACK {
+		p = p ^ (1 << 2)
+	}
+	return p
+}
+
+// ChMaskACK returns if the channel mask sent was successfully interpreted.
+func (p LinkADRAnsPayload) ChMaskACK() bool {
+	return p&(1<<0) > 0
+}
+
+// LinkADRAnsPayload returns if the data rate was successfylly set.
+func (p LinkADRAnsPayload) DataRateACK() bool {
+	return p&(1<<1) > 0
+}
+
+// PowerACK returns if the power level was successfully set.
+func (p LinkADRAnsPayload) PowerACK() bool {
+	return p&(1<<2) > 0
+}
