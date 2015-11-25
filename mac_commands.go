@@ -232,3 +232,36 @@ type RX2SetupReqPayload struct {
 	DLsettings DLsettings
 	Frequency  Frequency
 }
+
+// RX2SetupAnsPayload represents payload send by the RXParamSetupAns command.
+type RX2SetupAnsPayload byte
+
+// NewRX2SetupAnsPayload returns a new RX2SetupAnsPayload.
+func NewRX2SetupAnsPayload(channelACK, rx2DataRateACK, rx1DRoffsetACK bool) RX2SetupAnsPayload {
+	var p RX2SetupAnsPayload
+	if channelACK {
+		p = p ^ (1 << 0)
+	}
+	if rx2DataRateACK {
+		p = p ^ (1 << 1)
+	}
+	if rx1DRoffsetACK {
+		p = p ^ (1 << 2)
+	}
+	return p
+}
+
+// ChannelACK returns if the RX2 slot was successfully set.
+func (p RX2SetupAnsPayload) ChannelACK() bool {
+	return p&(1<<0) > 0
+}
+
+// RX2DataRateACK returns if the RX2 slot data rate was successfully set.
+func (p RX2SetupAnsPayload) RX2DataRateACK() bool {
+	return p&(1<<1) > 0
+}
+
+// RX1DRoffsetACK return if the RX1DRoffset was successfully set.
+func (p RX2SetupAnsPayload) RX1DRoffsetACK() bool {
+	return p&(1<<2) > 0
+}

@@ -1,6 +1,7 @@
 package lorawan
 
 import (
+	"fmt"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -206,5 +207,37 @@ func TestFrequency(t *testing.T) {
 			_, err := NewFrequency(2 ^ 24)
 			So(err, ShouldNotBeNil)
 		})
+	})
+}
+
+func TestRX2SetupAnsPayload(t *testing.T) {
+	Convey("Given an empty RX2SetupAnsPayload", t, func() {
+		var p RX2SetupAnsPayload
+		Convey("Then ChannelACK, RX2DataRateACK and RX1DRoffsetACK are false", func() {
+			So(p.ChannelACK(), ShouldBeFalse)
+			So(p.RX2DataRateACK(), ShouldBeFalse)
+			So(p.RX1DRoffsetACK(), ShouldBeFalse)
+		})
+	})
+
+	Convey("Given I use NewRX2SetupAnsPayload to create a new RX2SetupAnsPayload", t, func() {
+		testTable := [][3]bool{
+			{false, false, false},
+			{true, false, false},
+			{false, true, false},
+			{false, false, true},
+			{true, true, true},
+		}
+
+		for _, test := range testTable {
+			Convey(fmt.Sprintf("When calling NewRX2SetupAnsPayload(%v, %v, %v)", test[0], test[1], test[2]), func() {
+				p := NewRX2SetupAnsPayload(test[0], test[1], test[2])
+				Convey(fmt.Sprintf("Then ChannelACK=%v, RX2DataRateACK=%v and RX1DRoffsetACK=%v", test[0], test[1], test[2]), func() {
+					So(p.ChannelACK(), ShouldEqual, test[0])
+					So(p.RX2DataRateACK(), ShouldEqual, test[1])
+					So(p.RX1DRoffsetACK(), ShouldEqual, test[2])
+				})
+			})
+		}
 	})
 }
