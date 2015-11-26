@@ -109,38 +109,55 @@ func (r *Redundancy) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// DataRateTXPower represents the requested data rate and TX output power.
-type DataRateTXPower byte
-
-// NewDataRateTXPower returns a new DataRateTXPower. Max allowed values for
-// dataRate and txPower are 15.
-func NewDataRateTXPower(dataRate, txPower uint8) (DataRateTXPower, error) {
-	var dr DataRateTXPower
-	if dataRate > 15 {
-		return dr, errors.New("lorawan: max value for dataRate is 15")
-	}
-	if txPower > 15 {
-		return dr, errors.New("lorawan: max value for txPower is 15")
-	}
-	return DataRateTXPower((dataRate << 4) ^ txPower), nil
-}
-
-// DataRate returns the requested data rate.
-func (dr DataRateTXPower) DataRate() uint8 {
-	return uint8(dr) >> 4
-}
-
-// TXPower returns the requested TX output power.
-func (dr DataRateTXPower) TXPower() uint8 {
-	var mask uint8 = (1 << 3) ^ (1 << 2) ^ (1 << 1) ^ (1 << 0)
-	return uint8(dr) & mask
-}
-
 // LinkADRReqPayload represents the LinkADRReq payload.
 type LinkADRReqPayload struct {
-	DataRateTXPower DataRateTXPower
-	ChMask          ChMask
-	Redundancy      Redundancy
+	DataRate   uint8
+	TXPower    uint8
+	ChMask     ChMask
+	Redundancy Redundancy
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p LinkADRReqPayload) MarshalBinary() ([]byte, error) {
+	b := make([]byte, 0, 4)
+	if p.DataRate > 15 {
+		return b, errors.New("lorawan: the max value of DataRate is 15")
+	}
+	if p.TXPower > 15 {
+		return b, errors.New("lorawan: the max value of TXPower is 15")
+	}
+
+	cm, err := p.ChMask.MarshalBinary()
+	if err != nil {
+		return b, err
+	}
+	r, err := p.Redundancy.MarshalBinary()
+	if err != nil {
+		return b, err
+	}
+
+	b = append(b, p.TXPower^(p.DataRate<<4))
+	b = append(b, cm...)
+	b = append(b, r...)
+
+	return b, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (p *LinkADRReqPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 4 {
+		return errors.New("lorawan: 4 bytes of data are expected")
+	}
+	p.DataRate = (data[0] & ((1 << 7) ^ (1 << 6) ^ (1 << 5) ^ (1 << 4))) >> 4
+	p.TXPower = data[0] & ((1 << 3) ^ (1 << 2) ^ (1 << 1) ^ (1 << 0))
+
+	if err := p.ChMask.UnmarshalBinary(data[1:3]); err != nil {
+		return err
+	}
+	if err := p.Redundancy.UnmarshalBinary(data[3:4]); err != nil {
+		return err
+	}
+	return nil
 }
 
 // LinkADRAnsPayload represents the LinkADRAns payload.

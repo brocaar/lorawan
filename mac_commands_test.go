@@ -120,35 +120,66 @@ func TestRedundancy(t *testing.T) {
 	})
 }
 
-func TestDataRateTXPower(t *testing.T) {
-	Convey("Given an empty DataRateTXPower", t, func() {
-		var dr DataRateTXPower
-		Convey("DataRate = 0 and TXPower = 0", func() {
-			So(dr.DataRate(), ShouldEqual, 0)
-			So(dr.TXPower(), ShouldEqual, 0)
-		})
-	})
+func TestLinkADRReqPayload(t *testing.T) {
+	Convey("Given an empty LinkADRReqPayload", t, func() {
+		var p LinkADRReqPayload
 
-	Convey("Given I use NewDataRateTXPower to create a new DataRateTXPower", t, func() {
-		Convey("An error should be returned when dataRate > 15", func() {
-			_, err := NewDataRateTXPower(16, 0)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("An error should be returned when txPower > 15", func() {
-			_, err := NewDataRateTXPower(0, 16)
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("Given I call NewDataRateTXPower(11, 14)", func() {
-			dr, err := NewDataRateTXPower(11, 14)
+		Convey("Then MarshalBinary returns []byte{0, 0, 0, 0}", func() {
+			b, err := p.MarshalBinary()
 			So(err, ShouldBeNil)
-			Convey("DataRate should be 11", func() {
-				So(dr.DataRate(), ShouldEqual, 11)
-			})
-			Convey("TXPower should be 14", func() {
-				So(dr.TXPower(), ShouldEqual, 14)
+			So(b, ShouldResemble, []byte{0, 0, 0, 0})
+		})
+
+		Convey("Given a DataRate > 15", func() {
+			p.DataRate = 16
+			Convey("Then MarshalBinary returns an error", func() {
+				_, err := p.MarshalBinary()
+				So(err, ShouldNotBeNil)
 			})
 		})
+
+		Convey("Given a TXPower > 15", func() {
+			p.TXPower = 16
+			Convey("Then MarshalBinary returns an error", func() {
+				_, err := p.MarshalBinary()
+				So(err, ShouldNotBeNil)
+			})
+		})
+
+		Convey("Given a LinkADRReqPayload with DataRate=1, TXPower=2, ChMask(channel 3=true) and Redundancy(ChMaskCntl=4, NbRep=5)", func() {
+			var cm ChMask
+			cm[2] = true
+
+			p.DataRate = 1
+			p.TXPower = 2
+			p.ChMask = cm
+			p.Redundancy = Redundancy{ChMaskCntl: 4, NbRep: 5}
+
+			Convey("Then MarshalBinary returns []byte{18, 4, 0, 69}", func() {
+				b, err := p.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{18, 4, 0, 69})
+			})
+		})
+
+		Convey("Given the slice []byte{18, 4, 0, 69}", func() {
+			b := []byte{18, 4, 0, 69}
+			Convey("The UnmarshalBinary returns a LinkADRReqPayload with DataRate=1, TXPower=2, ChMask(channel 3=true) and Redundancy(ChMaskCntl=4, NbRep=5)", func() {
+				err := p.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+
+				var cm ChMask
+				cm[2] = true
+				var exp LinkADRReqPayload
+				exp.DataRate = 1
+				exp.TXPower = 2
+				exp.ChMask = cm
+				exp.Redundancy = Redundancy{ChMaskCntl: 4, NbRep: 5}
+
+				So(p, ShouldResemble, exp)
+			})
+		})
+
 	})
 }
 
