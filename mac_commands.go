@@ -31,14 +31,8 @@ const (
 
 // LinkCheckAnsPayload represents the LinkCheckAns payload.
 type LinkCheckAnsPayload struct {
-	// The demodulation margin (Margin) is an 8-bit unsigned integer in the
-	// range of 0..254 indicating the link margin in dB of the last
-	// successfully received LinkCheckReq command.
 	Margin uint8
-
-	// The gateway count (GwCnt) is the number of gateways that successfully
-	// received the last LinkCheckReq command.
-	GwCnt uint8
+	GwCnt  uint8
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -86,34 +80,33 @@ func (m *ChMask) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// Redundacy represents the redundacy field.
-type Redundacy byte
-
-// NewRedundacy returns a new Redundacy. Max allowed value for chMaskCntl is 7,
-// max allowed value for nbRep is 15.
-func NewRedundacy(chMaskCntl, nbRep uint8) (Redundacy, error) {
-	var r Redundacy
-	if chMaskCntl > 7 {
-		return r, errors.New("lorawan: max value of chMaskCntl is 7")
-	}
-	if nbRep > 15 {
-		return r, errors.New("lorawan: max value of nbRep is 15")
-	}
-
-	return Redundacy((chMaskCntl << 4) ^ nbRep), nil
+// Redundancy represents the redundancy field.
+type Redundancy struct {
+	ChMaskCntl uint8
+	NbRep      uint8
 }
 
-// ChMaskCntl (channel mask control) controls the interpretation of the ChMask
-// bit field.
-func (r Redundacy) ChMaskCntl() uint8 {
-	var mask uint8 = (1 << 6) ^ (1 << 5) ^ (1 << 4)
-	return (uint8(r) & mask) >> 4
+// MarshalBinary marshals the object in binary form.
+func (r Redundancy) MarshalBinary() ([]byte, error) {
+	b := make([]byte, 1)
+	if r.NbRep > 15 {
+		return b, errors.New("lorawan: max value of NbRep is 15")
+	}
+	if r.ChMaskCntl > 7 {
+		return b, errors.New("lorawan: max value of ChMaskCntl is 7")
+	}
+	b[0] = r.NbRep ^ (r.ChMaskCntl << 4)
+	return b, nil
 }
 
-// NbRep returns the number of repetition for each uplink message.
-func (r Redundacy) NbRep() uint8 {
-	var mask uint8 = (1 << 3) ^ (1 << 2) ^ (1 << 1) ^ (1 << 0)
-	return uint8(r) & mask
+// UnmarshalBinary decodes the object from binary form.
+func (r *Redundancy) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+	r.NbRep = data[0] & ((1 << 3) ^ (1 << 2) ^ (1 << 1) ^ (1 << 0))
+	r.ChMaskCntl = (data[0] & ((1 << 6) ^ (1 << 5) ^ (1 << 4))) >> 4
+	return nil
 }
 
 // DataRateTXPower represents the requested data rate and TX output power.
@@ -147,7 +140,7 @@ func (dr DataRateTXPower) TXPower() uint8 {
 type LinkADRReqPayload struct {
 	DataRateTXPower DataRateTXPower
 	ChMask          ChMask
-	Redundacy       Redundacy
+	Redundancy      Redundancy
 }
 
 // LinkADRAnsPayload represents the LinkADRAns payload.

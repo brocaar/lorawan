@@ -10,7 +10,7 @@ import (
 func TestLinkCheckAnsPayload(t *testing.T) {
 	Convey("Given a LinkCheckAnsPayload with Margin=123 and GwCnt=234", t, func() {
 		p := LinkCheckAnsPayload{Margin: 123, GwCnt: 234}
-		Convey("Then MarshalBinary should return []byte{123, 234}", func() {
+		Convey("Then MarshalBinary returns []byte{123, 234}", func() {
 			b, err := p.MarshalBinary()
 			So(err, ShouldBeNil)
 			So(b, ShouldResemble, []byte{123, 234})
@@ -20,7 +20,7 @@ func TestLinkCheckAnsPayload(t *testing.T) {
 	Convey("Given the slice []byte{123, 234}", t, func() {
 		b := []byte{123, 234}
 		p := LinkCheckAnsPayload{}
-		Convey("Then UnmarshalBinary should return a LinkCheckAnsPayload with Margin=123 and GwCnt=234", func() {
+		Convey("Then UnmarshalBinary returns a LinkCheckAnsPayload with Margin=123 and GwCnt=234", func() {
 			err := p.UnmarshalBinary(b)
 			So(err, ShouldBeNil)
 			So(p, ShouldResemble, LinkCheckAnsPayload{Margin: 123, GwCnt: 234})
@@ -42,7 +42,7 @@ func TestChMask(t *testing.T) {
 			m[0] = true
 			m[1] = true
 			m[12] = true
-			Convey("Then MarshalBinary should return []byte{3, 16}", func() {
+			Convey("Then MarshalBinary returns []byte{3, 16}", func() {
 				b, err := m.MarshalBinary()
 				So(err, ShouldBeNil)
 				So(b, ShouldResemble, []byte{3, 16})
@@ -51,7 +51,7 @@ func TestChMask(t *testing.T) {
 
 		Convey("Given a slice of 3 bytes", func() {
 			b := []byte{1, 2, 3}
-			Convey("Then UnmarshalBinary should return an error", func() {
+			Convey("Then UnmarshalBinary returns an error", func() {
 				err := m.UnmarshalBinary(b)
 				So(err, ShouldNotBeNil)
 			})
@@ -59,7 +59,7 @@ func TestChMask(t *testing.T) {
 
 		Convey("Given the slice []byte{3, 16}", func() {
 			b := []byte{3, 16}
-			Convey("Then UnmarshalBinary should return a ChMask with channel 1, 2 and 3 set to true", func() {
+			Convey("Then UnmarshalBinary returns a ChMask with channel 1, 2 and 3 set to true", func() {
 				err := m.UnmarshalBinary(b)
 				var exp ChMask
 				exp[0] = true
@@ -72,32 +72,49 @@ func TestChMask(t *testing.T) {
 	})
 }
 
-func TestRedundacy(t *testing.T) {
-	Convey("Given an empty Redundacy", t, func() {
-		var r Redundacy
-		Convey("ChMaskCntl = 0 and NbRep = 0", func() {
-			So(r.ChMaskCntl(), ShouldEqual, 0)
-			So(r.NbRep(), ShouldEqual, 0)
-		})
-	})
+func TestRedundancy(t *testing.T) {
+	Convey("Given an empty Redundancy", t, func() {
+		var r Redundancy
 
-	Convey("Given I use NewRedundacy to create a new Redundacy", t, func() {
-		Convey("An error should be returned when chMaskCntl > 7", func() {
-			_, err := NewRedundacy(8, 0)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("An error should be returned when nbRep > 15", func() {
-			_, err := NewRedundacy(0, 16)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("Given I call NewRedundacy(5, 11)", func() {
-			r, err := NewRedundacy(5, 11)
+		Convey("Then MarshalBinary returns []byte{0}", func() {
+			b, err := r.MarshalBinary()
 			So(err, ShouldBeNil)
-			Convey("ChMaskCntl() should return 5", func() {
-				So(r.ChMaskCntl(), ShouldEqual, 5)
+			So(b, ShouldResemble, []byte{0})
+		})
+
+		Convey("Given NbRep > 15", func() {
+			r.NbRep = 16
+			Convey("Then MarshalBinary returns an error", func() {
+				_, err := r.MarshalBinary()
+				So(err, ShouldNotBeNil)
 			})
-			Convey("NbRep() should return 11", func() {
-				So(r.NbRep(), ShouldEqual, 11)
+		})
+
+		Convey("Given ChMaskCntl > 7", func() {
+			r.ChMaskCntl = 8
+			Convey("Then MarshalBinary returns an error", func() {
+				_, err := r.MarshalBinary()
+				So(err, ShouldNotBeNil)
+			})
+		})
+
+		Convey("Given ChMaskCntl=1 and NbRep=5", func() {
+			r.ChMaskCntl = 1
+			r.NbRep = 5
+			Convey("Then MarshalBinary returns []byte{13}", func() {
+				b, err := r.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{21})
+			})
+		})
+
+		Convey("Given the slice []byte{21}", func() {
+			b := []byte{21}
+			Convey("Then UnmarshalBinary returns a Redundancy with ChMaskCntl=1 and NbRep=5", func() {
+				err := r.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+				So(r.ChMaskCntl, ShouldEqual, 1)
+				So(r.NbRep, ShouldEqual, 5)
 			})
 		})
 	})
