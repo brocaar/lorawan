@@ -56,35 +56,34 @@ func (p *LinkCheckAnsPayload) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// ChMask represents the channel mask.
-type ChMask [2]byte
+// ChMask encodes the channels usable for uplink access. 0 = channel 1,
+// 15 = channel 16.
+type ChMask [16]bool
 
-// NewChMask returns a new ChMask for the given channel numbers (max. is 16).
-func NewChMask(chans ...uint8) (ChMask, error) {
-	var mask ChMask
-	for _, c := range chans {
-		if c > 16 {
-			return mask, errors.New("lorawan: the max. channel number is 16")
+// MarshalBinary marshals the object in binary form.
+func (m ChMask) MarshalBinary() ([]byte, error) {
+	b := make([]byte, 2)
+	for i := uint8(0); i < 16; i++ {
+		if m[i] {
+			b[i/8] = b[i/8] ^ 1<<(i%8)
 		}
-		c = c - 1 // make it zero based indexed
-		i := c / 8
-		b := c % 8
-		mask[i] = mask[i] ^ 1<<b
 	}
-	return mask, nil
+	return b, nil
 }
 
-// Channels returns the channels active in the channel mask.
-func (m ChMask) Channels() []uint8 {
-	var chans []uint8
-	for c := uint8(0); c < 16; c++ {
-		i := c / 8
-		b := c % 8
-		if m[i]&(1<<b) > 0 {
-			chans = append(chans, c+1)
+// UnmarshalBinary decodes the object from binary form.
+func (m *ChMask) UnmarshalBinary(data []byte) error {
+	if len(data) != 2 {
+		return errors.New("lorawan: 2 bytes of data are expected")
+	}
+	for i, b := range data {
+		for j := uint8(0); j < 8; j++ {
+			if b&(1<<j) > 0 {
+				m[uint8(i)*8+j] = true
+			}
 		}
 	}
-	return chans
+	return nil
 }
 
 // Redundacy represents the redundacy field.

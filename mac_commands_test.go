@@ -28,6 +28,50 @@ func TestLinkCheckAnsPayload(t *testing.T) {
 	})
 }
 
+func TestChMask(t *testing.T) {
+	Convey("Given an empty ChMask", t, func() {
+		var m ChMask
+
+		Convey("Then MarshalBinary returns []byte{0, 0}", func() {
+			b, err := m.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0, 0})
+		})
+
+		Convey("Given channel 1, 2 and 13 are set to true", func() {
+			m[0] = true
+			m[1] = true
+			m[12] = true
+			Convey("Then MarshalBinary should return []byte{3, 16}", func() {
+				b, err := m.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{3, 16})
+			})
+		})
+
+		Convey("Given a slice of 3 bytes", func() {
+			b := []byte{1, 2, 3}
+			Convey("Then UnmarshalBinary should return an error", func() {
+				err := m.UnmarshalBinary(b)
+				So(err, ShouldNotBeNil)
+			})
+		})
+
+		Convey("Given the slice []byte{3, 16}", func() {
+			b := []byte{3, 16}
+			Convey("Then UnmarshalBinary should return a ChMask with channel 1, 2 and 3 set to true", func() {
+				err := m.UnmarshalBinary(b)
+				var exp ChMask
+				exp[0] = true
+				exp[1] = true
+				exp[12] = true
+				So(err, ShouldBeNil)
+				So(m, ShouldResemble, exp)
+			})
+		})
+	})
+}
+
 func TestRedundacy(t *testing.T) {
 	Convey("Given an empty Redundacy", t, func() {
 		var r Redundacy
@@ -86,30 +130,6 @@ func TestDataRateTXPower(t *testing.T) {
 			})
 			Convey("TXPower should be 14", func() {
 				So(dr.TXPower(), ShouldEqual, 14)
-			})
-		})
-	})
-}
-
-func TestChMask(t *testing.T) {
-	Convey("Given an empty ChMask", t, func() {
-		var mask ChMask
-		Convey("It should not contain any channels", func() {
-			So(mask.Channels(), ShouldBeEmpty)
-		})
-	})
-
-	Convey("Given I use NewChMask to create a new ChMask", t, func() {
-		Convey("An error should be returned for a channel > 16", func() {
-			_, err := NewChMask(1, 2, 17)
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("Given I call NewChMask(1, 5, 7, 11)", func() {
-			mask, err := NewChMask(1, 5, 7, 11)
-			So(err, ShouldBeNil)
-			Convey("Channels should return 1, 5, 7 and 11", func() {
-				So(mask.Channels(), ShouldResemble, []uint8{1, 5, 7, 11})
 			})
 		})
 	})
