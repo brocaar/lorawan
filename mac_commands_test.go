@@ -7,6 +7,27 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestLinkCheckAnsPayload(t *testing.T) {
+	Convey("Given a LinkCheckAnsPayload with Margin=123 and GwCnt=234", t, func() {
+		p := LinkCheckAnsPayload{Margin: 123, GwCnt: 234}
+		Convey("Then MarshalBinary should return []byte{123, 234}", func() {
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{123, 234})
+		})
+	})
+
+	Convey("Given the slice []byte{123, 234}", t, func() {
+		b := []byte{123, 234}
+		p := LinkCheckAnsPayload{}
+		Convey("Then UnmarshalBinary should return a LinkCheckAnsPayload with Margin=123 and GwCnt=234", func() {
+			err := p.UnmarshalBinary(b)
+			So(err, ShouldBeNil)
+			So(p, ShouldResemble, LinkCheckAnsPayload{Margin: 123, GwCnt: 234})
+		})
+	})
+}
+
 func TestRedundacy(t *testing.T) {
 	Convey("Given an empty Redundacy", t, func() {
 		var r Redundacy

@@ -31,8 +31,29 @@ const (
 
 // LinkCheckAnsPayload represents the LinkCheckAns payload.
 type LinkCheckAnsPayload struct {
+	// The demodulation margin (Margin) is an 8-bit unsigned integer in the
+	// range of 0..254 indicating the link margin in dB of the last
+	// successfully received LinkCheckReq command.
 	Margin uint8
-	GwCnt  uint8
+
+	// The gateway count (GwCnt) is the number of gateways that successfully
+	// received the last LinkCheckReq command.
+	GwCnt uint8
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p LinkCheckAnsPayload) MarshalBinary() ([]byte, error) {
+	return []byte{byte(p.Margin), byte(p.GwCnt)}, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (p *LinkCheckAnsPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 2 {
+		return errors.New("lorawan: 2 bytes of data are expected")
+	}
+	p.Margin = uint8(data[0])
+	p.GwCnt = uint8(data[1])
+	return nil
 }
 
 // ChMask represents the channel mask.
