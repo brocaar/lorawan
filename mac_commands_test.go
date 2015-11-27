@@ -415,3 +415,37 @@ func TestRX2SetupAnsPayload(t *testing.T) {
 		}
 	})
 }
+
+func TestDevStatusAnsPayload(t *testing.T) {
+	Convey("Given an empty DevStatusAnsPayload", t, func() {
+		var p DevStatusAnsPayload
+		Convey("Then MarshalBinary returns []byte{0, 0}", func() {
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0, 0})
+		})
+
+		testTable := []struct {
+			Battery uint8
+			Margin  int8
+			Bytes   []byte
+		}{
+			{0, -30, []byte{0, 34}},
+			{255, 30, []byte{255, 30}},
+			{127, -1, []byte{127, 63}},
+			{127, 0, []byte{127, 0}},
+		}
+
+		for _, test := range testTable {
+			Convey(fmt.Sprintf("Given Battery=%v and Margin=%v", test.Battery, test.Margin), func() {
+				p.Battery = test.Battery
+				p.Margin = test.Margin
+				Convey(fmt.Sprintf("Then MarshalBinary returns %v", test.Bytes), func() {
+					b, err := p.MarshalBinary()
+					So(err, ShouldBeNil)
+					So(b, ShouldResemble, test.Bytes)
+				})
+			})
+		}
+	})
+}

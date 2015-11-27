@@ -322,3 +322,42 @@ func (p *RX2SetupAnsPayload) UnmarshalBinary(data []byte) error {
 	p.RX1DRoffsetACK = data[0]&(1<<2) > 0
 	return nil
 }
+
+// DevStatusAnsPayload represents the DevStatusAns payload.
+type DevStatusAnsPayload struct {
+	Battery uint8
+	Margin  int8
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p DevStatusAnsPayload) MarshalBinary() ([]byte, error) {
+	b := make([]byte, 0, 2)
+	if p.Margin < -32 {
+		return b, errors.New("lorawan: the min value of Margin is -32")
+	}
+	if p.Margin > 31 {
+		return b, errors.New("lorawan: the max value of Margin is 31")
+	}
+
+	b = append(b, p.Battery)
+	if p.Margin < 0 {
+		b = append(b, uint8(64+p.Margin))
+	} else {
+		b = append(b, uint8(p.Margin))
+	}
+	return b, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (p *DevStatusAnsPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 2 bytes of data are expected")
+	}
+	p.Battery = data[0]
+	if data[1] > 31 {
+		p.Margin = int8(data[1]) - 64
+	} else {
+		p.Margin = int8(data[1])
+	}
+	return nil
+}
