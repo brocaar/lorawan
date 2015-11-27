@@ -252,37 +252,41 @@ func (s *DLsettings) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// Frequency defines the frequency which is a 24 bits unsigned integer.
-type Frequency [3]byte
-
-// NewFrequency returns a new Frequency. Note that the max. allowed value is
-// 24 bit (thus 2^24 - 1).
-func NewFrequency(frequency uint32) (Frequency, error) {
-	var freq Frequency
-	if frequency >= 2^24 {
-		return freq, errors.New("lorawan: max value for frequency is 2^24-1")
-	}
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, frequency)
-	for i := 0; i < 3; i++ {
-		freq[0] = b[0]
-	}
-	return freq, nil
-}
-
-// Uint32 returns the frequency value as an uint32.
-func (f Frequency) Uint32() uint32 {
-	b := make([]byte, 4)
-	for i, v := range f {
-		b[i] = v
-	}
-	return binary.LittleEndian.Uint32(b)
-}
-
-// RX2SetupReqPayload represents the second receive window parameters.
+// RX2SetupReqPayload represents the RX2SetupReq payload.
 type RX2SetupReqPayload struct {
+	Frequency  uint32
 	DLsettings DLsettings
-	Frequency  Frequency
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p RX2SetupReqPayload) MarshalBinary() ([]byte, error) {
+	b := make([]byte, 5)
+	if p.Frequency >= 16777216 { // 2^24
+		return b, errors.New("lorawan: max value of Frequency is 2^24-1")
+	}
+	if bytes, err := p.DLsettings.MarshalBinary(); err != nil {
+		return b, err
+	} else {
+		b[0] = bytes[0]
+	}
+	binary.LittleEndian.PutUint32(b[1:5], p.Frequency)
+	// we don't return the last octet which is fine since we're only interested
+	// in the 24 LSB of Frequency
+	return b[0:4], nil
+}
+
+func (p *RX2SetupReqPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 4 {
+		return errors.New("lorawan: 4 bytes of data are expected")
+	}
+	if err := p.DLsettings.UnmarshalBinary(data[0:1]); err != nil {
+		return err
+	}
+	// append one block of empty bits at the end of the slice since the
+	// binary to uint32 expects 32 bits.
+	data = append(data, byte(0))
+	p.Frequency = binary.LittleEndian.Uint32(data[1:5])
+	return nil
 }
 
 // RX2SetupAnsPayload represents payload send by the RXParamSetupAns command.

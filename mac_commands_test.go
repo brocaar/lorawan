@@ -324,25 +324,44 @@ func TestDLsettings(t *testing.T) {
 	})
 }
 
-func TestFrequency(t *testing.T) {
-	Convey("Given an empty Frequency", t, func() {
-		var f Frequency
-		Convey("It's uint32 representation should be 0", func() {
-			So(f.Uint32(), ShouldEqual, 0)
-		})
-	})
-
-	Convey("Given I use NewFrequency to create a new Frequency", t, func() {
-		Convey("When calling NewFrequency(2^24-1)", func() {
-			f, err := NewFrequency(2 ^ 24 - 1)
+func TestRX2SetupReqPayload(t *testing.T) {
+	Convey("Given an empty RX2SetupReqPayload", t, func() {
+		var p RX2SetupReqPayload
+		Convey("Then MarshalBinary returns []byte{0, 0, 0, 0}", func() {
+			b, err := p.MarshalBinary()
 			So(err, ShouldBeNil)
-			Convey("Then it's uint32 representation should equal 2^24-1", func() {
-				So(f.Uint32(), ShouldEqual, 2^24-1)
+			So(b, ShouldResemble, []byte{0, 0, 0, 0})
+		})
+
+		Convey("Given Frequency > 2^24-1", func() {
+			p.Frequency = 16777216 // 2^24
+			Convey("Then MarshalBinary returns an error", func() {
+				_, err := p.MarshalBinary()
+				So(err, ShouldNotBeNil)
 			})
 		})
-		Convey("A frequency >= 2^24 returns an error", func() {
-			_, err := NewFrequency(2 ^ 24)
-			So(err, ShouldNotBeNil)
+
+		Convey("Given Frequency=262657 and DLsettings(RX2DataRate=11, RX1DRoffset=3)", func() {
+			p.Frequency = 262657
+			p.DLsettings = DLsettings{RX2DataRate: 11, RX1DRoffset: 3}
+			Convey("Then MarshalBinary returns []byte{1, 2, 4, 59}", func() {
+				b, err := p.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{59, 1, 2, 4})
+			})
+		})
+
+		Convey("Given a slice []byte{59, 1, 2, 4}", func() {
+			b := []byte{59, 1, 2, 4}
+			Convey("Then UnmarshalBinary returns a RX2SetupReqPayload with Frequency=262657 and DLsettings(RX2DataRate=11, RX1DRoffset=3)", func() {
+				exp := RX2SetupReqPayload{
+					Frequency:  262657,
+					DLsettings: DLsettings{RX2DataRate: 11, RX1DRoffset: 3},
+				}
+				err := p.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+				So(p, ShouldResemble, exp)
+			})
 		})
 	})
 }
