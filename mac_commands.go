@@ -275,6 +275,7 @@ func (p RX2SetupReqPayload) MarshalBinary() ([]byte, error) {
 	return b[0:4], nil
 }
 
+// UnmarshalBinary decodes the object from binary form.
 func (p *RX2SetupReqPayload) UnmarshalBinary(data []byte) error {
 	if len(data) != 4 {
 		return errors.New("lorawan: 4 bytes of data are expected")
@@ -289,35 +290,35 @@ func (p *RX2SetupReqPayload) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// RX2SetupAnsPayload represents payload send by the RXParamSetupAns command.
-type RX2SetupAnsPayload byte
-
-// NewRX2SetupAnsPayload returns a new RX2SetupAnsPayload.
-func NewRX2SetupAnsPayload(channelACK, rx2DataRateACK, rx1DRoffsetACK bool) RX2SetupAnsPayload {
-	var p RX2SetupAnsPayload
-	if channelACK {
-		p = p ^ (1 << 0)
-	}
-	if rx2DataRateACK {
-		p = p ^ (1 << 1)
-	}
-	if rx1DRoffsetACK {
-		p = p ^ (1 << 2)
-	}
-	return p
+// RX2SetupAnsPayload represents the RX2SetupAns payload.
+type RX2SetupAnsPayload struct {
+	ChannelACK     bool
+	RX2DataRateACK bool
+	RX1DRoffsetACK bool
 }
 
-// ChannelACK returns if the RX2 slot was successfully set.
-func (p RX2SetupAnsPayload) ChannelACK() bool {
-	return p&(1<<0) > 0
+// MarshalBinary marshals the object in binary form.
+func (p RX2SetupAnsPayload) MarshalBinary() ([]byte, error) {
+	var b byte
+	if p.ChannelACK {
+		b = b ^ (1 << 0)
+	}
+	if p.RX2DataRateACK {
+		b = b ^ (1 << 1)
+	}
+	if p.RX1DRoffsetACK {
+		b = b ^ (1 << 2)
+	}
+	return []byte{b}, nil
 }
 
-// RX2DataRateACK returns if the RX2 slot data rate was successfully set.
-func (p RX2SetupAnsPayload) RX2DataRateACK() bool {
-	return p&(1<<1) > 0
-}
-
-// RX1DRoffsetACK return if the RX1DRoffset was successfully set.
-func (p RX2SetupAnsPayload) RX1DRoffsetACK() bool {
-	return p&(1<<2) > 0
+// UnmarshalBinary decodes the object from binary form.
+func (p *RX2SetupAnsPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+	p.ChannelACK = data[0]&(1<<0) > 0
+	p.RX2DataRateACK = data[0]&(1<<1) > 0
+	p.RX1DRoffsetACK = data[0]&(1<<2) > 0
+	return nil
 }

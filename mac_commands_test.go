@@ -369,29 +369,47 @@ func TestRX2SetupReqPayload(t *testing.T) {
 func TestRX2SetupAnsPayload(t *testing.T) {
 	Convey("Given an empty RX2SetupAnsPayload", t, func() {
 		var p RX2SetupAnsPayload
-		Convey("Then ChannelACK, RX2DataRateACK and RX1DRoffsetACK are false", func() {
-			So(p.ChannelACK(), ShouldBeFalse)
-			So(p.RX2DataRateACK(), ShouldBeFalse)
-			So(p.RX1DRoffsetACK(), ShouldBeFalse)
+		Convey("Then MarshalBinary returns []byte{0}", func() {
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0})
 		})
-	})
 
-	Convey("Given I use NewRX2SetupAnsPayload to create a new RX2SetupAnsPayload", t, func() {
-		testTable := [][3]bool{
-			{false, false, false},
-			{true, false, false},
-			{false, true, false},
-			{false, false, true},
-			{true, true, true},
+		testTable := []struct {
+			ChannelACK     bool
+			RX2DataRateACK bool
+			RX1DRoffsetACK bool
+			Bytes          []byte
+		}{
+			{true, false, false, []byte{1}},
+			{false, true, false, []byte{2}},
+			{false, false, true, []byte{4}},
+			{true, true, true, []byte{7}},
 		}
 
 		for _, test := range testTable {
-			Convey(fmt.Sprintf("When calling NewRX2SetupAnsPayload(%v, %v, %v)", test[0], test[1], test[2]), func() {
-				p := NewRX2SetupAnsPayload(test[0], test[1], test[2])
-				Convey(fmt.Sprintf("Then ChannelACK=%v, RX2DataRateACK=%v and RX1DRoffsetACK=%v", test[0], test[1], test[2]), func() {
-					So(p.ChannelACK(), ShouldEqual, test[0])
-					So(p.RX2DataRateACK(), ShouldEqual, test[1])
-					So(p.RX1DRoffsetACK(), ShouldEqual, test[2])
+			Convey(fmt.Sprintf("Given ChannelACK=%v, RX2DataRateACK=%v, RX1DRoffsetACK=%v", test.ChannelACK, test.RX2DataRateACK, test.RX1DRoffsetACK), func() {
+				p.ChannelACK = test.ChannelACK
+				p.RX2DataRateACK = test.RX2DataRateACK
+				p.RX1DRoffsetACK = test.RX1DRoffsetACK
+				Convey(fmt.Sprintf("Then marshalBinary returns %v", test.Bytes), func() {
+					b, err := p.MarshalBinary()
+					So(err, ShouldBeNil)
+					So(b, ShouldResemble, test.Bytes)
+				})
+			})
+
+			Convey(fmt.Sprintf("Given slice %v", test.Bytes), func() {
+				b := test.Bytes
+				Convey(fmt.Sprintf("Then UnmarshalBinary returns a RX2SetupAnsPayload with ChannelACK=%v, RX2DataRateACK=%v, RX1DRoffsetACK=%v", test.ChannelACK, test.RX2DataRateACK, test.RX1DRoffsetACK), func() {
+					exp := RX2SetupAnsPayload{
+						ChannelACK:     test.ChannelACK,
+						RX2DataRateACK: test.RX2DataRateACK,
+						RX1DRoffsetACK: test.RX1DRoffsetACK,
+					}
+					err := p.UnmarshalBinary(b)
+					So(err, ShouldBeNil)
+					So(p, ShouldResemble, exp)
 				})
 			})
 		}
