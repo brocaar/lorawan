@@ -281,36 +281,47 @@ func TestDutyCycleReqPayload(t *testing.T) {
 func TestDLsettings(t *testing.T) {
 	Convey("Given an empty DLsettings", t, func() {
 		var s DLsettings
-		Convey("RX2DataRate and RX1DRoffset should both be 0", func() {
-			So(s.RX1DRoffset(), ShouldEqual, 0)
-			So(s.RX2DataRate(), ShouldEqual, 0)
-		})
-
-	})
-
-	Convey("Given I use NewDLsettings to create a new NewDLsettings", t, func() {
-		Convey("When calling NewDLsettings(15, 7)", func() {
-			s, err := NewDLsettings(15, 7)
+		Convey("Then MarshalBinary returns []byte{0}", func() {
+			b, err := s.MarshalBinary()
 			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0})
+		})
 
-			Convey("Then RX2DataRate should be 15", func() {
-				So(s.RX2DataRate(), ShouldEqual, 15)
-			})
-			Convey("Then RX1DRoffset should be 7", func() {
-				So(s.RX1DRoffset(), ShouldEqual, 7)
+		Convey("Given a RX2DataRate > 15", func() {
+			s.RX2DataRate = 16
+			Convey("Then MarshalBinary returns an error", func() {
+				_, err := s.MarshalBinary()
+				So(err, ShouldNotBeNil)
 			})
 		})
 
-		Convey("A RX2DataRate > 15 should return an error", func() {
-			_, err := NewDLsettings(16, 0)
-			So(err, ShouldNotBeNil)
+		Convey("Given a RX1DRoffset > 7", func() {
+			s.RX1DRoffset = 8
+			Convey("Then MarshalBinary returns an error", func() {
+				_, err := s.MarshalBinary()
+				So(err, ShouldNotBeNil)
+			})
 		})
-		Convey("A RX1DRoffset > 7 should return an error", func() {
-			_, err := NewDLsettings(0, 8)
-			So(err, ShouldNotBeNil)
+
+		Convey("Given RX2DataRate=15 and RX1DRoffset=7", func() {
+			s.RX2DataRate = 15
+			s.RX1DRoffset = 7
+			Convey("Then MarshalBinary returns []byte{127}", func() {
+				b, err := s.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{127})
+			})
+		})
+
+		Convey("Given a slice []byte{127}", func() {
+			b := []byte{127}
+			Convey("Then UnmarshalBinary returns a DLsettings with RX2DataRate=15 and RX1DRoffset=7", func() {
+				err := s.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+				So(s, ShouldResemble, DLsettings{RX2DataRate: 15, RX1DRoffset: 7})
+			})
 		})
 	})
-
 }
 
 func TestFrequency(t *testing.T) {

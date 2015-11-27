@@ -204,6 +204,7 @@ type DutyCycleReqPayload struct {
 	MaxDCCycle uint8
 }
 
+// MarshalBinary marshals the object in binary form.
 func (p DutyCycleReqPayload) MarshalBinary() ([]byte, error) {
 	b := make([]byte, 0, 1)
 	if p.MaxDCCycle > 15 && p.MaxDCCycle < 255 {
@@ -213,6 +214,7 @@ func (p DutyCycleReqPayload) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
+// UnmarshalBinary decodes the object from binary form.
 func (p *DutyCycleReqPayload) UnmarshalBinary(data []byte) error {
 	if len(data) != 1 {
 		return errors.New("lorawan: 1 byte of data is expected")
@@ -221,30 +223,33 @@ func (p *DutyCycleReqPayload) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// DLsettings represents the downlink settings.
-type DLsettings byte
-
-// RX2DataRate returns the requested data rate.
-func (s DLsettings) RX2DataRate() uint8 {
-	var mask DLsettings = (1 << 3) ^ (1 << 2) ^ (1 << 1) ^ (1 << 0)
-	return uint8(s & mask)
+// DLsettings represents the DLsettings fields (downlink settings).
+type DLsettings struct {
+	RX2DataRate uint8
+	RX1DRoffset uint8
 }
 
-// RX1DRoffset returns the offset between uplink data rate and the downlink data rate.
-func (s DLsettings) RX1DRoffset() uint8 {
-	var mask DLsettings = (1 << 6) ^ (1 << 5) ^ (1 << 4)
-	return uint8(s&mask) >> 4
+// MarshalBinary marshals the object in binary form.
+func (s DLsettings) MarshalBinary() ([]byte, error) {
+	b := make([]byte, 0, 1)
+	if s.RX2DataRate > 15 {
+		return b, errors.New("lorawan: max value of RX2DataRate is 15")
+	}
+	if s.RX1DRoffset > 7 {
+		return b, errors.New("lorawan: max value of RX1DRoffset is 7")
+	}
+	b = append(b, s.RX2DataRate^(s.RX1DRoffset<<4))
+	return b, nil
 }
 
-// NewDLsettings returns a new DLsettings for the given RX2DataRate and RX1DRoffset.
-func NewDLsettings(rx2DataRate, rx1DRoffset uint8) (DLsettings, error) {
-	if rx2DataRate > 15 {
-		return 0, errors.New("lorawan: max value for rx2DataRate is 15")
+// UnmarshalBinary decodes the object from binary form.
+func (s *DLsettings) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
 	}
-	if rx1DRoffset > 7 {
-		return 0, errors.New("lorawan: max value for rx1DRoffset is 7")
-	}
-	return DLsettings(rx2DataRate ^ (rx1DRoffset << 4)), nil
+	s.RX2DataRate = data[0] & ((1 << 3) ^ (1 << 2) ^ (1 << 1) ^ (1 << 0))
+	s.RX1DRoffset = (data[0] & ((1 << 6) ^ (1 << 5) ^ (1 << 4))) >> 4
+	return nil
 }
 
 // Frequency defines the frequency which is a 24 bits unsigned integer.
