@@ -285,8 +285,10 @@ func (p *RX2SetupReqPayload) UnmarshalBinary(data []byte) error {
 	}
 	// append one block of empty bits at the end of the slice since the
 	// binary to uint32 expects 32 bits.
-	data = append(data, byte(0))
-	p.Frequency = binary.LittleEndian.Uint32(data[1:5])
+	b := make([]byte, len(data))
+	copy(b, data)
+	b = append(b, byte(0))
+	p.Frequency = binary.LittleEndian.Uint32(b[1:5])
 	return nil
 }
 
@@ -333,10 +335,10 @@ type DevStatusAnsPayload struct {
 func (p DevStatusAnsPayload) MarshalBinary() ([]byte, error) {
 	b := make([]byte, 0, 2)
 	if p.Margin < -32 {
-		return b, errors.New("lorawan: the min value of Margin is -32")
+		return b, errors.New("lorawan: min value of Margin is -32")
 	}
 	if p.Margin > 31 {
-		return b, errors.New("lorawan: the max value of Margin is 31")
+		return b, errors.New("lorawan: max value of Margin is 31")
 	}
 
 	b = append(b, p.Battery)
@@ -359,5 +361,51 @@ func (p *DevStatusAnsPayload) UnmarshalBinary(data []byte) error {
 	} else {
 		p.Margin = int8(data[1])
 	}
+	return nil
+}
+
+// NewChannelReqPayload represents the NewChannelReq payload.
+type NewChannelReqPayload struct {
+	ChIndex uint8
+	Freq    uint32
+	MaxDR   uint8
+	MinDR   uint8
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p NewChannelReqPayload) MarshalBinary() ([]byte, error) {
+	b := make([]byte, 5)
+	if p.Freq >= 16777216 { // 2^24
+		return b, errors.New("lorawan: max value of Freq is 2^24 - 1")
+	}
+	if p.MaxDR > 15 {
+		return b, errors.New("lorawan: max value of MaxDR is 15")
+	}
+	if p.MinDR > 15 {
+		return b, errors.New("lorawan: max value of MinDR is 15")
+	}
+
+	// we're borrowing the last byte b[4] because PutUint32 needs 4 bytes,
+	// the last byte b[4] will be set to 0 because max Freq = 2^24 - 1
+	binary.LittleEndian.PutUint32(b[1:5], p.Freq)
+	b[0] = p.ChIndex
+	b[4] = p.MinDR ^ (p.MaxDR << 4)
+
+	return b, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (p *NewChannelReqPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 5 {
+		return errors.New("lorawan: 4 bytes of data are expected")
+	}
+	p.ChIndex = data[0]
+	p.MinDR = data[4] & ((1 << 3) ^ (1 << 2) ^ (1 << 1) ^ (1 << 0))
+	p.MaxDR = (data[4] & ((1 << 7) ^ (1 << 6) ^ (1 << 5) ^ (1 << 4))) >> 4
+
+	b := make([]byte, len(data))
+	copy(b, data)
+	b[4] = byte(0)
+	p.Freq = binary.LittleEndian.Uint32(b[1:5])
 	return nil
 }

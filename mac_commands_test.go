@@ -449,3 +449,57 @@ func TestDevStatusAnsPayload(t *testing.T) {
 		}
 	})
 }
+
+func TestNewChannelReqPayload(t *testing.T) {
+	Convey("Given an emtpy NewChannelReqPayload", t, func() {
+		var p NewChannelReqPayload
+		Convey("Then MarshalBinary returns []byte{0, 0, 0, 0, 0}", func() {
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0, 0, 0, 0, 0})
+		})
+
+		Convey("Given Freq > 2^24 - 1", func() {
+			p.Freq = 16777216
+			Convey("MarshalBinary returns an error", func() {
+				_, err := p.MarshalBinary()
+				So(err, ShouldNotBeNil)
+			})
+		})
+
+		Convey("Given MaxDR > 15", func() {
+			p.MaxDR = 16
+			Convey("MarshalBinary returns an error", func() {
+				_, err := p.MarshalBinary()
+				So(err, ShouldNotBeNil)
+			})
+		})
+
+		Convey("Given MinDR > 15", func() {
+			p.MinDR = 16
+			Convey("MarshalBinary returns an error", func() {
+				_, err := p.MarshalBinary()
+				So(err, ShouldNotBeNil)
+			})
+		})
+
+		Convey("Given ChIndex=3, Freq=262657, MaxDR=5, MinDR=10", func() {
+			p.ChIndex = 3
+			p.Freq = 262657
+			p.MaxDR = 5
+			p.MinDR = 10
+			Convey("Then MarshalBinary returns []byte{3, 1, 2, 4, 90}", func() {
+				b, err := p.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{3, 1, 2, 4, 90})
+			})
+		})
+
+		Convey("Given a slice []byte{3, 1, 2, 4, 90}", func() {
+			b := []byte{3, 1, 2, 4, 90}
+			err := p.UnmarshalBinary(b)
+			So(err, ShouldBeNil)
+			So(p, ShouldResemble, NewChannelReqPayload{ChIndex: 3, Freq: 262657, MaxDR: 5, MinDR: 10})
+		})
+	})
+}
