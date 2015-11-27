@@ -503,3 +503,46 @@ func TestNewChannelReqPayload(t *testing.T) {
 		})
 	})
 }
+
+func TestNewChannelAnsPayload(t *testing.T) {
+	Convey("Given an empty NewChannelAnsPayload", t, func() {
+		var p NewChannelAnsPayload
+		Convey("Then MarshalBinary returns []byte{0}", func() {
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0})
+		})
+
+		testTable := []struct {
+			ChannelFrequencyOK bool
+			DataRateRangeOK    bool
+			Bytes              []byte
+		}{
+			{false, false, []byte{0}},
+			{true, false, []byte{1}},
+			{false, true, []byte{2}},
+			{true, true, []byte{3}},
+		}
+
+		for _, test := range testTable {
+			Convey(fmt.Sprintf("Given ChannelFrequencyOK=%v, DataRateRangeOK=%v", test.ChannelFrequencyOK, test.DataRateRangeOK), func() {
+				p.ChannelFrequencyOK = test.ChannelFrequencyOK
+				p.DataRateRangeOK = test.DataRateRangeOK
+				Convey(fmt.Sprintf("Then MarshalBinary returns %v", test.Bytes), func() {
+					b, err := p.MarshalBinary()
+					So(err, ShouldBeNil)
+					So(b, ShouldResemble, test.Bytes)
+				})
+			})
+
+			Convey(fmt.Sprintf("Given a slice %v", test.Bytes), func() {
+				b := test.Bytes
+				Convey(fmt.Sprintf("Then UnmarshalBinary returns a NewChannelAnsPayload with ChannelFrequencyOK=%v, DataRateRangeOK=%v", test.ChannelFrequencyOK, test.DataRateRangeOK), func() {
+					err := p.UnmarshalBinary(b)
+					So(err, ShouldBeNil)
+					So(p, ShouldResemble, NewChannelAnsPayload{ChannelFrequencyOK: test.ChannelFrequencyOK, DataRateRangeOK: test.DataRateRangeOK})
+				})
+			})
+		}
+	})
+}

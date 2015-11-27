@@ -409,3 +409,30 @@ func (p *NewChannelReqPayload) UnmarshalBinary(data []byte) error {
 	p.Freq = binary.LittleEndian.Uint32(b[1:5])
 	return nil
 }
+
+// NewChannelAnsPayload represents the NewChannelAns payload.
+type NewChannelAnsPayload struct {
+	ChannelFrequencyOK bool
+	DataRateRangeOK    bool
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p NewChannelAnsPayload) MarshalBinary() ([]byte, error) {
+	var b byte
+	if p.ChannelFrequencyOK {
+		b = (1 << 0)
+	}
+	if p.DataRateRangeOK {
+		b = b ^ (1 << 1)
+	}
+	return []byte{b}, nil
+}
+
+func (p *NewChannelAnsPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+	p.ChannelFrequencyOK = data[0]&(1<<0) > 0
+	p.DataRateRangeOK = data[0]&(1<<1) > 0
+	return nil
+}
