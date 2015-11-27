@@ -186,40 +186,50 @@ func TestLinkADRReqPayload(t *testing.T) {
 func TestLinkADRAnsPayload(t *testing.T) {
 	Convey("Given an empty LinkADRAnsPayload", t, func() {
 		var p LinkADRAnsPayload
-		Convey("ChMaskACK, DataRateACK and PowerACK should be false", func() {
-			So(p.ChMaskACK(), ShouldBeFalse)
-			So(p.DataRateACK(), ShouldBeFalse)
-			So(p.PowerACK(), ShouldBeFalse)
-		})
-	})
-
-	Convey("Given I use NewLinkADRAnsPayload to create a new LinkADRAnsPayload", t, func() {
-		Convey("Given I call NewLinkADRAnsPayload(true, false, false)", func() {
-			p := NewLinkADRAnsPayload(true, false, false)
-			Convey("ChMaskACK should be true", func() {
-				So(p.ChMaskACK(), ShouldBeTrue)
-				So(p.DataRateACK(), ShouldBeFalse)
-				So(p.PowerACK(), ShouldBeFalse)
-			})
+		Convey("Then MarshalBinary returns []byte{0}", func() {
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0})
 		})
 
-		Convey("Given I call NewLinkADRAnsPayload(true, true, false)", func() {
-			p := NewLinkADRAnsPayload(true, true, false)
-			Convey("ChMaskACK and DataRateACK should be true", func() {
-				So(p.ChMaskACK(), ShouldBeTrue)
-				So(p.DataRateACK(), ShouldBeTrue)
-				So(p.PowerACK(), ShouldBeFalse)
-			})
-		})
+		testTable := []struct {
+			ChannelMaskACK bool
+			DataRateACK    bool
+			PowerACK       bool
+			Bytes          []byte
+		}{
+			{true, false, false, []byte{1}},
+			{false, true, false, []byte{2}},
+			{false, false, true, []byte{4}},
+			{true, true, true, []byte{7}},
+		}
 
-		Convey("Given I call NewLinkADRAnsPayload(true, true, true)", func() {
-			p := NewLinkADRAnsPayload(true, true, true)
-			Convey("ChMaskACK DataRateACK and PowerACK should be true", func() {
-				So(p.ChMaskACK(), ShouldBeTrue)
-				So(p.DataRateACK(), ShouldBeTrue)
-				So(p.PowerACK(), ShouldBeTrue)
+		for _, test := range testTable {
+			Convey(fmt.Sprintf("Given a LinkADRAnsPayload with ChannelMaskACK=%v, DataRateACK=%v, PowerACK=%v", test.ChannelMaskACK, test.DataRateACK, test.PowerACK), func() {
+				p.ChannelMaskACK = test.ChannelMaskACK
+				p.DataRateACK = test.DataRateACK
+				p.PowerACK = test.PowerACK
+				Convey(fmt.Sprintf("Then MarshalBinary returns %v", test.Bytes), func() {
+					b, err := p.MarshalBinary()
+					So(err, ShouldBeNil)
+					So(b, ShouldResemble, test.Bytes)
+				})
 			})
-		})
+
+			Convey(fmt.Sprintf("Given a slice %v", test.Bytes), func() {
+				b := test.Bytes
+				Convey(fmt.Sprintf("Then UnmarshalBinary returns a LinkADRAnsPayload with ChannelMaskACK=%v, DataRateACK=%v, PowerACK=%v", test.ChannelMaskACK, test.DataRateACK, test.PowerACK), func() {
+					exp := LinkADRAnsPayload{
+						ChannelMaskACK: test.ChannelMaskACK,
+						DataRateACK:    test.DataRateACK,
+						PowerACK:       test.PowerACK,
+					}
+					err := p.UnmarshalBinary(b)
+					So(err, ShouldBeNil)
+					So(p, ShouldResemble, exp)
+				})
+			})
+		}
 	})
 }
 

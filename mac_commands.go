@@ -161,36 +161,42 @@ func (p *LinkADRReqPayload) UnmarshalBinary(data []byte) error {
 }
 
 // LinkADRAnsPayload represents the LinkADRAns payload.
-type LinkADRAnsPayload byte
-
-// NewLinkADRAnsPayload returns a new LinkADRAnsPayload containing the given options.
-func NewLinkADRAnsPayload(chMaskACK, dataRateACK, powerACK bool) LinkADRAnsPayload {
-	var p LinkADRAnsPayload
-	if chMaskACK {
-		p = p ^ (1 << 0)
-	}
-	if dataRateACK {
-		p = p ^ (1 << 1)
-	}
-	if powerACK {
-		p = p ^ (1 << 2)
-	}
-	return p
+type LinkADRAnsPayload struct {
+	ChannelMaskACK bool
+	DataRateACK    bool
+	PowerACK       bool
 }
 
-// ChMaskACK returns if the channel mask sent was successfully interpreted.
-func (p LinkADRAnsPayload) ChMaskACK() bool {
-	return p&(1<<0) > 0
+// MarshalBinary marshals the object in binary form.
+func (p LinkADRAnsPayload) MarshalBinary() ([]byte, error) {
+	var b byte
+	if p.ChannelMaskACK {
+		b = b ^ (1 << 0)
+	}
+	if p.DataRateACK {
+		b = b ^ (1 << 1)
+	}
+	if p.PowerACK {
+		b = b ^ (1 << 2)
+	}
+	return []byte{b}, nil
 }
 
-// DataRateACK returns if the data rate was successfylly set.
-func (p LinkADRAnsPayload) DataRateACK() bool {
-	return p&(1<<1) > 0
-}
-
-// PowerACK returns if the power level was successfully set.
-func (p LinkADRAnsPayload) PowerACK() bool {
-	return p&(1<<2) > 0
+// UnmarshalBinary decodes the object from binary form.
+func (p *LinkADRAnsPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+	if data[0]&(1<<0) > 0 {
+		p.ChannelMaskACK = true
+	}
+	if data[0]&(1<<1) > 0 {
+		p.DataRateACK = true
+	}
+	if data[0]&(1<<2) > 0 {
+		p.PowerACK = true
+	}
+	return nil
 }
 
 // DutyCycleReqPayload contains the MaxDCycle value.
