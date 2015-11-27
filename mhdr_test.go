@@ -1,28 +1,37 @@
 package lorawan
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestMHDR(t *testing.T) {
 	Convey("Given an empty MHDR", t, func() {
-		var mhdr MHDR
-		Convey("The MType() = JoinRequest", func() {
-			So(mhdr.MType(), ShouldEqual, JoinRequest)
+		var h MHDR
+		Convey("Then MarshalBinary returns []byte{0}", func() {
+			b, err := h.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0})
 		})
-		Convey("The Major() = LoRaWANR1", func() {
-			So(mhdr.Major(), ShouldEqual, LoRaWANR1)
-		})
-	})
 
-	Convey("Given NewMHDR(UnconfirmedDataUp,MajorRFU3)", t, func() {
-		mhdr := NewMHDR(UnconfirmedDataUp, MajorRFU3)
-		Convey("The MType() = UnconfirmedDataUp", func() {
-			So(mhdr.MType(), ShouldEqual, UnconfirmedDataUp)
+		Convey("Given MType=Proprietary, Major=LoRaWANR1", func() {
+			h.MType = Proprietary
+			h.Major = LoRaWANR1
+			Convey("Then MarshalBinary returns []byte{224}", func() {
+				b, err := h.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{224})
+			})
 		})
-		Convey("The Major() = MajorRFU3", func() {
-			So(mhdr.Major(), ShouldEqual, MajorRFU3)
+
+		Convey("Given a slice []byte{224}", func() {
+			b := []byte{224}
+			Convey("Then UnmarshalBinary returns a MHDR with MType=Proprietary, Major=LoRaWANR1", func() {
+				err := h.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+				So(h, ShouldResemble, MHDR{MType: Proprietary, Major: LoRaWANR1})
+			})
 		})
 	})
 }
