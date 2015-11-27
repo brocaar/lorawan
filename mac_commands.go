@@ -428,11 +428,34 @@ func (p NewChannelAnsPayload) MarshalBinary() ([]byte, error) {
 	return []byte{b}, nil
 }
 
+// UnmarshalBinary decodes the object from binary form.
 func (p *NewChannelAnsPayload) UnmarshalBinary(data []byte) error {
 	if len(data) != 1 {
 		return errors.New("lorawan: 1 byte of data is expected")
 	}
 	p.ChannelFrequencyOK = data[0]&(1<<0) > 0
 	p.DataRateRangeOK = data[0]&(1<<1) > 0
+	return nil
+}
+
+// RXTimingSetupReqPayload represents the RXTimingSetupReq payload.
+type RXTimingSetupReqPayload struct {
+	Delay uint8
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p RXTimingSetupReqPayload) MarshalBinary() ([]byte, error) {
+	if p.Delay > 15 {
+		return []byte{}, errors.New("lorawan: the max value of Delay is 15")
+	}
+	return []byte{p.Delay}, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (p *RXTimingSetupReqPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+	p.Delay = data[0]
 	return nil
 }

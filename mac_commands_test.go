@@ -546,3 +546,40 @@ func TestNewChannelAnsPayload(t *testing.T) {
 		}
 	})
 }
+
+func TestRXTimingSetupReqPayload(t *testing.T) {
+	Convey("Given an emtpy RXTimingSetupReqPayload", t, func() {
+		var p RXTimingSetupReqPayload
+		Convey("Then MarshalBinary returns []byte{0}", func() {
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0})
+		})
+
+		Convey("Given Delay > 15", func() {
+			p.Delay = 16
+			Convey("Then MarshalBinary returns an error", func() {
+				_, err := p.MarshalBinary()
+				So(err, ShouldNotBeNil)
+			})
+		})
+
+		Convey("Given Delay=15", func() {
+			p.Delay = 15
+			Convey("Then MarshalBinary returns []byte{15}", func() {
+				b, err := p.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{15})
+			})
+		})
+
+		Convey("Given a slice []byte{15}", func() {
+			b := []byte{15}
+			Convey("Then UnmarshalBinary returns RXTimingSetupReqPayload with Delay=15", func() {
+				err := p.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+				So(p, ShouldResemble, RXTimingSetupReqPayload{Delay: 15})
+			})
+		})
+	})
+}
