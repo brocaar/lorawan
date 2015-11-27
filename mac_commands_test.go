@@ -234,19 +234,46 @@ func TestLinkADRAnsPayload(t *testing.T) {
 }
 
 func TestDutyCycleReqPayload(t *testing.T) {
-	Convey("Given I use NewDutyCycleReqPayload to create a new DutyCycleReqPayload", t, func() {
-		Convey("A value > 15 should return an error", func() {
-			_, err := NewDutyCycleReqPayload(16)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("A value < 255 should return an error", func() {
-			_, err := NewDutyCycleReqPayload(254)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("A value < 15 should not return an error", func() {
-			p, err := NewDutyCycleReqPayload(14)
+	Convey("Given an empty DutyCycleReqPayload", t, func() {
+		var p DutyCycleReqPayload
+		Convey("Then MarshalBinary returns []byte{0}", func() {
+			b, err := p.MarshalBinary()
 			So(err, ShouldBeNil)
-			So(p, ShouldEqual, DutyCycleReqPayload(14))
+			So(b, ShouldResemble, []byte{0})
+		})
+
+		Convey("Given a MaxDCCycle=15", func() {
+			p.MaxDCCycle = 16
+			Convey("Then MarshalBinary returns an error", func() {
+				_, err := p.MarshalBinary()
+				So(err, ShouldNotBeNil)
+			})
+		})
+
+		Convey("Given a MaxDCCycle=254", func() {
+			p.MaxDCCycle = 254
+			Convey("Then MarshalBinary returns an error", func() {
+				_, err := p.MarshalBinary()
+				So(err, ShouldNotBeNil)
+			})
+		})
+
+		Convey("Given A MaxDCCycle=13", func() {
+			p.MaxDCCycle = 13
+			Convey("Then MarshalBinary returns []byte{13}", func() {
+				b, err := p.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{13})
+			})
+		})
+
+		Convey("Given a slice []byte{13}", func() {
+			b := []byte{13}
+			Convey("Then UnmarshalBinary returns a DutyCycleReqPayload with MaxDCCycle=13", func() {
+				err := p.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+				So(p, ShouldResemble, DutyCycleReqPayload{13})
+			})
 		})
 	})
 }

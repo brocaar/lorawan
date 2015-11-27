@@ -199,15 +199,26 @@ func (p *LinkADRAnsPayload) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// DutyCycleReqPayload contains the MaxDCycle value.
-type DutyCycleReqPayload uint8
+// DutyCycleReqPayload represents the DutyCycleReq payload.
+type DutyCycleReqPayload struct {
+	MaxDCCycle uint8
+}
 
-// NewDutyCycleReqPayload returns a new DutyCycleReqPayload for the given MaxDCycle.
-func NewDutyCycleReqPayload(maxDCycle uint8) (DutyCycleReqPayload, error) {
-	if maxDCycle > 15 && maxDCycle < 255 {
-		return 0, errors.New("lorawan: only a MaxDCycle value of 0 - 15 and 255 is allowed")
+func (p DutyCycleReqPayload) MarshalBinary() ([]byte, error) {
+	b := make([]byte, 0, 1)
+	if p.MaxDCCycle > 15 && p.MaxDCCycle < 255 {
+		return b, errors.New("lorawan: only a MaxDCycle value of 0 - 15 and 255 is allowed")
 	}
-	return DutyCycleReqPayload(maxDCycle), nil
+	b = append(b, p.MaxDCCycle)
+	return b, nil
+}
+
+func (p *DutyCycleReqPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+	p.MaxDCCycle = data[0]
+	return nil
 }
 
 // DLsettings represents the downlink settings.
