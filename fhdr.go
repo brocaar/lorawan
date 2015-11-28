@@ -21,58 +21,47 @@ func (a *DevAddr) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// FCtrl represents the frame control field.
-type FCtrl byte
-
-// NewFCtrl returns a new FCtrl. Note that for fOptsLen only the first
-// four bits are used (and thus the max. allowed number is 15)
-func NewFCtrl(adr, adrAckReq, ack, fPending bool, fOptsLen uint8) (FCtrl, error) {
-	var fc FCtrl
-	if fOptsLen > 15 {
-		return fc, errors.New("lorawan: the max. fOptsLen is 15")
-	}
-
-	if adr {
-		fc = fc ^ (1 << 7)
-	}
-	if adrAckReq {
-		fc = fc ^ (1 << 6)
-	}
-	if ack {
-		fc = fc ^ (1 << 5)
-	}
-	if fPending {
-		fc = fc ^ (1 << 4)
-	}
-
-	return fc ^ FCtrl(fOptsLen), nil
+// FCtrl represents the FCtrl (frame control) field.
+type FCtrl struct {
+	ADR       bool
+	ADRACKReq bool
+	ACK       bool
+	FPending  bool // unly used for downlink messages
+	FOptsLen  uint8
 }
 
-// ADR returns if the adaptive data rate control bit is set.
-func (c FCtrl) ADR() bool {
-	return c&(1<<7) > 0
+// MarshalBinary marshals the object in binary form.
+func (c FCtrl) MarshalBinary() ([]byte, error) {
+	if c.FOptsLen > 15 {
+		return []byte{}, errors.New("lorawan: max value of FOptsLen is 15")
+	}
+	b := byte(c.FOptsLen)
+	if c.FPending {
+		b = b ^ (1 << 4)
+	}
+	if c.ACK {
+		b = b ^ (1 << 5)
+	}
+	if c.ADRACKReq {
+		b = b ^ (1 << 6)
+	}
+	if c.ADR {
+		b = b ^ (1 << 7)
+	}
+	return []byte{b}, nil
 }
 
-// ADRACKReq returns if the acknowledgment request bit is set.
-func (c FCtrl) ADRACKReq() bool {
-	return c&(1<<6) > 0
-}
-
-// ACK returns if the acknowledgment bit is set.
-func (c FCtrl) ACK() bool {
-	return c&(1<<5) > 0
-}
-
-// FPending returns if the gataway has more data pending to be sent.
-// This is only used in downlink communication.
-func (c FCtrl) FPending() bool {
-	return c&(1<<4) > 0
-}
-
-// FOptsLen returns how many FOpts bytes the FHDR has.
-func (c FCtrl) FOptsLen() uint8 {
-	var mask uint8 = (1 << 3) ^ (1 << 2) ^ (1 << 1) ^ (1 << 0)
-	return uint8(c) & mask
+// UnmarshalBinary decodes the object from binary form.
+func (c *FCtrl) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+	c.FOptsLen = data[0] & ((1 << 3) ^ (1 << 2) ^ (1 << 1) ^ (1 << 0))
+	c.FPending = data[0]&(1<<4) > 0
+	c.ACK = data[0]&(1<<5) > 0
+	c.ADRACKReq = data[0]&(1<<6) > 0
+	c.ADR = data[0]&(1<<7) > 0
+	return nil
 }
 
 // FHDR represents the frame header.

@@ -1,6 +1,7 @@
 package lorawan
 
 import (
+	"fmt"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -37,65 +38,58 @@ func TestDevAddr(t *testing.T) {
 
 func TestFCtrl(t *testing.T) {
 	Convey("Given an empty FCtrl", t, func() {
-		var fc FCtrl
-		Convey("ADR, ADRACKReq, ACK and FPending should be false", func() {
-			So(fc.ADR(), ShouldBeFalse)
-			So(fc.ADRACKReq(), ShouldBeFalse)
-			So(fc.ACK(), ShouldBeFalse)
-			So(fc.FPending(), ShouldBeFalse)
+		var c FCtrl
+		Convey("Then MarshalBinary returns []byte{0}", func() {
+			b, err := c.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0})
 		})
-		Convey("FOptsLen = 0", func() {
-			So(fc.FOptsLen(), ShouldEqual, 0)
-		})
-	})
 
-	Convey("Given I use NewFCtrl to create a new FCtrl", t, func() {
-		Convey("An error should be returned when fOptsLen > 15 should", func() {
-			_, err := NewFCtrl(false, false, false, false, 16)
-			So(err, ShouldNotBeNil)
+		Convey("Given FOptsLen > 15", func() {
+			c.FOptsLen = 16
+			Convey("Then MarshalBinary returns an error", func() {
+				_, err := c.MarshalBinary()
+				So(err, ShouldNotBeNil)
+			})
 		})
-		Convey("ADR() == true when adr is set", func() {
-			fc, err := NewFCtrl(true, false, false, false, 0)
-			So(err, ShouldBeNil)
-			So(fc.ADR(), ShouldBeTrue)
-			So(fc.ADRACKReq(), ShouldBeFalse)
-			So(fc.ACK(), ShouldBeFalse)
-			So(fc.FPending(), ShouldBeFalse)
-		})
-		Convey("ADRACKReq() == true when adrAckReq is set", func() {
-			fc, err := NewFCtrl(false, true, false, false, 0)
-			So(err, ShouldBeNil)
-			So(fc.ADRACKReq(), ShouldBeTrue)
-			So(fc.ADR(), ShouldBeFalse)
-			So(fc.ACK(), ShouldBeFalse)
-			So(fc.FPending(), ShouldBeFalse)
 
-		})
-		Convey("ACK() == true when ack is set", func() {
-			fc, err := NewFCtrl(false, false, true, false, 0)
-			So(err, ShouldBeNil)
-			So(fc.ACK(), ShouldBeTrue)
-			So(fc.ADR(), ShouldBeFalse)
-			So(fc.ADRACKReq(), ShouldBeFalse)
-			So(fc.FPending(), ShouldBeFalse)
-		})
-		Convey("FPending() == true when fPending is set", func() {
-			fc, err := NewFCtrl(false, false, false, true, 0)
-			So(err, ShouldBeNil)
-			So(fc.FPending(), ShouldBeTrue)
-			So(fc.ADR(), ShouldBeFalse)
-			So(fc.ADRACKReq(), ShouldBeFalse)
-			So(fc.ACK(), ShouldBeFalse)
+		testTable := []struct {
+			ADR       bool
+			ADRACKReq bool
+			ACK       bool
+			FPending  bool
+			FOptsLen  uint8
+			Bytes     []byte
+		}{
+			{true, false, false, false, 2, []byte{130}},
+			{false, true, false, false, 3, []byte{67}},
+			{false, false, true, false, 4, []byte{36}},
+			{false, false, false, true, 5, []byte{21}},
+			{true, true, true, true, 6, []byte{246}},
+		}
 
-		})
-		Convey("FOptsLen() == 11, when fOptsLen is set to 11", func() {
-			fc, err := NewFCtrl(false, false, false, false, 11)
-			So(err, ShouldBeNil)
-			So(fc.ADR(), ShouldBeFalse)
-			So(fc.ADRACKReq(), ShouldBeFalse)
-			So(fc.ACK(), ShouldBeFalse)
-			So(fc.FPending(), ShouldBeFalse)
-			So(fc.FOptsLen(), ShouldEqual, 11)
-		})
+		for _, test := range testTable {
+			Convey(fmt.Sprintf("Given ADR=%v, ADRACKReq=%v, ACK=%v, FPending=%v, FOptsLen=%d", test.ADR, test.ADRACKReq, test.ACK, test.FPending, test.FOptsLen), func() {
+				c.ADR = test.ADR
+				c.ADRACKReq = test.ADRACKReq
+				c.ACK = test.ACK
+				c.FPending = test.FPending
+				c.FOptsLen = test.FOptsLen
+				Convey(fmt.Sprintf("Then MarshalBinary returns %v", test.Bytes), func() {
+					b, err := c.MarshalBinary()
+					So(err, ShouldBeNil)
+					So(b, ShouldResemble, test.Bytes)
+				})
+			})
+
+			Convey(fmt.Sprintf("Given the slice %v", test.Bytes), func() {
+				b := test.Bytes
+				Convey(fmt.Sprintf("Then UnmarshalBinary returns a FCtrl with ADR=%v, ADRACKReq=%v, ACK=%v, FPending=%v, FOptsLen=%d", test.ADR, test.ADRACKReq, test.ACK, test.FPending, test.FOptsLen), func() {
+					err := c.UnmarshalBinary(b)
+					So(err, ShouldBeNil)
+					So(c, ShouldResemble, FCtrl{ADR: test.ADR, ADRACKReq: test.ADRACKReq, ACK: test.ACK, FPending: test.FPending, FOptsLen: test.FOptsLen})
+				})
+			})
+		}
 	})
 }
