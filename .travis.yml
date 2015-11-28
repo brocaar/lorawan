@@ -7,6 +7,3 @@ install:
   - go get github.com/smartystreets/goconvey 
 
 script: go test -v
-
-sudo: false
-
