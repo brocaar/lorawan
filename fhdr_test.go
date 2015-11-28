@@ -6,6 +6,35 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestDevAddr(t *testing.T) {
+	Convey("Given an empty DevAddr", t, func() {
+		var a DevAddr
+		Convey("Then MarshalBinary returns []byte{0, 0, 0, 0}", func() {
+			b, err := a.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0, 0, 0, 0})
+		})
+
+		Convey("Given The DevAddr{1, 2, 3, 4}", func() {
+			a = DevAddr{1, 2, 3, 4}
+			Convey("Then MarshalBinary returns []byte{1, 2, 3, 4}", func() {
+				b, err := a.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{1, 2, 3, 4})
+			})
+		})
+
+		Convey("Given the slice []byte{1, 2, 3, 4}", func() {
+			b := []byte{1, 2, 3, 4}
+			Convey("Then UnmarshalBinary returns DevAddr{1, 2, 3, 4}", func() {
+				err := a.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+				So(a, ShouldResemble, DevAddr{1, 2, 3, 4})
+			})
+		})
+	})
+}
+
 func TestFCtrl(t *testing.T) {
 	Convey("Given an empty FCtrl", t, func() {
 		var fc FCtrl
