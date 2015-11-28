@@ -7,6 +7,54 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestMACCommand(t *testing.T) {
+	Convey("Given an empty MACCommand", t, func() {
+		var m MACCommand
+		Convey("Then MarshalBinary returns []byte{0}", func() {
+			b, err := m.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0})
+		})
+
+		Convey("Given CID=LinkCheckAns, Payload=LinkCheckAnsPayload(Margin=10, GwCnt=15)", func() {
+			m.CID = LinkCheckAns
+			m.Payload = &LinkCheckAnsPayload{Margin: 10, GwCnt: 15}
+			Convey("Then MarshalBinary returns []byte{2, 10, 15}", func() {
+				b, err := m.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{2, 10, 15})
+			})
+		})
+
+		Convey("Given the slice []byte{2, 10, 15}", func() {
+			b := []byte{2, 10, 15}
+			Convey("Given the direction is downlink", func() {
+				m.uplink = false
+				Convey("Then UnmarshalBinary should return a MACCommand with CID=LinkCheckAns", func() {
+					err := m.UnmarshalBinary(b)
+					So(err, ShouldBeNil)
+					So(m.CID, ShouldEqual, LinkCheckAns)
+					Convey("And Payload should be of type *LinkCheckAnsPayload", func() {
+						p, ok := m.Payload.(*LinkCheckAnsPayload)
+						So(ok, ShouldBeTrue)
+						Convey("And Margin=10, GwCnt=15", func() {
+							So(p, ShouldResemble, &LinkCheckAnsPayload{Margin: 10, GwCnt: 15})
+						})
+					})
+				})
+			})
+
+			Convey("Given the direction is uplink", func() {
+				m.uplink = true
+				Convey("Then UnmarshalBinary should return an error", func() {
+					err := m.UnmarshalBinary(b)
+					So(err, ShouldNotBeNil)
+				})
+			})
+		})
+	})
+}
+
 func TestLinkCheckAnsPayload(t *testing.T) {
 	Convey("Given a LinkCheckAnsPayload with Margin=123 and GwCnt=234", t, func() {
 		p := LinkCheckAnsPayload{Margin: 123, GwCnt: 234}

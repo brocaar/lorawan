@@ -1,6 +1,7 @@
 package lorawan
 
 import (
+	"encoding"
 	"encoding/binary"
 	"errors"
 )
@@ -28,6 +29,68 @@ const (
 	RXTimingSetupAns cid = 0x08
 	// 0x80 to 0xFF reserved for proprietary network command extensions
 )
+
+// Payload is the interface that every payload needs to implement.
+type Payload interface {
+	encoding.BinaryMarshaler
+	encoding.BinaryUnmarshaler
+}
+
+// MACCommand represents a MAC command with optional payload.
+type MACCommand struct {
+	CID     cid
+	Payload Payload
+	uplink  bool // true=uplink, false=downlink
+}
+
+// MarshalBinary marshals the object in binary form.
+func (m MACCommand) MarshalBinary() ([]byte, error) {
+	b := []byte{byte(m.CID)}
+	if m.Payload != nil {
+		p, err := m.Payload.MarshalBinary()
+		if err != nil {
+			return []byte{}, err
+		}
+		b = append(b, p...)
+	}
+	return b, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (m *MACCommand) UnmarshalBinary(data []byte) error {
+	if len(data) == 0 {
+		return errors.New("lorawan: at least 1 byte of data is expected")
+	}
+	m.CID = cid(data[0])
+	if len(data) > 1 {
+		switch {
+		case !m.uplink && m.CID == LinkCheckAns:
+			m.Payload = new(LinkCheckAnsPayload)
+		case !m.uplink && m.CID == LinkADRReq:
+			m.Payload = new(LinkADRReqPayload)
+		case m.uplink && m.CID == LinkADRAns:
+			m.Payload = new(LinkADRAnsPayload)
+		case !m.uplink && m.CID == DutyCycleReq:
+			m.Payload = new(DutyCycleReqPayload)
+		case !m.uplink && m.CID == RXParamSetupReq:
+			m.Payload = new(RX2SetupReqPayload)
+		case m.uplink && m.CID == RXParamSetupAns:
+			m.Payload = new(RX2SetupAnsPayload)
+		case m.uplink && m.CID == DevStatusAns:
+			m.Payload = new(DevStatusAnsPayload)
+		case !m.uplink && m.CID == NewChannelReq:
+			m.Payload = new(NewChannelReqPayload)
+		case m.uplink && m.CID == NewChannelAns:
+			m.Payload = new(NewChannelAnsPayload)
+		case !m.uplink && m.CID == RXTimingSetupReq:
+			m.Payload = new(RXTimingSetupReqPayload)
+		default:
+			return errors.New("lorawan: unknown MAC command or unexpected payload for MAC command")
+		}
+	}
+	// TODO handle proprietary payload
+	return m.Payload.UnmarshalBinary(data[1:])
+}
 
 // LinkCheckAnsPayload represents the LinkCheckAns payload.
 type LinkCheckAnsPayload struct {
