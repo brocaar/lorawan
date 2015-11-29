@@ -16,8 +16,8 @@ func TestDevAddr(t *testing.T) {
 			So(b, ShouldResemble, []byte{0, 0, 0, 0})
 		})
 
-		Convey("Given The DevAddr{1, 2, 3, 4}", func() {
-			a = DevAddr{1, 2, 3, 4}
+		Convey("Given The DevAddr=67305985", func() {
+			a = DevAddr(67305985)
 			Convey("Then MarshalBinary returns []byte{1, 2, 3, 4}", func() {
 				b, err := a.MarshalBinary()
 				So(err, ShouldBeNil)
@@ -27,10 +27,10 @@ func TestDevAddr(t *testing.T) {
 
 		Convey("Given the slice []byte{1, 2, 3, 4}", func() {
 			b := []byte{1, 2, 3, 4}
-			Convey("Then UnmarshalBinary returns DevAddr{1, 2, 3, 4}", func() {
+			Convey("Then UnmarshalBinary returns DevAddr=67305985", func() {
 				err := a.UnmarshalBinary(b)
 				So(err, ShouldBeNil)
-				So(a, ShouldResemble, DevAddr{1, 2, 3, 4})
+				So(a, ShouldResemble, DevAddr(67305985))
 			})
 		})
 	})
