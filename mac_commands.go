@@ -1,7 +1,6 @@
 package lorawan
 
 import (
-	"encoding"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -66,18 +65,16 @@ func getMACPayloadAndSize(uplink bool, c cid) (Payload, int, error) {
 	return v.payload.Clone(), v.size, nil
 }
 
-// Payload is the interface that every payload needs to implement.
-type Payload interface {
-	encoding.BinaryMarshaler
-	encoding.BinaryUnmarshaler
-	Clone() Payload
-}
-
 // MACCommand represents a MAC command with optional payload.
 type MACCommand struct {
 	CID     cid
 	Payload Payload
 	uplink  bool // true=uplink, false=downlink
+}
+
+// Clone returns a copy of the payload.
+func (m MACCommand) Clone() Payload {
+	return &m
 }
 
 // MarshalBinary marshals the object in binary form.
