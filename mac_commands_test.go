@@ -7,6 +7,30 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestGetMACPayloadAndSize(t *testing.T) {
+	Convey("Given uplink=false and CID=LinkADRReq", t, func() {
+		uplink := false
+		c := LinkADRReq
+		Convey("Then getMACPayloadAndSize returns LinkADRAnsPayload{} with size 4", func() {
+			p, s, err := getMACPayloadAndSize(uplink, c)
+			So(err, ShouldBeNil)
+			So(p, ShouldHaveSameTypeAs, &LinkADRAnsPayload{})
+			So(s, ShouldEqual, 4)
+		})
+	})
+
+	Convey("Given uplink=true and CID=LinkADRAns", t, func() {
+		uplink := true
+		c := LinkADRAns
+		Convey("Then getMACPayloadAndSize returns LinkADRAnsPayload{} with size 1", func() {
+			p, s, err := getMACPayloadAndSize(uplink, c)
+			So(err, ShouldBeNil)
+			So(p, ShouldHaveSameTypeAs, &LinkADRAnsPayload{})
+			So(s, ShouldEqual, 1)
+		})
+	})
+}
+
 func TestMACCommand(t *testing.T) {
 	Convey("Given an empty MACCommand", t, func() {
 		var m MACCommand

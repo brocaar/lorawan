@@ -80,7 +80,8 @@ type FHDR struct {
 func (h FHDR) MarshalBinary() ([]byte, error) {
 	var b []byte
 	var err error
-	opts := make([]byte, 0)
+	var opts []byte
+
 	for _, mac := range h.FOpts {
 		mac.uplink = h.uplink
 		b, err = mac.MarshalBinary()
@@ -113,6 +114,7 @@ func (h FHDR) MarshalBinary() ([]byte, error) {
 	return out, nil
 }
 
+// UnmarshalBinary decodes the object from binary form.
 func (h *FHDR) UnmarshalBinary(data []byte) error {
 	if len(data) < 7 {
 		return errors.New("lorawan: at least 7 bytes are expected")
@@ -129,31 +131,11 @@ func (h *FHDR) UnmarshalBinary(data []byte) error {
 	if len(data) > 7 {
 		var pLen int
 		for i := 0; i < len(data[7:]); i++ {
-			switch {
-			case !h.uplink && cid(data[7+i]) == LinkCheckAns:
-				pLen = 2
-			case !h.uplink && cid(data[7+i]) == LinkADRReq:
-				pLen = 4
-			case h.uplink && cid(data[7+i]) == LinkADRAns:
-				pLen = 1
-			case !h.uplink && cid(data[7+i]) == DutyCycleReq:
-				pLen = 1
-			case !h.uplink && cid(data[7+i]) == RXParamSetupReq:
-				pLen = 4
-			case h.uplink && cid(data[7+i]) == RXParamSetupAns:
-				pLen = 1
-			case h.uplink && cid(data[7+i]) == DevStatusAns:
-				pLen = 2
-			case !h.uplink && cid(data[7+i]) == NewChannelReq:
-				pLen = 4
-			case h.uplink && cid(data[7+i]) == NewChannelAns:
-				pLen = 1
-			case !h.uplink && cid(data[7+i]) == RXTimingSetupReq:
-				pLen = 1
-			default:
-				pLen = 0 // the MAC command does not have a payload
+			if _, s, err := getMACPayloadAndSize(h.uplink, cid(data[7+i])); err != nil {
+				pLen = 0
+			} else {
+				pLen = s
 			}
-			// TODO handle proprietary payload
 
 			// check if the remaining bytes are >= CID byte + payload size
 			if len(data[7+i:]) < pLen+1 {
