@@ -10,10 +10,11 @@ type MACPayload struct {
 	uplink     bool // used for binary (un)marshaling
 }
 
+// MarshalBinary marshals the object in binary form.
 func (p MACPayload) MarshalBinary() ([]byte, error) {
 	var b []byte
+	var out []byte
 	var err error
-	out := make([]byte, 0)
 
 	p.FHDR.uplink = p.uplink
 	b, err = p.FHDR.MarshalBinary()
@@ -49,6 +50,7 @@ func (p MACPayload) MarshalBinary() ([]byte, error) {
 	return out, nil
 }
 
+// UnmarshalBinary decodes the object from binary form.
 func (p *MACPayload) UnmarshalBinary(data []byte) error {
 	// check that there are enough bytes to decode a minimal FHDR
 	if len(data) < 7 {
