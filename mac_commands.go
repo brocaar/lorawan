@@ -102,8 +102,11 @@ func (m *MACCommand) UnmarshalBinary(data []byte) error {
 			return err
 		}
 		m.Payload = p
+		if err := m.Payload.UnmarshalBinary(data[1:]); err != nil {
+			return err
+		}
 	}
-	return m.Payload.UnmarshalBinary(data[1:])
+	return nil
 }
 
 // LinkCheckAnsPayload represents the LinkCheckAns payload.
