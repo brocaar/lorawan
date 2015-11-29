@@ -464,7 +464,7 @@ func (p DevStatusAnsPayload) MarshalBinary() ([]byte, error) {
 
 // UnmarshalBinary decodes the object from binary form.
 func (p *DevStatusAnsPayload) UnmarshalBinary(data []byte) error {
-	if len(data) != 1 {
+	if len(data) != 2 {
 		return errors.New("lorawan: 2 bytes of data are expected")
 	}
 	p.Battery = data[0]
