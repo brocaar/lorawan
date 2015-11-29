@@ -1,6 +1,7 @@
 package lorawan
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -46,7 +47,7 @@ func TestFCtrl(t *testing.T) {
 		})
 
 		Convey("Given FOptsLen > 15", func() {
-			c.FOptsLen = 16
+			c.fOptsLen = 16
 			Convey("Then MarshalBinary returns an error", func() {
 				_, err := c.MarshalBinary()
 				So(err, ShouldNotBeNil)
@@ -69,12 +70,12 @@ func TestFCtrl(t *testing.T) {
 		}
 
 		for _, test := range testTable {
-			Convey(fmt.Sprintf("Given ADR=%v, ADRACKReq=%v, ACK=%v, FPending=%v, FOptsLen=%d", test.ADR, test.ADRACKReq, test.ACK, test.FPending, test.FOptsLen), func() {
+			Convey(fmt.Sprintf("Given ADR=%v, ADRACKReq=%v, ACK=%v, FPending=%v, fOptsLen=%d", test.ADR, test.ADRACKReq, test.ACK, test.FPending, test.FOptsLen), func() {
 				c.ADR = test.ADR
 				c.ADRACKReq = test.ADRACKReq
 				c.ACK = test.ACK
 				c.FPending = test.FPending
-				c.FOptsLen = test.FOptsLen
+				c.fOptsLen = test.FOptsLen
 				Convey(fmt.Sprintf("Then MarshalBinary returns %v", test.Bytes), func() {
 					b, err := c.MarshalBinary()
 					So(err, ShouldBeNil)
@@ -84,12 +85,98 @@ func TestFCtrl(t *testing.T) {
 
 			Convey(fmt.Sprintf("Given the slice %v", test.Bytes), func() {
 				b := test.Bytes
-				Convey(fmt.Sprintf("Then UnmarshalBinary returns a FCtrl with ADR=%v, ADRACKReq=%v, ACK=%v, FPending=%v, FOptsLen=%d", test.ADR, test.ADRACKReq, test.ACK, test.FPending, test.FOptsLen), func() {
+				Convey(fmt.Sprintf("Then UnmarshalBinary returns a FCtrl with ADR=%v, ADRACKReq=%v, ACK=%v, FPending=%v, fOptsLen=%d", test.ADR, test.ADRACKReq, test.ACK, test.FPending, test.FOptsLen), func() {
 					err := c.UnmarshalBinary(b)
 					So(err, ShouldBeNil)
-					So(c, ShouldResemble, FCtrl{ADR: test.ADR, ADRACKReq: test.ADRACKReq, ACK: test.ACK, FPending: test.FPending, FOptsLen: test.FOptsLen})
+					So(c, ShouldResemble, FCtrl{ADR: test.ADR, ADRACKReq: test.ADRACKReq, ACK: test.ACK, FPending: test.FPending, fOptsLen: test.FOptsLen})
 				})
 			})
 		}
+	})
+}
+
+func TestFHDR(t *testing.T) {
+	Convey("Given an empty FHDR", t, func() {
+		var h FHDR
+		Convey("Then MarshalBinary returns []byte{0, 0, 0, 0, 0, 0, 0}", func() {
+			b, err := h.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0, 0, 0, 0, 0, 0, 0})
+		})
+
+		Convey("Given uplink=false, DevAddr=67305985, FCtrl=FCtrl(ADR=true, ADRACKReq=false, ACK=true, FPending=true), Fcnt=5, FOpts=[]MACCommand{(CID=LinkCheckAns, Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9))}", func() {
+			h.uplink = false
+			h.DevAddr = DevAddr(67305985)
+			h.FCtrl = FCtrl{ADR: true, ADRACKReq: false, ACK: true, FPending: true}
+			h.Fcnt = 5
+			h.FOpts = []MACCommand{
+				{CID: LinkCheckAns, Payload: &LinkCheckAnsPayload{Margin: 7, GwCnt: 9}},
+			}
+			Convey("Then MarshalBinary returns []byte{1, 2, 3, 4, 179, 5, 0, 2, 7, 9}", func() {
+				b, err := h.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{1, 2, 3, 4, 179, 5, 0, 2, 7, 9})
+			})
+		})
+
+		Convey("Given FOpts contains 5 times MACCommand{(CID=LinkCheckAns, Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9))}", func() {
+			for i := 0; i < 5; i++ {
+				h.FOpts = append(h.FOpts, MACCommand{CID: LinkCheckAns, Payload: &LinkCheckAnsPayload{Margin: 7, GwCnt: 9}})
+			}
+			Convey("Then MarshalBinary does not return an error", func() {
+				_, err := h.MarshalBinary()
+				So(err, ShouldBeNil)
+			})
+		})
+
+		Convey("Given FOpts contains 6 times MACCommand{(CID=LinkCheckAns, Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9))}", func() {
+			for i := 0; i < 6; i++ {
+				h.FOpts = append(h.FOpts, MACCommand{CID: LinkCheckAns, Payload: &LinkCheckAnsPayload{Margin: 7, GwCnt: 9}})
+			}
+			Convey("Then MarshalBinary does return an error", func() {
+				_, err := h.MarshalBinary()
+				So(err, ShouldResemble, errors.New("lorawan: max number of FOpts bytes is 15"))
+			})
+		})
+
+		Convey("Given uplink=false and slice []byte{1, 2, 3, 4, 179, 5, 0, 2, 7, 9}", func() {
+			b := []byte{1, 2, 3, 4, 179, 5, 0, 2, 7, 9}
+			h.uplink = false
+			Convey("Then UnmarshalBinary does not return an error", func() {
+				err := h.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+
+				Convey("Then DevAddr=67305985", func() {
+					So(h.DevAddr, ShouldEqual, DevAddr(67305985))
+				})
+
+				Convey("Then FCtrl=FCtrl(ADR=true, ADRACKReq=false, ACK=true, FPending=true, fOptsLen=3)", func() {
+					So(h.FCtrl, ShouldResemble, FCtrl{ADR: true, ADRACKReq: false, ACK: true, FPending: true, fOptsLen: 3})
+				})
+
+				Convey("Then len(FOpts)=1", func() {
+					So(h.FOpts, ShouldHaveLength, 1)
+					Convey("Then CID=LinkCheckAns", func() {
+						So(h.FOpts[0].CID, ShouldEqual, LinkCheckAns)
+					})
+
+				})
+
+				Convey("Then Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9)", func() {
+					p, ok := h.FOpts[0].Payload.(*LinkCheckAnsPayload)
+					So(ok, ShouldBeTrue)
+					So(p, ShouldResemble, &LinkCheckAnsPayload{Margin: 7, GwCnt: 9})
+				})
+			})
+		})
+
+		Convey("Given uplink=false and slice []byte{1, 2, 3, 4, 179, 5, 0, 2, 7}", func() {
+			h.uplink = false
+			b := []byte{1, 2, 3, 4, 179, 5, 0, 2, 7}
+			Convey("Then UnmarshalBinary returns an error", func() {
+				err := h.UnmarshalBinary(b)
+				So(err, ShouldResemble, errors.New("lorawan: not enough remaining bytes"))
+			})
+		})
 	})
 }
