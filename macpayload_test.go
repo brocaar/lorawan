@@ -47,8 +47,8 @@ func TestMACPayload(t *testing.T) {
 
 			Convey("Given the key []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
 				key := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
-				Convey("Then EncryptPayload does not return an error", func() {
-					err := p.EncryptPayload(key)
+				Convey("Then EncryptFRMPayload does not return an error", func() {
+					err := p.EncryptFRMPayload(key)
 					So(err, ShouldBeNil)
 
 					Convey("Then FRMPayload contains one DataPayload not equal to DataPayload(Bytes=[]byte{5, 6, 7})", func() {
@@ -58,8 +58,8 @@ func TestMACPayload(t *testing.T) {
 						So(data.Bytes, ShouldNotResemble, []byte{5, 6, 7})
 					})
 
-					Convey("Then DecryptPayload does not return an error", func() {
-						err := p.DecryptPayload(key)
+					Convey("Then DecryptFRMPayload does not return an error", func() {
+						err := p.DecryptFRMPayload(key)
 						So(err, ShouldBeNil)
 
 						Convey("Then FRMPayload contains one DataPayload(Bytes=[]byte{5, 6, 7})", func() {

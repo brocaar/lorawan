@@ -102,8 +102,8 @@ func (p MACPayload) MarshalBinary() ([]byte, error) {
 	return out, nil
 }
 
-// EncryptPayload encrypts the FRMPayload with the given key.
-func (p *MACPayload) EncryptPayload(key []byte) error {
+// EncryptFRMPayload encrypts the FRMPayload with the given key.
+func (p *MACPayload) EncryptFRMPayload(key []byte) error {
 	if len(p.FRMPayload) == 0 {
 		return errors.New("lorawan: nothing to encrypt")
 	}
@@ -150,9 +150,9 @@ func (p *MACPayload) EncryptPayload(key []byte) error {
 	return nil
 }
 
-// DecryptPayload decrypts the FRMPayload with the given key.
-func (p *MACPayload) DecryptPayload(key []byte) error {
-	if err := p.EncryptPayload(key); err != nil {
+// DecryptFRMPayload decrypts the FRMPayload with the given key.
+func (p *MACPayload) DecryptFRMPayload(key []byte) error {
+	if err := p.EncryptFRMPayload(key); err != nil {
 		return err
 	}
 	if len(p.FRMPayload) != 1 {
