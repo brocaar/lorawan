@@ -10,6 +10,64 @@ type MACPayload struct {
 	uplink     bool // used for binary (un)marshaling
 }
 
+func (p MACPayload) marshalPayload() ([]byte, error) {
+	var out []byte
+	var b []byte
+	var err error
+	for _, fp := range p.FRMPayload {
+		if mac, ok := fp.(*MACCommand); ok {
+			if *p.FPort != 0 {
+				return []byte{}, errors.New("lorawan: a MAC command is only allowed when FPort=0")
+			}
+			mac.uplink = p.uplink
+			b, err = mac.MarshalBinary()
+		} else {
+			b, err = fp.MarshalBinary()
+		}
+		if err != nil {
+			return []byte{}, err
+		}
+		out = append(out, b...)
+	}
+	return out, nil
+}
+
+func (p *MACPayload) unmarshalPayload(data []byte) error {
+	if *p.FPort == 0 {
+		// payload contains MAC commands
+		var pLen int
+		for i := 0; i < len(data); i++ {
+			if _, s, err := getMACPayloadAndSize(p.uplink, cid(data[i])); err != nil {
+				pLen = 0
+			} else {
+				pLen = s
+			}
+
+			// check if the remaining bytes are >= CID byte + payload size
+			if len(data[i:]) < pLen+1 {
+				return errors.New("lorawan: not enough remaining bytes")
+			}
+
+			mc := &MACCommand{uplink: p.uplink}
+			if err := mc.UnmarshalBinary(data[i : i+1+pLen]); err != nil {
+				return err
+			}
+			p.FRMPayload = append(p.FRMPayload, mc)
+
+			// go to the next command (skip the payload bytes of the current command)
+			i = i + pLen
+		}
+
+	} else {
+		// payload contains user defined data
+		p.FRMPayload = []Payload{&DataPayload{}}
+		if err := p.FRMPayload[0].UnmarshalBinary(data); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // MarshalBinary marshals the object in binary form.
 func (p MACPayload) MarshalBinary() ([]byte, error) {
 	var b []byte
@@ -31,21 +89,11 @@ func (p MACPayload) MarshalBinary() ([]byte, error) {
 	}
 
 	out = append(out, *p.FPort)
-	for _, fp := range p.FRMPayload {
-		if mac, ok := fp.(*MACCommand); ok {
-			if *p.FPort != 0 {
-				return []byte{}, errors.New("lorawan: a MAC command is only allowed when FPort=0")
-			}
-			mac.uplink = p.uplink
-			b, err = mac.MarshalBinary()
-		} else {
-			b, err = fp.MarshalBinary()
-		}
-		if err != nil {
-			return []byte{}, err
-		}
-		out = append(out, b...)
+
+	if b, err = p.marshalPayload(); err != nil {
+		return []byte{}, err
 	}
+	out = append(out, b...)
 
 	return out, nil
 }
@@ -82,39 +130,8 @@ func (p *MACPayload) UnmarshalBinary(data []byte) error {
 
 	fPort := uint8(data[7+p.FHDR.FCtrl.fOptsLen])
 	p.FPort = &fPort
-	payload := data[7+p.FHDR.FCtrl.fOptsLen+1:]
-
-	if *p.FPort == 0 {
-		// payload contains MAC commands
-		var pLen int
-		for i := 0; i < len(payload); i++ {
-			if _, s, err := getMACPayloadAndSize(p.uplink, cid(payload[i])); err != nil {
-				pLen = 0
-			} else {
-				pLen = s
-			}
-
-			// check if the remaining bytes are >= CID byte + payload size
-			if len(payload[i:]) < pLen+1 {
-				return errors.New("lorawan: not enough remaining bytes")
-			}
-
-			mc := &MACCommand{uplink: p.uplink}
-			if err := mc.UnmarshalBinary(payload[i : i+1+pLen]); err != nil {
-				return err
-			}
-			p.FRMPayload = append(p.FRMPayload, mc)
-
-			// go to the next command (skip the payload bytes of the current command)
-			i = i + pLen
-		}
-
-	} else {
-		// payload contains user defined data
-		p.FRMPayload = []Payload{&DataPayload{}}
-		if err := p.FRMPayload[0].UnmarshalBinary(payload); err != nil {
-			return err
-		}
+	if err := p.unmarshalPayload(data[7+p.FHDR.FCtrl.fOptsLen+1:]); err != nil {
+		return err
 	}
 
 	return nil
