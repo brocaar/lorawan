@@ -96,8 +96,3 @@ func (p *PHYPayload) UnmarshalBinary(data []byte) error {
 	}
 	return nil
 }
-
-// CalculateMIC calculates and returns the integrity code for the payload.
-func (p PHYPayload) CalculateMIC() [4]byte {
-	panic("not implemented")
-}
