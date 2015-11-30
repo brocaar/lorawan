@@ -33,7 +33,7 @@ func TestMACPayload(t *testing.T) {
 			})
 		})
 
-		Convey("Given FHDR(DevAddr=67305985), FPort=1, FRMPayload=[]Payload{DataPayload(Bytes={}byte{5, 6, 7})}", func() {
+		Convey("Given FHDR(DevAddr=67305985), FPort=1, FRMPayload=[]Payload{DataPayload(Bytes=[]byte{5, 6, 7})}", func() {
 			fPort := uint8(1)
 			p.FHDR.DevAddr = DevAddr(67305985)
 			p.FPort = &fPort
@@ -43,6 +43,33 @@ func TestMACPayload(t *testing.T) {
 				b, err := p.MarshalBinary()
 				So(err, ShouldBeNil)
 				So(b, ShouldResemble, []byte{1, 2, 3, 4, 0, 0, 0, 1, 5, 6, 7})
+			})
+
+			Convey("Given the key []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
+				key := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+				Convey("Then EncryptPayload does not return an error", func() {
+					err := p.EncryptPayload(key)
+					So(err, ShouldBeNil)
+
+					Convey("Then FRMPayload contains one DataPayload not equal to DataPayload(Bytes=[]byte{5, 6, 7})", func() {
+						So(p.FRMPayload, ShouldHaveLength, 1)
+						data, ok := p.FRMPayload[0].(*DataPayload)
+						So(ok, ShouldBeTrue)
+						So(data.Bytes, ShouldNotResemble, []byte{5, 6, 7})
+					})
+
+					Convey("Then DecryptPayload does not return an error", func() {
+						err := p.DecryptPayload(key)
+						So(err, ShouldBeNil)
+
+						Convey("Then FRMPayload contains one DataPayload(Bytes=[]byte{5, 6, 7})", func() {
+							So(p.FRMPayload, ShouldHaveLength, 1)
+							data, ok := p.FRMPayload[0].(*DataPayload)
+							So(ok, ShouldBeTrue)
+							So(data.Bytes, ShouldResemble, []byte{5, 6, 7})
+						})
+					})
+				})
 			})
 		})
 

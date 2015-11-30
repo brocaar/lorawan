@@ -1,6 +1,10 @@
 package lorawan
 
-import "errors"
+import (
+	"crypto/aes"
+	"encoding/binary"
+	"errors"
+)
 
 // MACPayload represents the MAC payload.
 type MACPayload struct {
@@ -96,6 +100,70 @@ func (p MACPayload) MarshalBinary() ([]byte, error) {
 	out = append(out, b...)
 
 	return out, nil
+}
+
+// EncryptPayload encrypts the FRMPayload with the given key.
+func (p *MACPayload) EncryptPayload(key []byte) error {
+	if len(p.FRMPayload) == 0 {
+		return errors.New("lorawan: nothing to encrypt")
+	}
+
+	data, err := p.marshalPayload()
+	if err != nil {
+		return err
+	}
+	pLen := len(data)
+	if pLen%16 != 0 {
+		// append with empty bytes so that len(data) is a multiple of 16
+		data = append(data, make([]byte, 16-(pLen%16))...)
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return err
+	}
+	if block.BlockSize() != 16 {
+		return errors.New("lorawan: block size of 16 was expected")
+	}
+
+	s := make([]byte, 16)
+	a := make([]byte, 16)
+	a[0] = 0x01
+	if p.uplink {
+		a[5] = 0x01
+	}
+	binary.LittleEndian.PutUint32(a[6:10], uint32(p.FHDR.DevAddr))
+	binary.LittleEndian.PutUint32(a[10:14], uint32(p.FHDR.Fcnt))
+
+	for i := 0; i < len(data)/16; i++ {
+		a[15] = byte(i + 1)
+		block.Encrypt(s, a)
+
+		for j := 0; j < len(s); j++ {
+			data[i*16+j] = data[i*16+j] ^ s[j]
+		}
+	}
+
+	// store the encrypted data in a DataPayload
+	p.FRMPayload = []Payload{&DataPayload{Bytes: data[0:pLen]}}
+
+	return nil
+}
+
+// DecryptPayload decrypts the FRMPayload with the given key.
+func (p *MACPayload) DecryptPayload(key []byte) error {
+	if err := p.EncryptPayload(key); err != nil {
+		return err
+	}
+	if len(p.FRMPayload) != 1 {
+		return errors.New("lorawan: a single FRMPayload was expected after decrypting")
+	}
+	dp, ok := p.FRMPayload[0].(*DataPayload)
+	if !ok {
+		return errors.New("lorawan: a DataPayload was expected")
+	}
+
+	return p.unmarshalPayload(dp.Bytes)
 }
 
 // UnmarshalBinary decodes the object from binary form.
