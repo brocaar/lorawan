@@ -9,7 +9,7 @@ type Payload interface {
 	Clone() Payload
 }
 
-// DataPayload represents
+// DataPayload represents a slice of bytes.
 type DataPayload struct {
 	Bytes []byte
 }
