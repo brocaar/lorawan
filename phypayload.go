@@ -53,7 +53,7 @@ func (h *MHDR) UnmarshalBinary(data []byte) error {
 // PHYPayload represents the physical payload.
 type PHYPayload struct {
 	MHDR       MHDR
-	MACPayload MACPayload
+	MACPayload Payload
 	MIC        [4]byte
 	uplink     bool
 }
@@ -65,6 +65,15 @@ func New(uplink bool) PHYPayload {
 
 // calculateMIC calculates and returns the MIC.
 func (p PHYPayload) calculateMIC(nwkSKey []byte) ([]byte, error) {
+	if p.MACPayload == nil {
+		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
+	}
+
+	macPayload, ok := p.MACPayload.(*MACPayload)
+	if !ok {
+		return []byte{}, errors.New("lorawan: MACPayload should be of type *MACPayload")
+	}
+
 	var b []byte
 	var err error
 	var micBytes []byte
@@ -75,7 +84,7 @@ func (p PHYPayload) calculateMIC(nwkSKey []byte) ([]byte, error) {
 	}
 	micBytes = append(micBytes, b...)
 
-	b, err = p.MACPayload.MarshalBinary()
+	b, err = macPayload.MarshalBinary()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -86,8 +95,8 @@ func (p PHYPayload) calculateMIC(nwkSKey []byte) ([]byte, error) {
 	if p.uplink {
 		b0[5] = 1
 	}
-	binary.LittleEndian.PutUint32(b0[6:10], uint32(p.MACPayload.FHDR.DevAddr))
-	binary.LittleEndian.PutUint32(b0[10:14], uint32(p.MACPayload.FHDR.Fcnt))
+	binary.LittleEndian.PutUint32(b0[6:10], uint32(macPayload.FHDR.DevAddr))
+	binary.LittleEndian.PutUint32(b0[10:14], uint32(macPayload.FHDR.Fcnt))
 	b0[15] = byte(len(micBytes))
 
 	hash, err := cmac.New(nwkSKey)
@@ -139,6 +148,14 @@ func (p PHYPayload) ValidateMIC(nwkSKey []byte) (bool, error) {
 
 // MarshalBinary marshals the object in binary form.
 func (p PHYPayload) MarshalBinary() ([]byte, error) {
+	if p.MACPayload == nil {
+		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
+	}
+
+	if mpl, ok := p.MACPayload.(*MACPayload); ok {
+		mpl.uplink = p.uplink
+	}
+
 	var out []byte
 	var b []byte
 	var err error
@@ -148,7 +165,6 @@ func (p PHYPayload) MarshalBinary() ([]byte, error) {
 	}
 	out = append(out, b...)
 
-	p.MACPayload.uplink = p.uplink
 	if b, err = p.MACPayload.MarshalBinary(); err != nil {
 		return []byte{}, err
 	}
@@ -163,10 +179,17 @@ func (p *PHYPayload) UnmarshalBinary(data []byte) error {
 		return errors.New("lorawan: at least 12 bytes needed to decode PHYPayload")
 	}
 
+	if p.MACPayload == nil {
+		return errors.New("lorawan: MACPayload should not be empty")
+	}
+
+	if mpl, ok := p.MACPayload.(*MACPayload); ok {
+		mpl.uplink = p.uplink
+	}
+
 	if err := p.MHDR.UnmarshalBinary(data[0:1]); err != nil {
 		return err
 	}
-	p.MACPayload.uplink = p.uplink
 	if err := p.MACPayload.UnmarshalBinary(data[1 : len(data)-4]); err != nil {
 		return err
 	}

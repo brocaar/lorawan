@@ -39,8 +39,9 @@ func TestMHDR(t *testing.T) {
 }
 
 func TestPHYPayload(t *testing.T) {
-	Convey("Given an empty PHYPayload", t, func() {
-		var p PHYPayload
+	Convey("Given an empty PHYPayload with empty MACPayload", t, func() {
+		p := PHYPayload{MACPayload: &MACPayload{}}
+
 		Convey("Then MarshalBinary returns []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}", func() {
 			b, err := p.MarshalBinary()
 			So(err, ShouldBeNil)
@@ -50,7 +51,11 @@ func TestPHYPayload(t *testing.T) {
 		Convey("Given MHDR(MType=JoinAccept, Major=LoRaWANR1), MACPayload(FHDR(DevAddr=67305985)), MIC=[4]byte{4, 3, 2, 1}", func() {
 			p.MHDR.MType = JoinAccept
 			p.MHDR.Major = LoRaWANR1
-			p.MACPayload.FHDR.DevAddr = DevAddr(67305985)
+			p.MACPayload = &MACPayload{
+				FHDR: FHDR{
+					DevAddr: DevAddr(67305985),
+				},
+			}
 			p.MIC = [4]byte{4, 3, 2, 1}
 
 			Convey("Given the NwkSKey []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
@@ -106,7 +111,7 @@ func TestPHYPayload(t *testing.T) {
 					So(p.MHDR, ShouldResemble, MHDR{MType: JoinAccept, Major: LoRaWANR1})
 				})
 				Convey("Then MACPayload(FHDR(DevAddr=67305985))", func() {
-					So(p.MACPayload, ShouldResemble, MACPayload{FHDR: FHDR{DevAddr: DevAddr(67305985)}})
+					So(p.MACPayload, ShouldResemble, &MACPayload{FHDR: FHDR{DevAddr: DevAddr(67305985)}})
 				})
 				Convey("Then MIC=[4]byte{4, 3, 2, 1}", func() {
 					So(p.MIC, ShouldResemble, [4]byte{4, 3, 2, 1})
@@ -118,17 +123,17 @@ func TestPHYPayload(t *testing.T) {
 
 func ExampleNew() {
 	uplink := true
-
 	nwkSKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	appSKey := []byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
 
-	pl := New(uplink)
+	payload := New(uplink)
 
-	pl.MHDR = MHDR{
+	payload.MHDR = MHDR{
 		MType: ConfirmedDataUp,
 		Major: LoRaWANR1,
 	}
-	pl.MACPayload = MACPayload{
+
+	macPayload := &MACPayload{
 		FHDR: FHDR{
 			DevAddr: DevAddr(67305985),
 			FCtrl: FCtrl{
@@ -142,15 +147,17 @@ func ExampleNew() {
 		FPort:      10,
 		FRMPayload: []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}},
 	}
-
-	if err := pl.SetMIC(nwkSKey); err != nil {
-		panic(err)
-	}
-	if err := pl.MACPayload.EncryptFRMPayload(appSKey); err != nil {
+	if err := macPayload.EncryptFRMPayload(appSKey); err != nil {
 		panic(err)
 	}
 
-	bytes, err := pl.MarshalBinary()
+	payload.MACPayload = macPayload
+
+	if err := payload.SetMIC(nwkSKey); err != nil {
+		panic(err)
+	}
+
+	bytes, err := payload.MarshalBinary()
 	if err != nil {
 		panic(err)
 	}
@@ -158,5 +165,5 @@ func ExampleNew() {
 	fmt.Println(bytes)
 
 	// Output:
-	// [128 1 2 3 4 0 0 0 10 59 85 197 241 99 239 222 68]
+	// [128 1 2 3 4 0 0 0 10 59 85 197 241 77 4 69 208]
 }
