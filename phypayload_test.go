@@ -2,6 +2,7 @@ package lorawan
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -113,4 +114,50 @@ func TestPHYPayload(t *testing.T) {
 			})
 		})
 	})
+}
+
+func ExampleNew() {
+	uplink := true
+	fPort := uint8(10)
+
+	nwkSKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+	appSKey := []byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
+
+	pl := New(uplink)
+
+	pl.MHDR = MHDR{
+		MType: ConfirmedDataUp,
+		Major: LoRaWANR1,
+	}
+	pl.MACPayload = MACPayload{
+		FHDR: FHDR{
+			DevAddr: DevAddr(67305985),
+			FCtrl: FCtrl{
+				ADR:       false,
+				ADRACKReq: false,
+				ACK:       false,
+			},
+			Fcnt:  0,
+			FOpts: []MACCommand{},
+		},
+		FPort:      &fPort, // a pointer is used since FPort might be nil
+		FRMPayload: []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}},
+	}
+
+	if err := pl.SetMIC(nwkSKey); err != nil {
+		panic(err)
+	}
+	if err := pl.MACPayload.EncryptFRMPayload(appSKey); err != nil {
+		panic(err)
+	}
+
+	bytes, err := pl.MarshalBinary()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(bytes)
+
+	// Output:
+	// [128 1 2 3 4 0 0 0 10 59 85 197 241 99 239 222 68]
 }
