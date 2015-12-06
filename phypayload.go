@@ -67,7 +67,7 @@ func New(uplink bool) PHYPayload {
 func (p PHYPayload) calculateMIC(nwkSKey []byte) ([]byte, error) {
 	var b []byte
 	var err error
-	micBytes := make([]byte, 0)
+	var micBytes []byte
 
 	b, err = p.MHDR.MarshalBinary()
 	if err != nil {
