@@ -4,6 +4,6 @@ go:
   - 1.5
 
 install:
-  - go get github.com/smartystreets/goconvey 
+  - go get -t ./...
 
 script: go test -v
