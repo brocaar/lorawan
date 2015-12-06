@@ -9,7 +9,7 @@ import (
 // MACPayload represents the MAC payload.
 type MACPayload struct {
 	FHDR       FHDR
-	FPort      *uint8
+	FPort      uint8 // ignored when FRMPayload is empty
 	FRMPayload []Payload
 	uplink     bool // used for binary (un)marshaling
 }
@@ -20,7 +20,7 @@ func (p MACPayload) marshalPayload() ([]byte, error) {
 	var err error
 	for _, fp := range p.FRMPayload {
 		if mac, ok := fp.(*MACCommand); ok {
-			if *p.FPort != 0 {
+			if p.FPort != 0 {
 				return []byte{}, errors.New("lorawan: a MAC command is only allowed when FPort=0")
 			}
 			mac.uplink = p.uplink
@@ -37,7 +37,7 @@ func (p MACPayload) marshalPayload() ([]byte, error) {
 }
 
 func (p *MACPayload) unmarshalPayload(data []byte) error {
-	if *p.FPort == 0 {
+	if p.FPort == 0 {
 		// payload contains MAC commands
 		var pLen int
 		for i := 0; i < len(data); i++ {
@@ -85,14 +85,12 @@ func (p MACPayload) MarshalBinary() ([]byte, error) {
 	}
 	out = append(out, b...)
 
+	// ignore FPort and FRMPayload when FRMPayload is empty
 	if len(p.FRMPayload) == 0 {
-		if p.FPort != nil {
-			return []byte{}, errors.New("lorawan: FPort should not be set when FRMPayload is empty")
-		}
 		return out, nil
 	}
 
-	out = append(out, *p.FPort)
+	out = append(out, p.FPort)
 
 	if b, err = p.marshalPayload(); err != nil {
 		return []byte{}, err
@@ -196,8 +194,7 @@ func (p *MACPayload) UnmarshalBinary(data []byte) error {
 		return nil
 	}
 
-	fPort := uint8(data[7+p.FHDR.FCtrl.fOptsLen])
-	p.FPort = &fPort
+	p.FPort = uint8(data[7+p.FHDR.FCtrl.fOptsLen])
 	if err := p.unmarshalPayload(data[7+p.FHDR.FCtrl.fOptsLen+1:]); err != nil {
 		return err
 	}

@@ -17,12 +17,7 @@ func TestMACPayload(t *testing.T) {
 		})
 
 		Convey("Given FPort=1", func() {
-			fPort := uint8(1)
-			p.FPort = &fPort
-			Convey("Then MarshalBinary returns an error", func() {
-				_, err := p.MarshalBinary()
-				So(err, ShouldResemble, errors.New("lorawan: FPort should not be set when FRMPayload is empty"))
-			})
+			p.FPort = 1
 
 			Convey("Given FRMPayload contains MACCommand(CID=LinkCheckReq)", func() {
 				p.FRMPayload = []Payload{&MACCommand{CID: LinkCheckReq}}
@@ -34,9 +29,8 @@ func TestMACPayload(t *testing.T) {
 		})
 
 		Convey("Given FHDR(DevAddr=67305985), FPort=1, FRMPayload=[]Payload{DataPayload(Bytes=[]byte{5, 6, 7})}", func() {
-			fPort := uint8(1)
 			p.FHDR.DevAddr = DevAddr(67305985)
-			p.FPort = &fPort
+			p.FPort = 1
 			p.FRMPayload = []Payload{&DataPayload{[]byte{5, 6, 7}}}
 
 			Convey("Then MarshalBinary returns []byte{1, 2, 3, 4, 0, 0, 0, 1, 5, 6, 7}", func() {
@@ -74,10 +68,9 @@ func TestMACPayload(t *testing.T) {
 		})
 
 		Convey("Given uplink=true, FHDR(DevAddr=67305985), FPort=0, FRMPayload=[]Payload{MACCommand{CID: DevStatusAns, Payload: DevStatusAnsPayload(Battery=10, Margin=20)}}", func() {
-			fPort := uint8(0)
 			p.uplink = true
 			p.FHDR.DevAddr = DevAddr(67305985)
-			p.FPort = &fPort
+			p.FPort = 0
 			p.FRMPayload = []Payload{&MACCommand{CID: DevStatusAns, Payload: &DevStatusAnsPayload{Battery: 10, Margin: 20}}}
 
 			Convey("Then MarshalBinary returns []byte{1, 2, 3, 4, 0, 0, 0, 0, 6, 10, 20}", func() {
@@ -132,7 +125,7 @@ func TestMACPayload(t *testing.T) {
 					So(p.FHDR.DevAddr, ShouldEqual, DevAddr(67305985))
 				})
 				Convey("Then FPort=0", func() {
-					So(*p.FPort, ShouldEqual, 0)
+					So(p.FPort, ShouldEqual, 0)
 				})
 				Convey("Then FRMPayload=[]Payload{MACCommand{CID: DevStatusAns, Payload: DevStatusAnsPayload(Battery=10, Margin=20)}}", func() {
 					So(p.FRMPayload, ShouldHaveLength, 1)
@@ -160,7 +153,7 @@ func TestMACPayload(t *testing.T) {
 					So(p.FHDR.DevAddr, ShouldEqual, DevAddr(67305985))
 				})
 				Convey("Then FPort=1", func() {
-					So(*p.FPort, ShouldEqual, 1)
+					So(p.FPort, ShouldEqual, 1)
 				})
 				Convey("Then FRMPayload=[]Payload{DataPayload([]byte{6, 10, 20})}", func() {
 					So(p.FRMPayload, ShouldHaveLength, 1)

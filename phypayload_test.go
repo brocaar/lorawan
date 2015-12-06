@@ -118,7 +118,6 @@ func TestPHYPayload(t *testing.T) {
 
 func ExampleNew() {
 	uplink := true
-	fPort := uint8(10)
 
 	nwkSKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	appSKey := []byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
@@ -140,7 +139,7 @@ func ExampleNew() {
 			Fcnt:  0,
 			FOpts: []MACCommand{},
 		},
-		FPort:      &fPort, // a pointer is used since FPort might be nil
+		FPort:      10,
 		FRMPayload: []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}},
 	}
 
