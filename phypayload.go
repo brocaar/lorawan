@@ -1,6 +1,11 @@
 package lorawan
 
-import "errors"
+import (
+	"encoding/binary"
+	"errors"
+
+	"github.com/jacobsa/crypto/cmac"
+)
 
 // MType represents the message type.
 type mType byte
@@ -56,6 +61,80 @@ type PHYPayload struct {
 // New returns a new PHYPayload instance set to either uplink or downlink.
 func New(uplink bool) PHYPayload {
 	return PHYPayload{uplink: uplink}
+}
+
+// calculateMIC calculates and returns the MIC.
+func (p PHYPayload) calculateMIC(nwkSKey []byte) ([]byte, error) {
+	var b []byte
+	var err error
+	micBytes := make([]byte, 0)
+
+	b, err = p.MHDR.MarshalBinary()
+	if err != nil {
+		return []byte{}, err
+	}
+	micBytes = append(micBytes, b...)
+
+	b, err = p.MACPayload.MarshalBinary()
+	if err != nil {
+		return []byte{}, err
+	}
+	micBytes = append(micBytes, b...)
+
+	b0 := make([]byte, 16)
+	b0[0] = 0x49
+	if p.uplink {
+		b0[5] = 1
+	}
+	binary.LittleEndian.PutUint32(b0[6:10], uint32(p.MACPayload.FHDR.DevAddr))
+	binary.LittleEndian.PutUint32(b0[10:14], uint32(p.MACPayload.FHDR.Fcnt))
+	b0[15] = byte(len(micBytes))
+
+	hash, err := cmac.New(nwkSKey)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	hash.Write(b0)
+	hash.Write(micBytes)
+
+	hb := hash.Sum([]byte{})
+	if len(hb) < 4 {
+		return []byte{}, errors.New("lorawan: the hash returned less than 4 bytes")
+	}
+	return hb[0:4], nil
+}
+
+// SetMIC calculates and sets the MIC field.
+func (p *PHYPayload) SetMIC(nwkSKey []byte) error {
+	mic, err := p.calculateMIC(nwkSKey)
+	if err != nil {
+		return err
+	}
+	if len(mic) != 4 {
+		return errors.New("lorawan: a MIC of 4 bytes is expected")
+	}
+	for i, v := range mic {
+		p.MIC[i] = v
+	}
+	return nil
+}
+
+// ValidateMIC returns if the MIC is valid.
+func (p PHYPayload) ValidateMIC(nwkSKey []byte) (bool, error) {
+	mic, err := p.calculateMIC(nwkSKey)
+	if err != nil {
+		return false, err
+	}
+	if len(mic) != 4 {
+		return false, errors.New("lorawan: a MIC of 4 bytes is expected")
+	}
+	for i, v := range mic {
+		if p.MIC[i] != v {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 // MarshalBinary marshals the object in binary form.

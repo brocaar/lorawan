@@ -52,6 +52,34 @@ func TestPHYPayload(t *testing.T) {
 			p.MACPayload.FHDR.DevAddr = DevAddr(67305985)
 			p.MIC = [4]byte{4, 3, 2, 1}
 
+			Convey("Given the NwkSKey []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
+				nwkSKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+
+				Convey("Then ValidateMIC returns false", func() {
+					v, err := p.ValidateMIC(nwkSKey)
+					So(err, ShouldBeNil)
+					So(v, ShouldBeFalse)
+
+				})
+
+				// todo: check if this mic is valid
+				Convey("calculateMIC returns []byte{0xac, 0x80, 0x37, 0x24}", func() {
+					mic, err := p.calculateMIC(nwkSKey)
+					So(err, ShouldBeNil)
+					So(mic, ShouldResemble, []byte{0xac, 0x80, 0x37, 0x24})
+				})
+
+				Convey("Given the MIC is []byte{0xac, 0x80, 0x37, 0x24}", func() {
+					p.MIC = [4]byte{0xac, 0x80, 0x37, 0x24}
+
+					Convey("Then ValidateMIC returns true", func() {
+						v, err := p.ValidateMIC(nwkSKey)
+						So(err, ShouldBeNil)
+						So(v, ShouldBeTrue)
+					})
+				})
+			})
+
 			Convey("Then MarshalBinary returns []byte{32, 1, 2, 3, 4, 0, 0, 0, 4, 3, 2, 1}", func() {
 				b, err := p.MarshalBinary()
 				So(err, ShouldBeNil)
