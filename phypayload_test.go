@@ -137,7 +137,7 @@ func ExampleNew() {
 				ACK:       false,
 			},
 			Fcnt:  0,
-			FOpts: []MACCommand{},
+			FOpts: []MACCommand{}, // you can leave this out when there is no MAC command to send
 		},
 		FPort:      10,
 		FRMPayload: []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}},
