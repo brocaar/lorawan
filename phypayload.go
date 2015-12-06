@@ -149,7 +149,7 @@ func (p PHYPayload) ValidateMIC(nwkSKey []byte) (bool, error) {
 // MarshalBinary marshals the object in binary form.
 func (p PHYPayload) MarshalBinary() ([]byte, error) {
 	if p.MACPayload == nil {
-		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
+		return []byte{}, errors.New("lorawan: MACPayload should not be nil")
 	}
 
 	if mpl, ok := p.MACPayload.(*MACPayload); ok {
@@ -175,21 +175,23 @@ func (p PHYPayload) MarshalBinary() ([]byte, error) {
 
 // UnmarshalBinary decodes the object from binary form.
 func (p *PHYPayload) UnmarshalBinary(data []byte) error {
-	if len(data) < 12 {
-		return errors.New("lorawan: at least 12 bytes needed to decode PHYPayload")
-	}
-
-	if p.MACPayload == nil {
-		return errors.New("lorawan: MACPayload should not be empty")
-	}
-
-	if mpl, ok := p.MACPayload.(*MACPayload); ok {
-		mpl.uplink = p.uplink
+	if len(data) < 5 {
+		return errors.New("lorawan: at least 5 bytes needed to decode PHYPayload")
 	}
 
 	if err := p.MHDR.UnmarshalBinary(data[0:1]); err != nil {
 		return err
 	}
+
+	switch p.MHDR.MType {
+	case JoinRequest:
+		p.MACPayload = &JoinRequestPayload{}
+	case JoinAccept:
+		p.MACPayload = &JoinAcceptPayload{}
+	default:
+		p.MACPayload = &MACPayload{uplink: p.uplink}
+	}
+
 	if err := p.MACPayload.UnmarshalBinary(data[1 : len(data)-4]); err != nil {
 		return err
 	}

@@ -93,16 +93,102 @@ func TestPHYPayload(t *testing.T) {
 			})
 		})
 
-		Convey("Ginve the slice []byte{32, 1, 2, 3, 4, 0, 0, 0, 4, 3, 2}", func() {
-			b := []byte{32, 1, 2, 3, 4, 0, 0, 0, 4, 3, 2}
+		Convey("Given the slice of bytes with an invalid size", func() {
+			b := make([]byte, 4)
 			Convey("Then UnmarshalBinary returns an error", func() {
 				err := p.UnmarshalBinary(b)
-				So(err, ShouldResemble, errors.New("lorawan: at least 12 bytes needed to decode PHYPayload"))
+				So(err, ShouldResemble, errors.New("lorawan: at least 5 bytes needed to decode PHYPayload"))
 			})
 		})
 
 		Convey("Given the slice []byte{32, 1, 2, 3, 4, 0, 0, 0, 4, 3, 2, 1}", func() {
-			b := []byte{32, 1, 2, 3, 4, 0, 0, 0, 4, 3, 2, 1}
+			b := []byte{64, 1, 2, 3, 4, 0, 0, 0, 4, 3, 2, 1}
+			Convey("Then UnmarshalBinary does not return an error", func() {
+				err := p.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+
+				Convey("Then MHDR=(MType=UnconfirmedDataUp, Major=LoRaWANR1)", func() {
+					So(p.MHDR, ShouldResemble, MHDR{MType: UnconfirmedDataUp, Major: LoRaWANR1})
+				})
+				Convey("Then MACPayload(FHDR(DevAddr=67305985))", func() {
+					So(p.MACPayload, ShouldResemble, &MACPayload{FHDR: FHDR{DevAddr: DevAddr(67305985)}})
+				})
+				Convey("Then MIC=[4]byte{4, 3, 2, 1}", func() {
+					So(p.MIC, ShouldResemble, [4]byte{4, 3, 2, 1})
+				})
+			})
+		})
+	})
+}
+
+func TestPHYPayloadJoinRequest(t *testing.T) {
+	Convey("Given an empty PHYPayload with empty JoinRequestPayload", t, func() {
+		p := PHYPayload{MACPayload: &JoinRequestPayload{}}
+		Convey("Then MarshalBinary returns []byte with 23 0x00 bytes", func() {
+			exp := make([]byte, 23)
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, exp)
+		})
+
+		Convey("Given MHDR=(MType=JoinRequest, Major=LoRaWANR1), MACPayload=JoinRequestPayload(AppEUI=1, DevEUI=2, DevNonce=3), MIC=[4]byte{4, 5, 6, 7}", func() {
+			p.MHDR = MHDR{MType: JoinRequest, Major: LoRaWANR1}
+			p.MACPayload = &JoinRequestPayload{AppEUI: 1, DevEUI: 2, DevNonce: 3}
+			p.MIC = [4]byte{4, 5, 6, 7}
+
+			Convey("Then MarshalBinary returns []byte{0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 4, 5, 6, 7}", func() {
+				b, err := p.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 4, 5, 6, 7})
+			})
+		})
+
+		Convey("Given the slice []byte{0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 4, 5, 6, 7}", func() {
+			b := []byte{0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 4, 5, 6, 7}
+
+			Convey("Then UnmarshalBinary does not return an error", func() {
+				err := p.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+
+				Convey("Then MHDR=(MType=JoinRequest, Major=LoRaWANR1)", func() {
+					So(p.MHDR, ShouldResemble, MHDR{MType: JoinRequest, Major: LoRaWANR1})
+				})
+				Convey("Then MACPayload=JoinRequestPayload(AppEUI=1, DevEUI=2, DevNonce=3)", func() {
+					So(p.MACPayload, ShouldResemble, &JoinRequestPayload{AppEUI: 1, DevEUI: 2, DevNonce: 3})
+				})
+				Convey("MIC=[4]byte{4, 5, 6, 7}", func() {
+					So(p.MIC, ShouldResemble, [4]byte{4, 5, 6, 7})
+				})
+			})
+		})
+	})
+}
+
+func TestPHYPayloadJoinAccept(t *testing.T) {
+	Convey("Given an empty PHYPayload with empty JoinAcceptPayload", t, func() {
+		p := PHYPayload{MACPayload: &JoinAcceptPayload{}}
+		Convey("Then MarshalBinary returns []byte with 17 0x00", func() {
+			exp := make([]byte, 17)
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, exp)
+		})
+
+		Convey("Given MHDR=(MType=JoinAccept, Major=LoRaWANR1), MACPayload=JoinAcceptPayload(AppNonce=5, NetID=6, DevAddr=67305985, DLSettings=(RX2DataRate=1, RX1DRoffset=2), RXDelay=7), MIC=[4]byte{8, 9 , 10, 11}", func() {
+			p.MHDR = MHDR{MType: JoinAccept, Major: LoRaWANR1}
+			p.MACPayload = &JoinAcceptPayload{AppNonce: 5, NetID: 6, DevAddr: DevAddr(67305985), DLSettings: DLsettings{RX2DataRate: 1, RX1DRoffset: 2}, RXDelay: 7}
+			p.MIC = [4]byte{8, 9, 10, 11}
+
+			Convey("Then MarshalBinary returns []byte{32, 5, 0, 0, 6, 0, 0, 1, 2, 3, 4, 33, 7, 8, 9, 10, 11}", func() {
+				b, err := p.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{32, 5, 0, 0, 6, 0, 0, 1, 2, 3, 4, 33, 7, 8, 9, 10, 11})
+			})
+		})
+
+		Convey("Given the slice []byte{32, 5, 0, 0, 6, 0, 0, 1, 2, 3, 4, 33, 7, 8, 9, 10, 11}", func() {
+			b := []byte{32, 5, 0, 0, 6, 0, 0, 1, 2, 3, 4, 33, 7, 8, 9, 10, 11}
+
 			Convey("Then UnmarshalBinary does not return an error", func() {
 				err := p.UnmarshalBinary(b)
 				So(err, ShouldBeNil)
@@ -110,11 +196,11 @@ func TestPHYPayload(t *testing.T) {
 				Convey("Then MHDR=(MType=JoinAccept, Major=LoRaWANR1)", func() {
 					So(p.MHDR, ShouldResemble, MHDR{MType: JoinAccept, Major: LoRaWANR1})
 				})
-				Convey("Then MACPayload(FHDR(DevAddr=67305985))", func() {
-					So(p.MACPayload, ShouldResemble, &MACPayload{FHDR: FHDR{DevAddr: DevAddr(67305985)}})
+				Convey("Then MACPayload=JoinAcceptPayload(AppNonce=5, NetID=6, DevAddr=67305985, DLSettings=(RX2DataRate=1, RX1DRoffset=2), RXDelay=7", func() {
+					So(p.MACPayload, ShouldResemble, &JoinAcceptPayload{AppNonce: 5, NetID: 6, DevAddr: 67305985, DLSettings: DLsettings{RX2DataRate: 1, RX1DRoffset: 2}, RXDelay: 7})
 				})
-				Convey("Then MIC=[4]byte{4, 3, 2, 1}", func() {
-					So(p.MIC, ShouldResemble, [4]byte{4, 3, 2, 1})
+				Convey("Then MIC=[4]byte{8, 9, 10, 11}", func() {
+					So(p.MIC, ShouldResemble, [4]byte{8, 9, 10, 11})
 				})
 			})
 		})
