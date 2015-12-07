@@ -179,15 +179,65 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 			p.MACPayload = &JoinAcceptPayload{AppNonce: 5, NetID: 6, DevAddr: DevAddr(67305985), DLSettings: DLsettings{RX2DataRate: 1, RX1DRoffset: 2}, RXDelay: 7}
 			p.MIC = [4]byte{8, 9, 10, 11}
 
+			// no encryption and invalid MIC
 			Convey("Then MarshalBinary returns []byte{32, 5, 0, 0, 6, 0, 0, 1, 2, 3, 4, 33, 7, 8, 9, 10, 11}", func() {
 				b, err := p.MarshalBinary()
 				So(err, ShouldBeNil)
 				So(b, ShouldResemble, []byte{32, 5, 0, 0, 6, 0, 0, 1, 2, 3, 4, 33, 7, 8, 9, 10, 11})
 			})
+
+			Convey("Given AppKey []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
+				appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+
+				Convey("Then ValidateMIC returns false", func() {
+					v, err := p.ValidateMIC(appKey)
+					So(err, ShouldBeNil)
+					So(v, ShouldBeFalse)
+				})
+
+				Convey("Given SetMIC is called", func() {
+					err := p.SetMIC(appKey)
+					So(err, ShouldBeNil)
+
+					// todo: validate if this mic is actually valid
+					Convey("Then SetMIC sets the MIC to [4]byte{84, 249, 105, 200}", func() {
+						So(p.MIC, ShouldResemble, [4]byte{84, 249, 105, 200})
+					})
+
+					Convey("Given EncryptMACPayload is called", func() {
+						err := p.EncryptMACPayload(appKey)
+						So(err, ShouldBeNil)
+
+						Convey("Then MACPayload should be of type *DataPayload", func() {
+							dp, ok := p.MACPayload.(*DataPayload)
+							So(ok, ShouldBeTrue)
+
+							Convey("Then DataPayload Bytes equals []byte{254, 181, 110, 80, 34, 171, 6, 249, 168, 201, 38, 207, 132, 74, 252, 57}", func() {
+								So(dp.Bytes, ShouldResemble, []byte{254, 181, 110, 80, 34, 171, 6, 249, 168, 201, 38, 207, 132, 74, 252, 57})
+							})
+
+							Convey("Then marshalBinary returns []byte{32, 254, 181, 110, 80, 34, 171, 6, 249, 168, 201, 38, 207, 132, 74, 252, 57, 84, 249, 105, 200}", func() {
+								b, err := p.MarshalBinary()
+								So(err, ShouldBeNil)
+								So(b, ShouldResemble, []byte{32, 254, 181, 110, 80, 34, 171, 6, 249, 168, 201, 38, 207, 132, 74, 252, 57, 84, 249, 105, 200})
+							})
+						})
+					})
+				})
+
+				Convey("Given the MIC is [4]byte{0x54, 0xf9, 0x69, 0xc8}", func() {
+					p.MIC = [4]byte{0x54, 0xf9, 0x69, 0xc8}
+					Convey("Then ValidateMIC returns true", func() {
+						v, err := p.ValidateMIC(appKey)
+						So(err, ShouldBeNil)
+						So(v, ShouldBeTrue)
+					})
+				})
+			})
 		})
 
-		Convey("Given the slice []byte{32, 5, 0, 0, 6, 0, 0, 1, 2, 3, 4, 33, 7, 8, 9, 10, 11}", func() {
-			b := []byte{32, 5, 0, 0, 6, 0, 0, 1, 2, 3, 4, 33, 7, 8, 9, 10, 11}
+		Convey("Given the slice []byte{32, 254, 181, 110, 80, 34, 171, 6, 249, 168, 201, 38, 207, 132, 74, 252, 57, 84, 249, 105, 200}", func() {
+			b := []byte{32, 254, 181, 110, 80, 34, 171, 6, 249, 168, 201, 38, 207, 132, 74, 252, 57, 84, 249, 105, 200}
 
 			Convey("Then UnmarshalBinary does not return an error", func() {
 				err := p.UnmarshalBinary(b)
@@ -196,11 +246,42 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 				Convey("Then MHDR=(MType=JoinAccept, Major=LoRaWANR1)", func() {
 					So(p.MHDR, ShouldResemble, MHDR{MType: JoinAccept, Major: LoRaWANR1})
 				})
-				Convey("Then MACPayload=JoinAcceptPayload(AppNonce=5, NetID=6, DevAddr=67305985, DLSettings=(RX2DataRate=1, RX1DRoffset=2), RXDelay=7", func() {
-					So(p.MACPayload, ShouldResemble, &JoinAcceptPayload{AppNonce: 5, NetID: 6, DevAddr: 67305985, DLSettings: DLsettings{RX2DataRate: 1, RX1DRoffset: 2}, RXDelay: 7})
+
+				Convey("Then MACPayload is of type *DataPayload", func() {
+					dp, ok := p.MACPayload.(*DataPayload)
+					So(ok, ShouldBeTrue)
+
+					Convey("Then Bytes equals []byte{254, 181, 110, 80, 34, 171, 6, 249, 168, 201, 38, 207, 132, 74, 252, 57}", func() {
+						So(dp.Bytes, ShouldResemble, []byte{254, 181, 110, 80, 34, 171, 6, 249, 168, 201, 38, 207, 132, 74, 252, 57})
+					})
+
+					Convey("Given AppKey []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
+						appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+
+						Convey("Given DecryptMACPayload is called", func() {
+							err := p.DecryptMACPayload(appKey)
+							So(err, ShouldBeNil)
+
+							Convey("Then MACPayload is of type *JoinAcceptPayload", func() {
+								ja, ok := p.MACPayload.(*JoinAcceptPayload)
+								So(ok, ShouldBeTrue)
+
+								Convey("Then MACPayload=JoinAcceptPayload(AppNonce=5, NetID=6, DevAddr=67305985, DLSettings=(RX2DataRate=1, RX1DRoffset=2), RXDelay=7", func() {
+									So(ja, ShouldResemble, &JoinAcceptPayload{AppNonce: 5, NetID: 6, DevAddr: 67305985, DLSettings: DLsettings{RX2DataRate: 1, RX1DRoffset: 2}, RXDelay: 7})
+								})
+
+								Convey("Then ValidateMIC returns true", func() {
+									v, err := p.ValidateMIC(appKey)
+									So(err, ShouldBeNil)
+									So(v, ShouldBeTrue)
+								})
+							})
+						})
+					})
 				})
-				Convey("Then MIC=[4]byte{8, 9, 10, 11}", func() {
-					So(p.MIC, ShouldResemble, [4]byte{8, 9, 10, 11})
+
+				Convey("Then MIC=[4]byte{84, 249, 105, 200}", func() {
+					So(p.MIC, ShouldResemble, [4]byte{84, 249, 105, 200})
 				})
 			})
 		})

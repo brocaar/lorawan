@@ -1,6 +1,7 @@
 package lorawan
 
 import (
+	"crypto/aes"
 	"encoding/binary"
 	"errors"
 
@@ -176,12 +177,20 @@ func (p PHYPayload) calculateJoinAcceptMIC(key []byte) ([]byte, error) {
 	micBytes = append(micBytes, b...)
 
 	binary.LittleEndian.PutUint32(iBytes, jaPayload.AppNonce)
-	micBytes = append(micBytes, b[0:3]...)
+	micBytes = append(micBytes, iBytes[0:3]...)
 	binary.LittleEndian.PutUint32(iBytes, jaPayload.NetID)
-	micBytes = append(micBytes, b[0:3]...)
+	micBytes = append(micBytes, iBytes[0:3]...)
 	binary.LittleEndian.PutUint32(iBytes, uint32(jaPayload.DevAddr))
+	micBytes = append(micBytes, iBytes...)
+
+	// in the 1.0 spec instead of DLSettings there is RFU field. the assumption
+	// is made that this should have been DLSettings, since the same goes
+	// for encrypt / decryption.
+	b, err = jaPayload.DLSettings.MarshalBinary()
+	if err != nil {
+		return []byte{}, err
+	}
 	micBytes = append(micBytes, b...)
-	micBytes = append(micBytes, byte(0)) // RFU byte
 	micBytes = append(micBytes, byte(jaPayload.RXDelay))
 
 	hash, err := cmac.New(key)
@@ -250,6 +259,67 @@ func (p PHYPayload) ValidateMIC(key []byte) (bool, error) {
 	return true, nil
 }
 
+// EncryptMACPayload encrypts the MACPayload with the given key. Note that this
+// should only be done when the MACPayload is a JoinAcceptPayload.
+func (p *PHYPayload) EncryptMACPayload(key []byte) error {
+	if _, ok := p.MACPayload.(*JoinAcceptPayload); !ok {
+		return errors.New("lorawan: EncryptMACPayload can only be for *JoinAcceptPayload")
+	}
+
+	pt, err := p.MACPayload.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	// in the 1.0 spec instead of DLSettings there is RFU field. the assumption
+	// is made that this should have been DLSettings.
+
+	pt = append(pt, p.MIC[0:4]...)
+	if len(pt)%16 != 0 {
+		return errors.New("lorawan: plaintext should be a multiple of 16")
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return err
+	}
+	if block.BlockSize() != 16 {
+		return errors.New("lorawan: block-size of 16 bytes is expected")
+	}
+	ct := make([]byte, len(pt))
+	for i := 0; i < len(pt)/16; i++ {
+		// decrypt is used for encryption, so that the node only has to implement
+		// the aes encryption (see lorawan specs)
+		block.Decrypt(ct[i*16:(i*16)+16], pt[i*16:(i*16)+16])
+	}
+	p.MACPayload = &DataPayload{Bytes: ct}
+	return nil
+}
+
+func (p *PHYPayload) DecryptMACPayload(key []byte) error {
+	dp, ok := p.MACPayload.(*DataPayload)
+	if !ok {
+		return errors.New("lorawan: MACPayload should be of type *DataPayload")
+	}
+	if len(dp.Bytes)%16 != 0 {
+		return errors.New("lorawan: the DataPayload should be a multiple of 16")
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return err
+	}
+	if block.BlockSize() != 16 {
+		return errors.New("lorawan: block-size of 16 bytes is expected")
+	}
+	pt := make([]byte, len(dp.Bytes))
+	for i := 0; i < len(pt)/16; i++ {
+		block.Encrypt(pt[i*16:i*16+16], dp.Bytes[i*16:i*16+16])
+	}
+	p.MACPayload = &JoinAcceptPayload{}
+	return p.MACPayload.UnmarshalBinary(pt[0 : len(pt)-4]) // - MIC
+}
+
 // MarshalBinary marshals the object in binary form.
 func (p PHYPayload) MarshalBinary() ([]byte, error) {
 	if p.MACPayload == nil {
@@ -291,7 +361,7 @@ func (p *PHYPayload) UnmarshalBinary(data []byte) error {
 	case JoinRequest:
 		p.MACPayload = &JoinRequestPayload{}
 	case JoinAccept:
-		p.MACPayload = &JoinAcceptPayload{}
+		p.MACPayload = &DataPayload{}
 	default:
 		p.MACPayload = &MACPayload{uplink: p.uplink}
 	}
