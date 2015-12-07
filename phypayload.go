@@ -155,7 +155,6 @@ func (p PHYPayload) calculateJoinRequestMIC(key []byte) ([]byte, error) {
 }
 
 // calculateJoinAcceptMIC calculates and returns the join-accept MIC.
-// todo: is RFU an empty byte or just an empty placeholder (no byte(s))?
 func (p PHYPayload) calculateJoinAcceptMIC(key []byte) ([]byte, error) {
 	if p.MACPayload == nil {
 		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
@@ -182,12 +181,7 @@ func (p PHYPayload) calculateJoinAcceptMIC(key []byte) ([]byte, error) {
 	micBytes = append(micBytes, b[0:3]...)
 	binary.LittleEndian.PutUint32(iBytes, uint32(jaPayload.DevAddr))
 	micBytes = append(micBytes, b...)
-
-	b, err = jaPayload.DLSettings.MarshalBinary()
-	if err != nil {
-		return []byte{}, err
-	}
-	micBytes = append(micBytes, b...)
+	micBytes = append(micBytes, byte(0)) // RFU byte
 	micBytes = append(micBytes, byte(jaPayload.RXDelay))
 
 	hash, err := cmac.New(key)
