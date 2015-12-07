@@ -311,7 +311,7 @@ func ExampleNew() {
 	}
 
 	uplink := true
-	payload := New(uplink)
+	payload := NewPayload(uplink)
 	payload.MHDR = MHDR{
 		MType: ConfirmedDataUp,
 		Major: LoRaWANR1,
@@ -337,7 +337,7 @@ func ExampleNew_joinRequest() {
 	uplink := true
 	appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
-	payload := New(uplink)
+	payload := NewPayload(uplink)
 	payload.MHDR = MHDR{
 		MType: JoinRequest,
 		Major: LoRaWANR1,
@@ -367,7 +367,7 @@ func ExampleNew_joinAcceptSend() {
 	uplink := false
 	appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
-	payload := New(uplink)
+	payload := NewPayload(uplink)
 	payload.MHDR = MHDR{
 		MType: JoinAccept,
 		Major: LoRaWANR1,
@@ -403,7 +403,7 @@ func ExampleNew_joinAcceptReceive() {
 	appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	bytes := []byte{32, 171, 84, 244, 227, 34, 30, 148, 118, 211, 1, 33, 90, 24, 50, 81, 139, 128, 229, 23, 154}
 
-	payload := New(uplink)
+	payload := NewPayload(uplink)
 	if err := payload.UnmarshalBinary(bytes); err != nil {
 		panic(err)
 	}

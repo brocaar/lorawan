@@ -59,8 +59,8 @@ type PHYPayload struct {
 	uplink     bool
 }
 
-// New returns a new PHYPayload instance set to either uplink or downlink.
-func New(uplink bool) PHYPayload {
+// NewPayload returns a new PHYPayload instance set to either uplink or downlink.
+func NewPayload(uplink bool) PHYPayload {
 	return PHYPayload{uplink: uplink}
 }
 
