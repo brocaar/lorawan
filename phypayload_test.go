@@ -288,7 +288,7 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 	})
 }
 
-func ExampleNew() {
+func ExampleNewPayload() {
 	nwkSKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	appSKey := []byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
 
@@ -333,7 +333,7 @@ func ExampleNew() {
 	// [128 1 2 3 4 0 0 0 10 59 85 197 241 77 4 69 208]
 }
 
-func ExampleNew_joinRequest() {
+func ExampleNewPayload_joinRequest() {
 	uplink := true
 	appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
@@ -363,7 +363,7 @@ func ExampleNew_joinRequest() {
 	// [0 21 205 91 7 0 0 0 0 177 104 222 58 0 0 0 0 57 48 219 11 219 8]
 }
 
-func ExampleNew_joinAcceptSend() {
+func ExampleNewPayload_joinAcceptSend() {
 	uplink := false
 	appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
@@ -398,7 +398,7 @@ func ExampleNew_joinAcceptSend() {
 	// [32 171 84 244 227 34 30 148 118 211 1 33 90 24 50 81 139 128 229 23 154]
 }
 
-func ExampleNew_joinAcceptReceive() {
+func ExampleNewPayload_joinAcceptReceive() {
 	uplink := false
 	appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	bytes := []byte{32, 171, 84, 244, 227, 34, 30, 148, 118, 211, 1, 33, 90, 24, 50, 81, 139, 128, 229, 23, 154}
