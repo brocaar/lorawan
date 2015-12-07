@@ -261,6 +261,8 @@ func (p PHYPayload) ValidateMIC(key []byte) (bool, error) {
 
 // EncryptMACPayload encrypts the MACPayload with the given key. Note that this
 // should only be done when the MACPayload is a JoinAcceptPayload.
+// Note that the encryption should be performed after SetMIC since the MIC
+// is part of the encrypted content.
 func (p *PHYPayload) EncryptMACPayload(key []byte) error {
 	if _, ok := p.MACPayload.(*JoinAcceptPayload); !ok {
 		return errors.New("lorawan: EncryptMACPayload can only be for *JoinAcceptPayload")
@@ -296,6 +298,7 @@ func (p *PHYPayload) EncryptMACPayload(key []byte) error {
 	return nil
 }
 
+// DecryptMACPayload decrypts the MACPayload with the given key.
 func (p *PHYPayload) DecryptMACPayload(key []byte) error {
 	dp, ok := p.MACPayload.(*DataPayload)
 	if !ok {
