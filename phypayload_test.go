@@ -208,16 +208,8 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 }
 
 func ExampleNew() {
-	uplink := true
 	nwkSKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	appSKey := []byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
-
-	payload := New(uplink)
-
-	payload.MHDR = MHDR{
-		MType: ConfirmedDataUp,
-		Major: LoRaWANR1,
-	}
 
 	macPayload := &MACPayload{
 		FHDR: FHDR{
@@ -237,6 +229,12 @@ func ExampleNew() {
 		panic(err)
 	}
 
+	uplink := true
+	payload := New(uplink)
+	payload.MHDR = MHDR{
+		MType: ConfirmedDataUp,
+		Major: LoRaWANR1,
+	}
 	payload.MACPayload = macPayload
 
 	if err := payload.SetMIC(nwkSKey); err != nil {
@@ -252,4 +250,34 @@ func ExampleNew() {
 
 	// Output:
 	// [128 1 2 3 4 0 0 0 10 59 85 197 241 77 4 69 208]
+}
+
+func ExampleNew_joinRequest() {
+	uplink := true
+	appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+
+	payload := New(uplink)
+	payload.MHDR = MHDR{
+		MType: JoinRequest,
+		Major: LoRaWANR1,
+	}
+	payload.MACPayload = &JoinRequestPayload{
+		AppEUI:   123456789,
+		DevEUI:   987654321,
+		DevNonce: 12345,
+	}
+
+	if err := payload.SetMIC(appKey); err != nil {
+		panic(err)
+	}
+
+	bytes, err := payload.MarshalBinary()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(bytes)
+
+	// Output:
+	// [0 21 205 91 7 0 0 0 0 177 104 222 58 0 0 0 0 57 48 219 11 219 8]
 }

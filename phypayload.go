@@ -64,7 +64,7 @@ func New(uplink bool) PHYPayload {
 }
 
 // calculateMIC calculates and returns the MIC.
-func (p PHYPayload) calculateMIC(nwkSKey []byte) ([]byte, error) {
+func (p PHYPayload) calculateMIC(key []byte) ([]byte, error) {
 	if p.MACPayload == nil {
 		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
 	}
@@ -99,7 +99,7 @@ func (p PHYPayload) calculateMIC(nwkSKey []byte) ([]byte, error) {
 	binary.LittleEndian.PutUint32(b0[10:14], uint32(macPayload.FHDR.Fcnt))
 	b0[15] = byte(len(micBytes))
 
-	hash, err := cmac.New(nwkSKey)
+	hash, err := cmac.New(key)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -114,9 +114,108 @@ func (p PHYPayload) calculateMIC(nwkSKey []byte) ([]byte, error) {
 	return hb[0:4], nil
 }
 
+// calculateJoinRequestMIC calculates and returns the join-request MIC.
+func (p PHYPayload) calculateJoinRequestMIC(key []byte) ([]byte, error) {
+	if p.MACPayload == nil {
+		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
+	}
+	jrPayload, ok := p.MACPayload.(*JoinRequestPayload)
+	if !ok {
+		return []byte{}, errors.New("lorawan: MACPayload should be of type *JoinRequestPayload")
+	}
+
+	var b []byte
+	var err error
+	micBytes := make([]byte, 0, 19)
+	iBytes := make([]byte, 8)
+
+	b, err = p.MHDR.MarshalBinary()
+	if err != nil {
+		return []byte{}, err
+	}
+	micBytes = append(micBytes, b...)
+
+	binary.LittleEndian.PutUint64(iBytes, jrPayload.AppEUI)
+	micBytes = append(micBytes, iBytes...)
+	binary.LittleEndian.PutUint64(iBytes, jrPayload.DevEUI)
+	micBytes = append(micBytes, iBytes...)
+	binary.LittleEndian.PutUint16(iBytes[0:2], jrPayload.DevNonce)
+	micBytes = append(micBytes, iBytes[0:2]...)
+
+	hash, err := cmac.New(key)
+	if err != nil {
+		return []byte{}, err
+	}
+	hash.Write(micBytes)
+	hb := hash.Sum([]byte{})
+	if len(hb) < 4 {
+		return []byte{}, errors.New("lorawan: the hash returned less than 4 bytes")
+	}
+	return hb[0:4], nil
+}
+
+// calculateJoinAcceptMIC calculates and returns the join-accept MIC.
+// todo: is RFU an empty byte or just an empty placeholder (no byte(s))?
+func (p PHYPayload) calculateJoinAcceptMIC(key []byte) ([]byte, error) {
+	if p.MACPayload == nil {
+		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
+	}
+	jaPayload, ok := p.MACPayload.(*JoinAcceptPayload)
+	if !ok {
+		return []byte{}, errors.New("lorawan: MACPayload should be of type *JoinAcceptPayload")
+	}
+
+	var b []byte
+	var err error
+	micBytes := make([]byte, 0, 13)
+	iBytes := make([]byte, 4)
+
+	b, err = p.MHDR.MarshalBinary()
+	if err != nil {
+		return []byte{}, err
+	}
+	micBytes = append(micBytes, b...)
+
+	binary.LittleEndian.PutUint32(iBytes, jaPayload.AppNonce)
+	micBytes = append(micBytes, b[0:3]...)
+	binary.LittleEndian.PutUint32(iBytes, jaPayload.NetID)
+	micBytes = append(micBytes, b[0:3]...)
+	binary.LittleEndian.PutUint32(iBytes, uint32(jaPayload.DevAddr))
+	micBytes = append(micBytes, b...)
+
+	b, err = jaPayload.DLSettings.MarshalBinary()
+	if err != nil {
+		return []byte{}, err
+	}
+	micBytes = append(micBytes, b...)
+	micBytes = append(micBytes, byte(jaPayload.RXDelay))
+
+	hash, err := cmac.New(key)
+	if err != nil {
+		return []byte{}, err
+	}
+	hash.Write(micBytes)
+	hb := hash.Sum([]byte{})
+	if len(hb) < 4 {
+		return []byte{}, errors.New("lorawan: the hash returned less than 4 bytes")
+	}
+	return hb[0:4], nil
+}
+
 // SetMIC calculates and sets the MIC field.
-func (p *PHYPayload) SetMIC(nwkSKey []byte) error {
-	mic, err := p.calculateMIC(nwkSKey)
+func (p *PHYPayload) SetMIC(key []byte) error {
+	var mic []byte
+	var err error
+
+	switch p.MACPayload.(type) {
+	case *JoinRequestPayload:
+		mic, err = p.calculateJoinRequestMIC(key)
+	case *JoinAcceptPayload:
+		mic, err = p.calculateJoinAcceptMIC(key)
+	default:
+		mic, err = p.calculateMIC(key)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -130,8 +229,19 @@ func (p *PHYPayload) SetMIC(nwkSKey []byte) error {
 }
 
 // ValidateMIC returns if the MIC is valid.
-func (p PHYPayload) ValidateMIC(nwkSKey []byte) (bool, error) {
-	mic, err := p.calculateMIC(nwkSKey)
+func (p PHYPayload) ValidateMIC(key []byte) (bool, error) {
+	var mic []byte
+	var err error
+
+	switch p.MACPayload.(type) {
+	case *JoinRequestPayload:
+		mic, err = p.calculateJoinRequestMIC(key)
+	case *JoinAcceptPayload:
+		mic, err = p.calculateJoinAcceptMIC(key)
+	default:
+		mic, err = p.calculateMIC(key)
+	}
+
 	if err != nil {
 		return false, err
 	}
