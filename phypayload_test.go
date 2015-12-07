@@ -362,3 +362,68 @@ func ExampleNew_joinRequest() {
 	// Output:
 	// [0 21 205 91 7 0 0 0 0 177 104 222 58 0 0 0 0 57 48 219 11 219 8]
 }
+
+func ExampleNew_joinAcceptSend() {
+	uplink := false
+	appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+
+	payload := New(uplink)
+	payload.MHDR = MHDR{
+		MType: JoinAccept,
+		Major: LoRaWANR1,
+	}
+	payload.MACPayload = &JoinAcceptPayload{
+		AppNonce:   12345,
+		NetID:      11111111,
+		DevAddr:    67305985,
+		DLSettings: DLsettings{RX2DataRate: 0, RX1DRoffset: 0},
+		RXDelay:    0,
+	}
+	// set the MIC before encryption
+	if err := payload.SetMIC(appKey); err != nil {
+		panic(err)
+	}
+	if err := payload.EncryptMACPayload(appKey); err != nil {
+		panic(err)
+	}
+
+	bytes, err := payload.MarshalBinary()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(bytes)
+
+	// Output:
+	// [32 171 84 244 227 34 30 148 118 211 1 33 90 24 50 81 139 128 229 23 154]
+}
+
+func ExampleNew_joinAcceptReceive() {
+	uplink := false
+	appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+	bytes := []byte{32, 171, 84, 244, 227, 34, 30, 148, 118, 211, 1, 33, 90, 24, 50, 81, 139, 128, 229, 23, 154}
+
+	payload := New(uplink)
+	if err := payload.UnmarshalBinary(bytes); err != nil {
+		panic(err)
+	}
+
+	if err := payload.DecryptMACPayload(appKey); err != nil {
+		panic(err)
+	}
+
+	_, ok := payload.MACPayload.(*JoinAcceptPayload)
+	if !ok {
+		panic("*JoinAcceptPayload expected")
+	}
+
+	v, err := payload.ValidateMIC(appKey)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(v)
+
+	// Output:
+	// true
+}
