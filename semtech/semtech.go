@@ -4,6 +4,8 @@
 package semtech
 
 import (
+	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"strconv"
 	"strings"
@@ -32,9 +34,42 @@ const (
 type PushDataPacket struct {
 	ProtocolVersion uint8
 	RandomToken     uint16
-	Identifier      uint8
-	GatewayMAC      uint64
+	GatewayMAC      [8]byte
 	Payload         PushDataPayload
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p PushDataPacket) MarshalBinary() ([]byte, error) {
+	pb, err := json.Marshal(&p.Payload)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]byte, 4, len(pb)+12)
+	out[0] = p.ProtocolVersion
+	binary.LittleEndian.PutUint16(out[1:3], p.RandomToken)
+	out[3] = byte(PushData)
+	out = append(out, p.GatewayMAC[0:len(p.GatewayMAC)]...)
+	out = append(out, pb...)
+	return out, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (p *PushDataPacket) UnmarshalBinary(data []byte) error {
+	if len(data) < 13 {
+		return errors.New("lorawan/semtech: at least 13 bytes are expected")
+	}
+	if data[3] != byte(PushData) {
+		return errors.New("lorawan/semtech: identifier mismatch (PUSH_DATA expected)")
+	}
+
+	p.ProtocolVersion = data[0]
+	p.RandomToken = binary.LittleEndian.Uint16(data[1:3])
+	for i := 0; i < 8; i++ {
+		p.GatewayMAC[i] = data[4+i]
+	}
+
+	return json.Unmarshal(data[12:], &p.Payload)
 }
 
 // PushACKPacket is used by the server to acknowledge immediately all the
@@ -50,7 +85,7 @@ type PullDataPacket struct {
 	ProtocolVersion uint8
 	RandomToken     uint16
 	Identifier      uint8
-	GatewayMAC      uint64
+	GatewayMAC      [8]byte
 }
 
 // PullACKPacket is used by the server to confirm that the network route is
@@ -72,8 +107,8 @@ type PullRespPacket struct {
 
 // PushDataPayload represents the upstream JSON data structure.
 type PushDataPayload struct {
-	RXPK []RXPK
-	Stat *Stat
+	RXPK []RXPK `json:"rxpk,omitempty"`
+	Stat *Stat  `json:"stat,omitempty"`
 }
 
 // PullDataPayload represents the downstream JSON data structure.
