@@ -1,0 +1,208 @@
+// Package semtech implements the Semtech communication protocol between Lora
+// gateway and server. The specification can be found at:
+// https://github.com/Lora-net/packet_forwarder/blob/master/PROTOCOL.TXT
+package semtech
+
+import (
+	"errors"
+	"strconv"
+	"strings"
+	"time"
+)
+
+// PacketType defines the packet type.
+type PacketType byte
+
+// Available packet types
+const (
+	PushData PacketType = iota
+	PushACK
+	PullData
+	PullResp
+	PullACK
+)
+
+// Protocol versions
+const (
+	ProtocolVersion1 uint8 = 0x01
+)
+
+// PushDataPacket type is used by the gateway mainly to forward the RF packets
+// received, and associated metadata, to the server.
+type PushDataPacket struct {
+	ProtocolVersion uint8
+	RandomToken     uint16
+	Identifier      uint8
+	GatewayMAC      uint64
+	Payload         PushDataPayload
+}
+
+// PushACKPacket is used by the server to acknowledge immediately all the
+// PUSH_DATA packets received.
+type PushACKPacket struct {
+	ProtocolVersion uint8
+	RandomToken     uint16
+	Identifier      uint8
+}
+
+// PullDataPacket is used by the gateway to poll data from the server.
+type PullDataPacket struct {
+	ProtocolVersion uint8
+	RandomToken     uint16
+	Identifier      uint8
+	GatewayMAC      uint64
+}
+
+// PullACKPacket is used by the server to confirm that the network route is
+// open and that the server can send PULL_RESP packets at any time.
+type PullACKPacket struct {
+	ProtocolVersion uint8
+	RandomToken     uint16
+	Identifier      uint8
+}
+
+// PullRespPacket is used by the server to send RF packets and associated
+// metadata that will have to be emitted by the gateway.
+type PullRespPacket struct {
+	ProtocolVersion uint8
+	RandomToken     uint16
+	Identifier      uint8
+	Payload         PullDataPayload
+}
+
+// PushDataPayload represents the upstream JSON data structure.
+type PushDataPayload struct {
+	RXPK []RXPK
+	Stat *Stat
+}
+
+// PullDataPayload represents the downstream JSON data structure.
+type PullDataPayload struct {
+	TXPK []TXPK
+}
+
+// CompactTime implements time.Time but (un)marshals to and from
+// ISO 8601 'compact' format.
+type CompactTime time.Time
+
+// MarshalJSON implements the json.Marshaler interface.
+func (t CompactTime) MarshalJSON() ([]byte, error) {
+	return []byte(time.Time(t).UTC().Format(`"` + time.RFC3339Nano + `"`)), nil
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (t *CompactTime) UnmarshalJSON(data []byte) error {
+	t2, err := time.Parse(`"`+time.RFC3339Nano+`"`, string(data))
+	if err != nil {
+		return err
+	}
+	*t = CompactTime(t2)
+	return nil
+}
+
+// ExpandedTime implements time.Time but (un)marshals to and from
+// ISO 8601 'expanded' format.
+type ExpandedTime time.Time
+
+// MarshalJSON implements the json.Marshaler interface.
+func (t ExpandedTime) MarshalJSON() ([]byte, error) {
+	return []byte(time.Time(t).UTC().Format(`"2006-01-02 15:04:05 MST"`)), nil
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (t *ExpandedTime) UnmarshalJSON(data []byte) error {
+	t2, err := time.Parse(`"2006-01-02 15:04:05 MST"`, string(data))
+	if err != nil {
+		return err
+	}
+	*t = ExpandedTime(t2)
+	return nil
+}
+
+// DatR implements the data rate which can be either a string (LoRa identifier)
+// or an unsigned integer in case of FSK (bits per second).
+type DatR struct {
+	LoRa string
+	FSK  uint32
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+func (d DatR) MarshalJSON() ([]byte, error) {
+	if d.LoRa != "" {
+		return []byte(`"` + d.LoRa + `"`), nil
+	}
+	return []byte(strconv.FormatUint(uint64(d.FSK), 10)), nil
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (d *DatR) UnmarshalJSON(data []byte) error {
+	i, err := strconv.ParseUint(string(data), 10, 32)
+	if err != nil {
+		d.LoRa = strings.Trim(string(data), `"`)
+		return nil
+	}
+	d.FSK = uint32(i)
+	return nil
+}
+
+// RXPK contain a RF packet and associated metadata.
+type RXPK struct {
+	Time CompactTime `json:"time"` // UTC time of pkt RX, us precision, ISO 8601 'compact' format (e.g. 2013-03-31T16:21:17.528002Z)
+	Tmst uint32      `json:"tmst"` // Internal timestamp of "RX finished" event (32b unsigned)
+	Freq float64     `json:"freq"` // RX central frequency in MHz (unsigned float, Hz precision)
+	Chan uint8       `json:"chan"` // Concentrator "IF" channel used for RX (unsigned integer)
+	RFCh uint8       `json:"rfch"` // Concentrator "RF chain" used for RX (unsigned integer)
+	Stat int8        `json:"stat"` // CRC status: 1 = OK, -1 = fail, 0 = no CRC
+	Modu string      `json:"modu"` // Modulation identifier "LORA" or "FSK"
+	DatR DatR        `json:"datr"` // LoRa datarate identifier (eg. SF12BW500) || FSK datarate (unsigned, in bits per second)
+	CodR string      `json:"codr"` // LoRa ECC coding rate identifier
+	RSSI int16       `json:"rssi"` // RSSI in dBm (signed integer, 1 dB precision)
+	LSNR int16       `json:"lsnr"` // Lora SNR ratio in dB (signed float, 0.1 dB precision)
+	Size uint16      `json:"size"` // RF packet payload size in bytes (unsigned integer)
+	Data string      `json:"data"` // Base64 encoded RF packet payload, padded
+}
+
+// Stat contains the status of the gateway.
+type Stat struct {
+	Time ExpandedTime `json:"time"` // UTC 'system' time of the gateway, ISO 8601 'expanded' format (e.g 2014-01-12 08:59:28 GMT)
+	Lati float64      `json:"lati"` // GPS latitude of the gateway in degree (float, N is +)
+	Long float64      `json:"long"` // GPS latitude of the gateway in degree (float, E is +)
+	Alti int32        `json:"alti"` // GPS altitude of the gateway in meter RX (integer)
+	RXNb uint32       `json:"rxnb"` // Number of radio packets received (unsigned integer)
+	RXOK uint32       `json:"rxok"` // Number of radio packets received with a valid PHY CRC
+	RXFW uint32       `json:"rxfw"` // Number of radio packets forwarded (unsigned integer)
+	ACKR float64      `json:"ackr"` // Percentage of upstream datagrams that were acknowledged
+	DWNb uint32       `json:"dwnb"` // Number of downlink datagrams received (unsigned integer)
+}
+
+// TXPK contains a RF packet to be emitted and associated metadata.
+type TXPK struct {
+	Imme bool         `json:"imme"`           // Send packet immediately (will ignore tmst & time)
+	Tmst uint32       `json:"tmst,omitempty"` // Send packet on a certain timestamp value (will ignore time)
+	Time *CompactTime `json:"time,omitempty"` // Send packet at a certain time (GPS synchronization required)
+	Freq float64      `json:"freq"`           // TX central frequency in MHz (unsigned float, Hz precision)
+	RFCh uint8        `json:"rfch"`           // Concentrator "RF chain" used for TX (unsigned integer)
+	Powe uint8        `json:"powe"`           // TX output power in dBm (unsigned integer, dBm precision)
+	Modu string       `json:"modu"`           // Modulation identifier "LORA" or "FSK"
+	DatR DatR         `json:"datr"`           // LoRa datarate identifier (eg. SF12BW500) || FSK datarate (unsigned, in bits per second)
+	CodR string       `json:"codr,omitempty"` // LoRa ECC coding rate identifier
+	FDev uint16       `json:"fdev,omitempty"` // FSK frequency deviation (unsigned integer, in Hz)
+	IPol bool         `json:"ipol"`           // Lora modulation polarization inversion
+	Prea uint16       `json:"prea,omitempty"` // RF preamble size (unsigned integer)
+	Size uint16       `json:"size"`           // RF packet payload size in bytes (unsigned integer)
+	NCRC bool         `json:"ncrc,omitempty"` // If true, disable the CRC of the physical layer (optional)
+	Data string       `json:"data"`           // Base64 encoded RF packet payload, padding optional
+}
+
+// GetPacketType returns the packet type for the given packet data.
+func GetPacketType(data []byte) (PacketType, error) {
+	if len(data) < 4 {
+		return PacketType(0), errors.New("lorawan/semtech: at least 4 bytes of data are expected")
+	}
+
+	if data[0] != ProtocolVersion1 {
+		return PacketType(0), errors.New("lorawan/semtech: unknown protocol version")
+	}
+
+	return PacketType(data[3]), nil
+}
