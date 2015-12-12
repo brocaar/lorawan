@@ -202,6 +202,19 @@ func TestPullDataPacket(t *testing.T) {
 				So(b, ShouldResemble, []byte{1, 123, 0, 2, 1, 2, 3, 4, 5, 6, 7, 8})
 			})
 		})
+
+		Convey("Given the slice []byte{1, 123, 0, 2, 1, 2, 3, 4, 5, 6, 7, 8}", func() {
+			b := []byte{1, 123, 0, 2, 1, 2, 3, 4, 5, 6, 7, 8}
+			Convey("Then UnmarshalBinary returns ProtocolVersion=1, RandomToken=123, GatewayMAC=[]byte{1, 2, 3, 4, 5, 6, 8, 8}", func() {
+				err := p.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+				So(p, ShouldResemble, PullDataPacket{
+					ProtocolVersion: 1,
+					RandomToken:     123,
+					GatewayMAC:      [8]byte{1, 2, 3, 4, 5, 6, 7, 8},
+				})
+			})
+		})
 	})
 }
 
@@ -223,6 +236,18 @@ func TestPullACKPacket(t *testing.T) {
 				b, err := p.MarshalBinary()
 				So(err, ShouldBeNil)
 				So(b, ShouldResemble, []byte{1, 123, 0, 4})
+			})
+		})
+
+		Convey("Given the slice []byte{1, 123, 0, 4}", func() {
+			b := []byte{1, 123, 0, 4}
+			Convey("Then UnmarshalBinary returns ProtocolVersion=1, RandomToken=123", func() {
+				err := p.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+				So(p, ShouldResemble, PullACKPacket{
+					ProtocolVersion: 1,
+					RandomToken:     123,
+				})
 			})
 		})
 	})
