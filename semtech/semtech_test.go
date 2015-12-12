@@ -204,3 +204,26 @@ func TestPullDataPacket(t *testing.T) {
 		})
 	})
 }
+
+func TestPullACKPacket(t *testing.T) {
+	Convey("Given an empty PullACKPacket", t, func() {
+		var p PullACKPacket
+		Convey("Then MarshalBinary returns []byte{0, 0, 0, 4}", func() {
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0, 0, 0, 4})
+		})
+
+		Convey("Given ProtocolVersion=1, RandomToken=123}", func() {
+			p = PullACKPacket{
+				ProtocolVersion: 1,
+				RandomToken:     123,
+			}
+			Convey("Then MarshalBinary returns []byte{1, 123, 0, 4}", func() {
+				b, err := p.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{1, 123, 0, 4})
+			})
+		})
+	})
+}

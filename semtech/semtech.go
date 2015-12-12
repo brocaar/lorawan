@@ -139,7 +139,28 @@ func (p *PullDataPacket) UnmarshalBinary(data []byte) error {
 type PullACKPacket struct {
 	ProtocolVersion uint8
 	RandomToken     uint16
-	Identifier      uint8
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p PullACKPacket) MarshalBinary() ([]byte, error) {
+	out := make([]byte, 4)
+	out[0] = p.ProtocolVersion
+	binary.LittleEndian.PutUint16(out[1:3], p.RandomToken)
+	out[3] = byte(PullACK)
+	return out, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (p *PullACKPacket) UnmarshalBinary(data []byte) error {
+	if len(data) != 4 {
+		return errors.New("lorawan/semtech: 4 bytes of data are expected")
+	}
+	if data[3] != byte(PullACK) {
+		return errors.New("lorawan/semtech: identifier mismatch (PULL_ACK expected)")
+	}
+	p.ProtocolVersion = data[0]
+	p.RandomToken = binary.LittleEndian.Uint16(data[1:3])
+	return nil
 }
 
 // PullRespPacket is used by the server to send RF packets and associated
