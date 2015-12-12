@@ -168,8 +168,34 @@ func (p *PullACKPacket) UnmarshalBinary(data []byte) error {
 type PullRespPacket struct {
 	ProtocolVersion uint8
 	RandomToken     uint16
-	Identifier      uint8
 	Payload         PullDataPayload
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p PullRespPacket) MarshalBinary() ([]byte, error) {
+	pb, err := json.Marshal(&p.Payload)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]byte, 4, 4+len(pb))
+	out[0] = p.ProtocolVersion
+	binary.LittleEndian.PutUint16(out[1:3], p.RandomToken)
+	out[3] = byte(PullResp)
+	out = append(out, pb...)
+	return out, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (p *PullRespPacket) UnmarshalBinary(data []byte) error {
+	if len(data) < 5 {
+		return errors.New("lorawan/semtech: at least 5 bytes of data are expected")
+	}
+	if data[3] != byte(PullResp) {
+		return errors.New("lorawan/semtech: identifier mismatch (PULL_RESP expected)")
+	}
+	p.ProtocolVersion = data[0]
+	p.RandomToken = binary.LittleEndian.Uint16(data[1:3])
+	return json.Unmarshal(data[4:], &p.Payload)
 }
 
 // PushDataPayload represents the upstream JSON data structure.
@@ -180,7 +206,7 @@ type PushDataPayload struct {
 
 // PullDataPayload represents the downstream JSON data structure.
 type PullDataPayload struct {
-	TXPK []TXPK
+	TXPK TXPK `json:"txpk"`
 }
 
 // CompactTime implements time.Time but (un)marshals to and from
