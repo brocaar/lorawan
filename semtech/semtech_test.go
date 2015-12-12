@@ -149,7 +149,7 @@ func TestPushDataPacket(t *testing.T) {
 func TestPushACKPacket(t *testing.T) {
 	Convey("Given an empty PushACKPacket", t, func() {
 		var p PushACKPacket
-		Convey("MarshalBinary returns []byte{0, 0, 0, 1}", func() {
+		Convey("Then MarshalBinary returns []byte{0, 0, 0, 1}", func() {
 			b, err := p.MarshalBinary()
 			So(err, ShouldBeNil)
 			So(b, ShouldResemble, []byte{0, 0, 0, 1})
@@ -176,6 +176,30 @@ func TestPushACKPacket(t *testing.T) {
 					ProtocolVersion: ProtocolVersion1,
 					RandomToken:     123,
 				})
+			})
+		})
+	})
+}
+
+func TestPullDataPacket(t *testing.T) {
+	Convey("Given an empty PullDataPacket", t, func() {
+		var p PullDataPacket
+		Convey("Then MarshalBinary returns []byte{0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0}", func() {
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0})
+		})
+
+		Convey("Given ProtocolVersion=1, RandomToken=123, GatewayMAC=[]byte{1, 2, 3, 4, 5, 6, 8, 8}", func() {
+			p = PullDataPacket{
+				ProtocolVersion: 1,
+				RandomToken:     123,
+				GatewayMAC:      [8]byte{1, 2, 3, 4, 5, 6, 7, 8},
+			}
+			Convey("Then MarshalBinary returns []byte{1, 123, 0, 2, 1, 2, 3, 4, 5, 6, 7, 8}", func() {
+				b, err := p.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{1, 123, 0, 2, 1, 2, 3, 4, 5, 6, 7, 8})
 			})
 		})
 	})
