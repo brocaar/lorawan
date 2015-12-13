@@ -10,17 +10,11 @@ import (
 type Payload interface {
 	encoding.BinaryMarshaler
 	encoding.BinaryUnmarshaler
-	Clone() Payload
 }
 
 // DataPayload represents a slice of bytes.
 type DataPayload struct {
 	Bytes []byte
-}
-
-// Clone returns a copy of the payload.
-func (p DataPayload) Clone() Payload {
-	return &p
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -40,11 +34,6 @@ type JoinRequestPayload struct {
 	AppEUI   uint64
 	DevEUI   uint64
 	DevNonce uint16
-}
-
-// Clone returns a copy of the payload.
-func (p JoinRequestPayload) Clone() Payload {
-	return &p
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -75,11 +64,6 @@ type JoinAcceptPayload struct {
 	DevAddr    DevAddr
 	DLSettings DLsettings
 	RXDelay    uint8
-}
-
-// Clone returns a copy of the payload.
-func (p JoinAcceptPayload) Clone() Payload {
-	return &p
 }
 
 // MarshalBinary marshals the object in binary form.

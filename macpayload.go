@@ -201,8 +201,3 @@ func (p *MACPayload) UnmarshalBinary(data []byte) error {
 
 	return nil
 }
-
-// Clone returns a copy of the payload.
-func (p MACPayload) Clone() Payload {
-	return &p
-}

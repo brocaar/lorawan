@@ -33,25 +33,25 @@ const (
 // macPayloadInfo contains the info about a MAC payload
 type macPayloadInfo struct {
 	size    int
-	payload Payload
+	payload func() Payload
 }
 
 // macPayloadRegistry contains the info for uplink and downlink MAC payloads
 // in the format map[uplink]map[CID].
 var macPayloadRegistry = map[bool]map[cid]macPayloadInfo{
 	false: map[cid]macPayloadInfo{
-		LinkCheckAns:     {2, &LinkCheckAnsPayload{}},
-		LinkADRReq:       {4, &LinkADRAnsPayload{}},
-		DutyCycleReq:     {1, &DutyCycleReqPayload{}},
-		RXParamSetupReq:  {4, &RX2SetupReqPayload{}},
-		NewChannelReq:    {4, &NewChannelReqPayload{}},
-		RXTimingSetupReq: {1, &RXTimingSetupReqPayload{}},
+		LinkCheckAns:     {2, func() Payload { return &LinkCheckAnsPayload{} }},
+		LinkADRReq:       {4, func() Payload { return &LinkADRAnsPayload{} }},
+		DutyCycleReq:     {1, func() Payload { return &DutyCycleReqPayload{} }},
+		RXParamSetupReq:  {4, func() Payload { return &RX2SetupReqPayload{} }},
+		NewChannelReq:    {4, func() Payload { return &NewChannelReqPayload{} }},
+		RXTimingSetupReq: {1, func() Payload { return &RXTimingSetupReqPayload{} }},
 	},
 	true: map[cid]macPayloadInfo{
-		LinkADRAns:      {1, &LinkADRAnsPayload{}},
-		RXParamSetupAns: {1, &RX2SetupAnsPayload{}},
-		DevStatusAns:    {2, &DevStatusAnsPayload{}},
-		NewChannelAns:   {1, &NewChannelAnsPayload{}},
+		LinkADRAns:      {1, func() Payload { return &LinkADRAnsPayload{} }},
+		RXParamSetupAns: {1, func() Payload { return &RX2SetupAnsPayload{} }},
+		DevStatusAns:    {2, func() Payload { return &DevStatusAnsPayload{} }},
+		NewChannelAns:   {1, func() Payload { return &NewChannelAnsPayload{} }},
 	},
 }
 
@@ -62,7 +62,7 @@ func getMACPayloadAndSize(uplink bool, c cid) (Payload, int, error) {
 		return nil, 0, fmt.Errorf("lorawan: payload unknown for uplink=%v and CID=%v", uplink, c)
 	}
 
-	return v.payload.Clone(), v.size, nil
+	return v.payload(), v.size, nil
 }
 
 // MACCommand represents a MAC command with optional payload.
@@ -70,11 +70,6 @@ type MACCommand struct {
 	CID     cid
 	Payload Payload
 	uplink  bool // true=uplink, false=downlink
-}
-
-// Clone returns a copy of the payload.
-func (m MACCommand) Clone() Payload {
-	return &m
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -113,11 +108,6 @@ func (m *MACCommand) UnmarshalBinary(data []byte) error {
 type LinkCheckAnsPayload struct {
 	Margin uint8
 	GwCnt  uint8
-}
-
-// Clone returns a copy of the payload.
-func (p LinkCheckAnsPayload) Clone() Payload {
-	return &p
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -202,11 +192,6 @@ type LinkADRReqPayload struct {
 	Redundancy Redundancy
 }
 
-// Clone returns a copy of the payload.
-func (p LinkADRReqPayload) Clone() Payload {
-	return &p
-}
-
 // MarshalBinary marshals the object in binary form.
 func (p LinkADRReqPayload) MarshalBinary() ([]byte, error) {
 	b := make([]byte, 0, 4)
@@ -257,11 +242,6 @@ type LinkADRAnsPayload struct {
 	PowerACK       bool
 }
 
-// Clone returns a copy of the payload.
-func (p LinkADRAnsPayload) Clone() Payload {
-	return &p
-}
-
 // MarshalBinary marshals the object in binary form.
 func (p LinkADRAnsPayload) MarshalBinary() ([]byte, error) {
 	var b byte
@@ -297,11 +277,6 @@ func (p *LinkADRAnsPayload) UnmarshalBinary(data []byte) error {
 // DutyCycleReqPayload represents the DutyCycleReq payload.
 type DutyCycleReqPayload struct {
 	MaxDCCycle uint8
-}
-
-// Clone returns a copy of the payload.
-func (p DutyCycleReqPayload) Clone() Payload {
-	return &p
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -358,11 +333,6 @@ type RX2SetupReqPayload struct {
 	DLsettings DLsettings
 }
 
-// Clone returns a copy of the payload.
-func (p RX2SetupReqPayload) Clone() Payload {
-	return &p
-}
-
 // MarshalBinary marshals the object in binary form.
 func (p RX2SetupReqPayload) MarshalBinary() ([]byte, error) {
 	b := make([]byte, 5)
@@ -404,11 +374,6 @@ type RX2SetupAnsPayload struct {
 	RX1DRoffsetACK bool
 }
 
-// Clone returns a copy of the payload.
-func (p RX2SetupAnsPayload) Clone() Payload {
-	return &p
-}
-
 // MarshalBinary marshals the object in binary form.
 func (p RX2SetupAnsPayload) MarshalBinary() ([]byte, error) {
 	var b byte
@@ -439,11 +404,6 @@ func (p *RX2SetupAnsPayload) UnmarshalBinary(data []byte) error {
 type DevStatusAnsPayload struct {
 	Battery uint8
 	Margin  int8
-}
-
-// Clone returns a copy of the payload.
-func (p DevStatusAnsPayload) Clone() Payload {
-	return &p
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -485,11 +445,6 @@ type NewChannelReqPayload struct {
 	Freq    uint32
 	MaxDR   uint8
 	MinDR   uint8
-}
-
-// Clone returns a copy of the payload.
-func (p NewChannelReqPayload) Clone() Payload {
-	return &p
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -536,11 +491,6 @@ type NewChannelAnsPayload struct {
 	DataRateRangeOK    bool
 }
 
-// Clone returns a copy of the payload.
-func (p NewChannelAnsPayload) Clone() Payload {
-	return &p
-}
-
 // MarshalBinary marshals the object in binary form.
 func (p NewChannelAnsPayload) MarshalBinary() ([]byte, error) {
 	var b byte
@@ -566,11 +516,6 @@ func (p *NewChannelAnsPayload) UnmarshalBinary(data []byte) error {
 // RXTimingSetupReqPayload represents the RXTimingSetupReq payload.
 type RXTimingSetupReqPayload struct {
 	Delay uint8
-}
-
-// Clone returns a copy of the payload.
-func (p RXTimingSetupReqPayload) Clone() Payload {
-	return &p
 }
 
 // MarshalBinary marshals the object in binary form.

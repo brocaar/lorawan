@@ -17,6 +17,15 @@ func TestGetMACPayloadAndSize(t *testing.T) {
 			So(p, ShouldHaveSameTypeAs, &LinkADRAnsPayload{})
 			So(s, ShouldEqual, 4)
 		})
+
+		Convey("Then running getMACPayloadAndSize twice should return different objects", func() {
+			p1, _, err := getMACPayloadAndSize(uplink, c)
+			So(err, ShouldBeNil)
+			p2, _, err := getMACPayloadAndSize(uplink, c)
+			So(err, ShouldBeNil)
+
+			So(fmt.Sprintf("%p", p1), ShouldNotEqual, fmt.Sprintf("%p", p2))
+		})
 	})
 
 	Convey("Given uplink=true and CID=LinkADRAns", t, func() {
