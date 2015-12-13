@@ -1,6 +1,3 @@
-// Package semtech implements the Semtech communication protocol between Lora
-// gateway and server. The specification can be found at:
-// https://github.com/Lora-net/packet_forwarder/blob/master/PROTOCOL.TXT
 package semtech
 
 import (

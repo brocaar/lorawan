@@ -68,8 +68,11 @@ be able to access its fields.
 See the examples section of the documentation for concrete usage examples
 of this package.
 
+The protocol written by Semtech and used by many gateways for communication
+between the gateway and the server is implemented in the semtech sub-package.
+
 When using this package, knowledge about the LoRaWAN specification is needed.
-You can request the LoRaWAN specification here:
+You can download the LoRaWAN specification here:
 https://www.lora-alliance.org/For-Developers/LoRaWANDevelopers
 
 */
