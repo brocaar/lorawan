@@ -105,8 +105,12 @@ func (p PHYPayload) calculateMIC(key []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	hash.Write(b0)
-	hash.Write(micBytes)
+	if _, err = hash.Write(b0); err != nil {
+		return nil, err
+	}
+	if _, err = hash.Write(micBytes); err != nil {
+		return nil, err
+	}
 
 	hb := hash.Sum([]byte{})
 	if len(hb) < 4 {
@@ -147,7 +151,9 @@ func (p PHYPayload) calculateJoinRequestMIC(key []byte) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	hash.Write(micBytes)
+	if _, err = hash.Write(micBytes); err != nil {
+		return nil, err
+	}
 	hb := hash.Sum([]byte{})
 	if len(hb) < 4 {
 		return []byte{}, errors.New("lorawan: the hash returned less than 4 bytes")
@@ -197,7 +203,9 @@ func (p PHYPayload) calculateJoinAcceptMIC(key []byte) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	hash.Write(micBytes)
+	if _, err = hash.Write(micBytes); err != nil {
+		return nil, err
+	}
 	hb := hash.Sum([]byte{})
 	if len(hb) < 4 {
 		return []byte{}, errors.New("lorawan: the hash returned less than 4 bytes")

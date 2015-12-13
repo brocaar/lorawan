@@ -24,7 +24,7 @@ func TestGetMACPayloadAndSize(t *testing.T) {
 			p2, _, err := getMACPayloadAndSize(uplink, c)
 			So(err, ShouldBeNil)
 
-			So(fmt.Sprintf("%p", p1), ShouldNotEqual, fmt.Sprintf("%p", p2))
+			So(fmt.Sprintf("%p", p1.(*LinkADRAnsPayload)), ShouldNotEqual, fmt.Sprintf("%p", p2.(*LinkADRAnsPayload)))
 		})
 	})
 
