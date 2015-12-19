@@ -282,7 +282,7 @@ type RXPK struct {
 	DatR DatR        `json:"datr"` // LoRa datarate identifier (eg. SF12BW500) || FSK datarate (unsigned, in bits per second)
 	CodR string      `json:"codr"` // LoRa ECC coding rate identifier
 	RSSI int16       `json:"rssi"` // RSSI in dBm (signed integer, 1 dB precision)
-	LSNR int16       `json:"lsnr"` // Lora SNR ratio in dB (signed float, 0.1 dB precision)
+	LSNR float64     `json:"lsnr"` // Lora SNR ratio in dB (signed float, 0.1 dB precision)
 	Size uint16      `json:"size"` // RF packet payload size in bytes (unsigned integer)
 	Data string      `json:"data"` // Base64 encoded RF packet payload, padded
 }
