@@ -1,3 +1,5 @@
+//go:generate stringer -type=PacketType
+
 package semtech
 
 import (
