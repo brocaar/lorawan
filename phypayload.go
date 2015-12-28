@@ -93,7 +93,7 @@ func (p PHYPayload) calculateMIC(key []byte) ([]byte, error) {
 
 	b0 := make([]byte, 16)
 	b0[0] = 0x49
-	if p.uplink {
+	if !p.uplink {
 		b0[5] = 1
 	}
 	copy(b0[6:10], macPayload.FHDR.DevAddr[:])

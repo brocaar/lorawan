@@ -68,15 +68,14 @@ func TestPHYPayload(t *testing.T) {
 
 				})
 
-				// todo: check if this mic is valid
-				Convey("calculateMIC returns []byte{0xac, 0x80, 0x37, 0x24}", func() {
+				Convey("calculateMIC returns []byte{0x7b, 0x14, 0x9d, 0x8a}", func() {
 					mic, err := p.calculateMIC(nwkSKey)
 					So(err, ShouldBeNil)
-					So(mic, ShouldResemble, []byte{0xac, 0x80, 0x37, 0x24})
+					So(mic, ShouldResemble, []byte{0x7b, 0x14, 0x9d, 0x8a})
 				})
 
-				Convey("Given the MIC is []byte{0xac, 0x80, 0x37, 0x24}", func() {
-					p.MIC = [4]byte{0xac, 0x80, 0x37, 0x24}
+				Convey("Given the MIC is []byte{0x7b, 0x14, 0x9d, 0x8a}", func() {
+					p.MIC = [4]byte{0x7b, 0x14, 0x9d, 0x8a}
 
 					Convey("Then ValidateMIC returns true", func() {
 						v, err := p.ValidateMIC(nwkSKey)
@@ -330,7 +329,7 @@ func ExampleNewPHYPayload() {
 	fmt.Println(bytes)
 
 	// Output:
-	// [128 1 2 3 4 0 0 0 10 59 85 197 241 77 4 69 208]
+	// [128 1 2 3 4 0 0 0 10 59 85 197 241 187 130 109 49]
 }
 
 func ExampleNewPHYPayload_joinRequest() {
