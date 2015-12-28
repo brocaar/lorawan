@@ -3,24 +3,25 @@ package lorawan
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 )
 
 // DevAddr represents the device address.
-type DevAddr uint32
+type DevAddr [4]byte
 
 // MarshalBinary marshals the object in binary form.
 func (a DevAddr) MarshalBinary() ([]byte, error) {
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, uint32(a))
-	return b, nil
+	return a[:], nil
 }
 
 // UnmarshalBinary decodes the object from binary form.
 func (a *DevAddr) UnmarshalBinary(data []byte) error {
-	if len(data) != 4 {
-		return errors.New("lorawan: 4 bytes of data are expected")
+	if len(data) != len(a) {
+		return fmt.Errorf("lorawan: %d bytes of data are expected", len(a))
 	}
-	*a = DevAddr(binary.LittleEndian.Uint32(data))
+	for i, v := range data {
+		a[i] = v
+	}
 	return nil
 }
 

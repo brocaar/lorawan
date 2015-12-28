@@ -130,7 +130,7 @@ func (p *MACPayload) EncryptFRMPayload(key []byte) error {
 	if p.uplink {
 		a[5] = 0x01
 	}
-	binary.LittleEndian.PutUint32(a[6:10], uint32(p.FHDR.DevAddr))
+	copy(a[6:10], p.FHDR.DevAddr[:])
 	binary.LittleEndian.PutUint32(a[10:14], uint32(p.FHDR.Fcnt))
 
 	for i := 0; i < len(data)/16; i++ {

@@ -48,12 +48,12 @@ func TestPHYPayload(t *testing.T) {
 			So(b, ShouldResemble, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 		})
 
-		Convey("Given MHDR(MType=JoinAccept, Major=LoRaWANR1), MACPayload(FHDR(DevAddr=67305985)), MIC=[4]byte{4, 3, 2, 1}", func() {
+		Convey("Given MHDR(MType=JoinAccept, Major=LoRaWANR1), MACPayload(FHDR(DevAddr=[4]byte{1, 2, 3, 4})), MIC=[4]byte{4, 3, 2, 1}", func() {
 			p.MHDR.MType = JoinAccept
 			p.MHDR.Major = LoRaWANR1
 			p.MACPayload = &MACPayload{
 				FHDR: FHDR{
-					DevAddr: DevAddr(67305985),
+					DevAddr: DevAddr([4]byte{1, 2, 3, 4}),
 				},
 			}
 			p.MIC = [4]byte{4, 3, 2, 1}
@@ -110,8 +110,8 @@ func TestPHYPayload(t *testing.T) {
 				Convey("Then MHDR=(MType=UnconfirmedDataUp, Major=LoRaWANR1)", func() {
 					So(p.MHDR, ShouldResemble, MHDR{MType: UnconfirmedDataUp, Major: LoRaWANR1})
 				})
-				Convey("Then MACPayload(FHDR(DevAddr=67305985))", func() {
-					So(p.MACPayload, ShouldResemble, &MACPayload{FHDR: FHDR{DevAddr: DevAddr(67305985)}})
+				Convey("Then MACPayload(FHDR(DevAddr=[4]byte{1, 2, 3, 4}))", func() {
+					So(p.MACPayload, ShouldResemble, &MACPayload{FHDR: FHDR{DevAddr: DevAddr([4]byte{1, 2, 3, 4})}})
 				})
 				Convey("Then MIC=[4]byte{4, 3, 2, 1}", func() {
 					So(p.MIC, ShouldResemble, [4]byte{4, 3, 2, 1})
@@ -174,9 +174,9 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 			So(b, ShouldResemble, exp)
 		})
 
-		Convey("Given MHDR=(MType=JoinAccept, Major=LoRaWANR1), MACPayload=JoinAcceptPayload(AppNonce=5, NetID=6, DevAddr=67305985, DLSettings=(RX2DataRate=1, RX1DRoffset=2), RXDelay=7), MIC=[4]byte{8, 9 , 10, 11}", func() {
+		Convey("Given MHDR=(MType=JoinAccept, Major=LoRaWANR1), MACPayload=JoinAcceptPayload(AppNonce=5, NetID=6, DevAddr=[4]byte{1, 2, 3, 4}, DLSettings=(RX2DataRate=1, RX1DRoffset=2), RXDelay=7), MIC=[4]byte{8, 9 , 10, 11}", func() {
 			p.MHDR = MHDR{MType: JoinAccept, Major: LoRaWANR1}
-			p.MACPayload = &JoinAcceptPayload{AppNonce: 5, NetID: 6, DevAddr: DevAddr(67305985), DLSettings: DLsettings{RX2DataRate: 1, RX1DRoffset: 2}, RXDelay: 7}
+			p.MACPayload = &JoinAcceptPayload{AppNonce: 5, NetID: 6, DevAddr: DevAddr([4]byte{1, 2, 3, 4}), DLSettings: DLsettings{RX2DataRate: 1, RX1DRoffset: 2}, RXDelay: 7}
 			p.MIC = [4]byte{8, 9, 10, 11}
 
 			// no encryption and invalid MIC
@@ -266,8 +266,8 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 								ja, ok := p.MACPayload.(*JoinAcceptPayload)
 								So(ok, ShouldBeTrue)
 
-								Convey("Then MACPayload=JoinAcceptPayload(AppNonce=5, NetID=6, DevAddr=67305985, DLSettings=(RX2DataRate=1, RX1DRoffset=2), RXDelay=7", func() {
-									So(ja, ShouldResemble, &JoinAcceptPayload{AppNonce: 5, NetID: 6, DevAddr: 67305985, DLSettings: DLsettings{RX2DataRate: 1, RX1DRoffset: 2}, RXDelay: 7})
+								Convey("Then MACPayload=JoinAcceptPayload(AppNonce=5, NetID=6, DevAddr=[4]byte{1, 2, 3, 4}, DLSettings=(RX2DataRate=1, RX1DRoffset=2), RXDelay=7", func() {
+									So(ja, ShouldResemble, &JoinAcceptPayload{AppNonce: 5, NetID: 6, DevAddr: DevAddr([4]byte{1, 2, 3, 4}), DLSettings: DLsettings{RX2DataRate: 1, RX1DRoffset: 2}, RXDelay: 7})
 								})
 
 								Convey("Then ValidateMIC returns true", func() {
@@ -294,7 +294,7 @@ func ExampleNewPHYPayload() {
 
 	macPayload := &MACPayload{
 		FHDR: FHDR{
-			DevAddr: DevAddr(67305985),
+			DevAddr: DevAddr([4]byte{1, 2, 3, 4}),
 			FCtrl: FCtrl{
 				ADR:       false,
 				ADRACKReq: false,
@@ -375,7 +375,7 @@ func ExampleNewPHYPayload_joinAcceptSend() {
 	payload.MACPayload = &JoinAcceptPayload{
 		AppNonce:   12345,
 		NetID:      11111111,
-		DevAddr:    67305985,
+		DevAddr:    DevAddr([4]byte{1, 2, 3, 4}),
 		DLSettings: DLsettings{RX2DataRate: 0, RX1DRoffset: 0},
 		RXDelay:    0,
 	}

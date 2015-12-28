@@ -96,7 +96,7 @@ func (p PHYPayload) calculateMIC(key []byte) ([]byte, error) {
 	if p.uplink {
 		b0[5] = 1
 	}
-	binary.LittleEndian.PutUint32(b0[6:10], uint32(macPayload.FHDR.DevAddr))
+	copy(b0[6:10], macPayload.FHDR.DevAddr[:])
 	binary.LittleEndian.PutUint32(b0[10:14], uint32(macPayload.FHDR.Fcnt))
 	b0[15] = byte(len(micBytes))
 
@@ -186,8 +186,7 @@ func (p PHYPayload) calculateJoinAcceptMIC(key []byte) ([]byte, error) {
 	micBytes = append(micBytes, iBytes[0:3]...)
 	binary.LittleEndian.PutUint32(iBytes, jaPayload.NetID)
 	micBytes = append(micBytes, iBytes[0:3]...)
-	binary.LittleEndian.PutUint32(iBytes, uint32(jaPayload.DevAddr))
-	micBytes = append(micBytes, iBytes...)
+	micBytes = append(micBytes, jaPayload.DevAddr[:]...)
 
 	// in the 1.0 spec instead of DLSettings there is RFU field. the assumption
 	// is made that this should have been DLSettings, since the same goes

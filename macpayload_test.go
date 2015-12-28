@@ -28,8 +28,8 @@ func TestMACPayload(t *testing.T) {
 			})
 		})
 
-		Convey("Given FHDR(DevAddr=67305985), FPort=1, FRMPayload=[]Payload{DataPayload(Bytes=[]byte{5, 6, 7})}", func() {
-			p.FHDR.DevAddr = DevAddr(67305985)
+		Convey("Given FHDR(DevAddr=[4]{1, 2, 3, 4}), FPort=1, FRMPayload=[]Payload{DataPayload(Bytes=[]byte{5, 6, 7})}", func() {
+			p.FHDR.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
 			p.FPort = 1
 			p.FRMPayload = []Payload{&DataPayload{[]byte{5, 6, 7}}}
 
@@ -67,9 +67,9 @@ func TestMACPayload(t *testing.T) {
 			})
 		})
 
-		Convey("Given uplink=true, FHDR(DevAddr=67305985), FPort=0, FRMPayload=[]Payload{MACCommand{CID: DevStatusAns, Payload: DevStatusAnsPayload(Battery=10, Margin=20)}}", func() {
+		Convey("Given uplink=true, FHDR(DevAddr=[4]{1, 2, 3, 4}), FPort=0, FRMPayload=[]Payload{MACCommand{CID: DevStatusAns, Payload: DevStatusAnsPayload(Battery=10, Margin=20)}}", func() {
 			p.uplink = true
-			p.FHDR.DevAddr = DevAddr(67305985)
+			p.FHDR.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
 			p.FPort = 0
 			p.FRMPayload = []Payload{&MACCommand{CID: DevStatusAns, Payload: &DevStatusAnsPayload{Battery: 10, Margin: 20}}}
 
@@ -121,8 +121,8 @@ func TestMACPayload(t *testing.T) {
 				err := p.UnmarshalBinary(b)
 				So(err, ShouldBeNil)
 
-				Convey("Then FHDR(DevAddr=67305985)", func() {
-					So(p.FHDR.DevAddr, ShouldEqual, DevAddr(67305985))
+				Convey("Then FHDR(DevAddr=[4]byte{1, 2, 3, 4})", func() {
+					So(p.FHDR.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
 				})
 				Convey("Then FPort=0", func() {
 					So(p.FPort, ShouldEqual, 0)
@@ -149,8 +149,8 @@ func TestMACPayload(t *testing.T) {
 				err := p.UnmarshalBinary(b)
 				So(err, ShouldBeNil)
 
-				Convey("Then FHDR(DevAddr=67305985)", func() {
-					So(p.FHDR.DevAddr, ShouldEqual, DevAddr(67305985))
+				Convey("Then FHDR(DevAddr=[4]byte{1, 2, 3, 4})", func() {
+					So(p.FHDR.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
 				})
 				Convey("Then FPort=1", func() {
 					So(p.FPort, ShouldEqual, 1)

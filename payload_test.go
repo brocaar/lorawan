@@ -85,10 +85,10 @@ func TestJoinAcceptPayload(t *testing.T) {
 			So(b, ShouldResemble, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 		})
 
-		Convey("Given AppNonce=5, NetID=6, DevAddr=DevAddr(67305985), DLSettings=(RX2DataRate=7, RX1DRoffset=6), RXDelay=9", func() {
+		Convey("Given AppNonce=5, NetID=6, DevAddr=DevAddr([4]byte{1, 2, 3, 4}), DLSettings=(RX2DataRate=7, RX1DRoffset=6), RXDelay=9", func() {
 			p.AppNonce = 5
 			p.NetID = 6
-			p.DevAddr = DevAddr(67305985)
+			p.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
 			p.DLSettings.RX2DataRate = 7
 			p.DLSettings.RX1DRoffset = 6
 			p.RXDelay = 9
@@ -110,13 +110,13 @@ func TestJoinAcceptPayload(t *testing.T) {
 
 		Convey("Given the slice []byte{5, 0, 0, 6, 0, 0, 1, 2, 3, 4, 103, 9}", func() {
 			b := []byte{5, 0, 0, 6, 0, 0, 1, 2, 3, 4, 103, 9}
-			Convey("Then UnmarshalBinary returns a JoinAcceptPayload with AppNonce=5, NetID=6, DevAddr=DevAddr(67305985), DLSettings=(RX2DataRate=7, RX1DRoffset=6), RXDelay=9", func() {
+			Convey("Then UnmarshalBinary returns a JoinAcceptPayload with AppNonce=5, NetID=6, DevAddr=DevAddr([4]byte{1, 2, 3, 4}), DLSettings=(RX2DataRate=7, RX1DRoffset=6), RXDelay=9", func() {
 				err := p.UnmarshalBinary(b)
 				So(err, ShouldBeNil)
 
 				So(p.AppNonce, ShouldEqual, 5)
 				So(p.NetID, ShouldEqual, 6)
-				So(p.DevAddr, ShouldEqual, DevAddr(67305985))
+				So(p.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
 				So(p.DLSettings, ShouldResemble, DLsettings{RX2DataRate: 7, RX1DRoffset: 6})
 				So(p.RXDelay, ShouldEqual, 9)
 			})

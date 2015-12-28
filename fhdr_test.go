@@ -18,7 +18,7 @@ func TestDevAddr(t *testing.T) {
 		})
 
 		Convey("Given The DevAddr=67305985", func() {
-			a = DevAddr(67305985)
+			a = DevAddr([4]byte{1, 2, 3, 4})
 			Convey("Then MarshalBinary returns []byte{1, 2, 3, 4}", func() {
 				b, err := a.MarshalBinary()
 				So(err, ShouldBeNil)
@@ -28,10 +28,10 @@ func TestDevAddr(t *testing.T) {
 
 		Convey("Given the slice []byte{1, 2, 3, 4}", func() {
 			b := []byte{1, 2, 3, 4}
-			Convey("Then UnmarshalBinary returns DevAddr=67305985", func() {
+			Convey("Then UnmarshalBinary returns DevAddr([4]byte{1, 2, 3, 4})", func() {
 				err := a.UnmarshalBinary(b)
 				So(err, ShouldBeNil)
-				So(a, ShouldResemble, DevAddr(67305985))
+				So(a, ShouldResemble, DevAddr([4]byte{1, 2, 3, 4}))
 			})
 		})
 	})
@@ -106,7 +106,7 @@ func TestFHDR(t *testing.T) {
 
 		Convey("Given uplink=false, DevAddr=67305985, FCtrl=FCtrl(ADR=true, ADRACKReq=false, ACK=true, FPending=true), Fcnt=5, FOpts=[]MACCommand{(CID=LinkCheckAns, Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9))}", func() {
 			h.uplink = false
-			h.DevAddr = DevAddr(67305985)
+			h.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
 			h.FCtrl = FCtrl{ADR: true, ADRACKReq: false, ACK: true, FPending: true}
 			h.Fcnt = 5
 			h.FOpts = []MACCommand{
@@ -146,8 +146,8 @@ func TestFHDR(t *testing.T) {
 				err := h.UnmarshalBinary(b)
 				So(err, ShouldBeNil)
 
-				Convey("Then DevAddr=67305985", func() {
-					So(h.DevAddr, ShouldEqual, DevAddr(67305985))
+				Convey("Then DevAddr=[4]{1, 2, 3, 4}", func() {
+					So(h.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
 				})
 
 				Convey("Then FCtrl=FCtrl(ADR=true, ADRACKReq=false, ACK=true, FPending=true, fOptsLen=3)", func() {
