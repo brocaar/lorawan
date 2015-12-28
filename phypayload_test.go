@@ -291,25 +291,28 @@ func ExampleNewPHYPayload() {
 	nwkSKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	appSKey := []byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
 
-	macPayload := &MACPayload{
-		FHDR: FHDR{
-			DevAddr: DevAddr([4]byte{1, 2, 3, 4}),
-			FCtrl: FCtrl{
-				ADR:       false,
-				ADRACKReq: false,
-				ACK:       false,
-			},
-			Fcnt:  0,
-			FOpts: []MACCommand{}, // you can leave this out when there is no MAC command to send
+	// uplink and downlink messages are (un)marshalled and encrypted / decrypted
+	// differently
+	uplink := true
+
+	macPayload := NewMACPayload(uplink)
+	macPayload.FHDR = FHDR{
+		DevAddr: DevAddr([4]byte{1, 2, 3, 4}),
+		FCtrl: FCtrl{
+			ADR:       false,
+			ADRACKReq: false,
+			ACK:       false,
 		},
-		FPort:      10,
-		FRMPayload: []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}},
+		Fcnt:  0,
+		FOpts: []MACCommand{}, // you can leave this out when there is no MAC command to send
 	}
+	macPayload.FPort = 10
+	macPayload.FRMPayload = []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}}
+
 	if err := macPayload.EncryptFRMPayload(appSKey); err != nil {
 		panic(err)
 	}
 
-	uplink := true
 	payload := NewPHYPayload(uplink)
 	payload.MHDR = MHDR{
 		MType: ConfirmedDataUp,

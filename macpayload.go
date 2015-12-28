@@ -6,12 +6,22 @@ import (
 	"errors"
 )
 
-// MACPayload represents the MAC payload.
+// MACPayload represents the MAC payload. Use NewMACPayload for creating a new
+// MACPayload.
 type MACPayload struct {
 	FHDR       FHDR
 	FPort      uint8 // ignored when FRMPayload is empty
 	FRMPayload []Payload
-	uplink     bool // used for binary (un)marshaling
+	uplink     bool // used for binary (un)marshaling and encryption / decryption
+}
+
+// NewMACPayload returns a new MACPayload set to either uplink or downlink.
+// This is needed since there is a difference in how uplink and downlink
+// payloads are (un)marshalled and encrypted / decrypted.
+func NewMACPayload(uplink bool) *MACPayload {
+	return &MACPayload{
+		uplink: uplink,
+	}
 }
 
 func (p MACPayload) marshalPayload() ([]byte, error) {
@@ -127,7 +137,7 @@ func (p *MACPayload) EncryptFRMPayload(key []byte) error {
 	s := make([]byte, 16)
 	a := make([]byte, 16)
 	a[0] = 0x01
-	if p.uplink {
+	if !p.uplink {
 		a[5] = 0x01
 	}
 	copy(a[6:10], p.FHDR.DevAddr[:])
