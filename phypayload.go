@@ -1,3 +1,5 @@
+//go:generate stringer -type=mType
+
 package lorawan
 
 import (
