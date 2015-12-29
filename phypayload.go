@@ -135,7 +135,6 @@ func (p PHYPayload) calculateJoinRequestMIC(key []byte) ([]byte, error) {
 	var b []byte
 	var err error
 	micBytes := make([]byte, 0, 19)
-	iBytes := make([]byte, 8)
 
 	b, err = p.MHDR.MarshalBinary()
 	if err != nil {
@@ -143,12 +142,9 @@ func (p PHYPayload) calculateJoinRequestMIC(key []byte) ([]byte, error) {
 	}
 	micBytes = append(micBytes, b...)
 
-	binary.LittleEndian.PutUint64(iBytes, jrPayload.AppEUI)
-	micBytes = append(micBytes, iBytes...)
-	binary.LittleEndian.PutUint64(iBytes, jrPayload.DevEUI)
-	micBytes = append(micBytes, iBytes...)
-	binary.LittleEndian.PutUint16(iBytes[0:2], jrPayload.DevNonce)
-	micBytes = append(micBytes, iBytes[0:2]...)
+	micBytes = append(micBytes, jrPayload.AppEUI[:]...)
+	micBytes = append(micBytes, jrPayload.DevEUI[:]...)
+	micBytes = append(micBytes, jrPayload.DevNonce[:]...)
 
 	hash, err := cmac.New(key)
 	if err != nil {
@@ -177,7 +173,6 @@ func (p PHYPayload) calculateJoinAcceptMIC(key []byte) ([]byte, error) {
 	var b []byte
 	var err error
 	micBytes := make([]byte, 0, 13)
-	iBytes := make([]byte, 4)
 
 	b, err = p.MHDR.MarshalBinary()
 	if err != nil {
@@ -185,10 +180,8 @@ func (p PHYPayload) calculateJoinAcceptMIC(key []byte) ([]byte, error) {
 	}
 	micBytes = append(micBytes, b...)
 
-	binary.LittleEndian.PutUint32(iBytes, jaPayload.AppNonce)
-	micBytes = append(micBytes, iBytes[0:3]...)
-	binary.LittleEndian.PutUint32(iBytes, jaPayload.NetID)
-	micBytes = append(micBytes, iBytes[0:3]...)
+	micBytes = append(micBytes, jaPayload.AppNonce[:]...)
+	micBytes = append(micBytes, jaPayload.NetID[:]...)
 	micBytes = append(micBytes, jaPayload.DevAddr[:]...)
 
 	// in the 1.0 spec instead of DLSettings there is RFU field. the assumption
