@@ -72,7 +72,7 @@ func (c *FCtrl) UnmarshalBinary(data []byte) error {
 type FHDR struct {
 	DevAddr DevAddr
 	FCtrl   FCtrl
-	Fcnt    uint16
+	FCnt    uint16
 	FOpts   []MACCommand // max. number of allowed bytes is 15
 	uplink  bool         // used for the (un)marshaling, not part of the spec.
 }
@@ -109,7 +109,7 @@ func (h FHDR) MarshalBinary() ([]byte, error) {
 	}
 	out = append(out, b...)
 	out = append(out, []byte{0, 0}...) // used by PutUint16
-	binary.LittleEndian.PutUint16(out[5:7], h.Fcnt)
+	binary.LittleEndian.PutUint16(out[5:7], h.FCnt)
 	out = append(out, opts...)
 
 	return out, nil
@@ -127,7 +127,7 @@ func (h *FHDR) UnmarshalBinary(data []byte) error {
 	if err := h.FCtrl.UnmarshalBinary(data[4:5]); err != nil {
 		return err
 	}
-	h.Fcnt = binary.LittleEndian.Uint16(data[5:7])
+	h.FCnt = binary.LittleEndian.Uint16(data[5:7])
 
 	if len(data) > 7 {
 		var pLen int

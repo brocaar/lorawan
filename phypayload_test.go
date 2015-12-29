@@ -323,7 +323,7 @@ func ExampleNewPHYPayload() {
 			ADRACKReq: false,
 			ACK:       false,
 		},
-		Fcnt:  0,
+		FCnt:  0,
 		FOpts: []MACCommand{}, // you can leave this out when there is no MAC command to send
 	}
 	macPayload.FPort = 10

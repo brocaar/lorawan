@@ -108,7 +108,7 @@ func TestFHDR(t *testing.T) {
 			h.uplink = false
 			h.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
 			h.FCtrl = FCtrl{ADR: true, ADRACKReq: false, ACK: true, FPending: true}
-			h.Fcnt = 5
+			h.FCnt = 5
 			h.FOpts = []MACCommand{
 				{CID: LinkCheckAns, Payload: &LinkCheckAnsPayload{Margin: 7, GwCnt: 9}},
 			}
