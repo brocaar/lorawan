@@ -39,8 +39,8 @@ func TestMACPayload(t *testing.T) {
 				So(b, ShouldResemble, []byte{1, 2, 3, 4, 0, 0, 0, 1, 5, 6, 7})
 			})
 
-			Convey("Given the key []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
-				key := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+			Convey("Given the key [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
+				key := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 				Convey("Then EncryptFRMPayload does not return an error", func() {
 					err := p.EncryptFRMPayload(key)
 					So(err, ShouldBeNil)

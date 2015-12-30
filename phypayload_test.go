@@ -58,8 +58,8 @@ func TestPHYPayload(t *testing.T) {
 			}
 			p.MIC = [4]byte{4, 3, 2, 1}
 
-			Convey("Given the NwkSKey []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
-				nwkSKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+			Convey("Given the NwkSKey 16[]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
+				nwkSKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
 				Convey("Then ValidateMIC returns false", func() {
 					v, err := p.ValidateMIC(nwkSKey)
@@ -199,8 +199,8 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 				So(b, ShouldResemble, []byte{32, 1, 1, 1, 2, 2, 2, 1, 2, 3, 4, 33, 7, 8, 9, 10, 11})
 			})
 
-			Convey("Given AppKey []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
-				appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+			Convey("Given AppKey [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
+				appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
 				Convey("Then ValidateMIC returns false", func() {
 					v, err := p.ValidateMIC(appKey)
@@ -268,8 +268,8 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 						So(dp.Bytes, ShouldResemble, []byte{234, 201, 51, 48, 151, 50, 166, 172, 136, 105, 14, 81, 71, 167, 87, 205})
 					})
 
-					Convey("Given AppKey []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
-						appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+					Convey("Given AppKey [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
+						appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
 						Convey("Given DecryptMACPayload is called", func() {
 							err := p.DecryptMACPayload(appKey)
@@ -308,8 +308,8 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 }
 
 func ExampleNewPHYPayload() {
-	nwkSKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
-	appSKey := []byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
+	nwkSKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+	appSKey := [16]byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
 
 	// uplink and downlink messages are (un)marshalled and encrypted / decrypted
 	// differently
@@ -357,7 +357,7 @@ func ExampleNewPHYPayload() {
 
 func ExampleNewPHYPayload_joinRequest() {
 	uplink := true
-	appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+	appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
 	payload := NewPHYPayload(uplink)
 	payload.MHDR = MHDR{
@@ -387,7 +387,7 @@ func ExampleNewPHYPayload_joinRequest() {
 
 func ExampleNewPHYPayload_joinAcceptSend() {
 	uplink := false
-	appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+	appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
 	payload := NewPHYPayload(uplink)
 	payload.MHDR = MHDR{
@@ -422,7 +422,7 @@ func ExampleNewPHYPayload_joinAcceptSend() {
 
 func ExampleNewPHYPayload_joinAcceptReceive() {
 	uplink := false
-	appKey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+	appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	bytes := []byte{32, 171, 84, 244, 227, 34, 30, 148, 118, 211, 1, 33, 90, 24, 50, 81, 139, 128, 229, 23, 154}
 
 	payload := NewPHYPayload(uplink)

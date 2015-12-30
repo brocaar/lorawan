@@ -111,7 +111,7 @@ func (p MACPayload) MarshalBinary() ([]byte, error) {
 }
 
 // EncryptFRMPayload encrypts the FRMPayload with the given key.
-func (p *MACPayload) EncryptFRMPayload(key []byte) error {
+func (p *MACPayload) EncryptFRMPayload(key [16]byte) error {
 	if len(p.FRMPayload) == 0 {
 		return errors.New("lorawan: nothing to encrypt")
 	}
@@ -126,7 +126,7 @@ func (p *MACPayload) EncryptFRMPayload(key []byte) error {
 		data = append(data, make([]byte, 16-(pLen%16))...)
 	}
 
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(key[:])
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (p *MACPayload) EncryptFRMPayload(key []byte) error {
 }
 
 // DecryptFRMPayload decrypts the FRMPayload with the given key.
-func (p *MACPayload) DecryptFRMPayload(key []byte) error {
+func (p *MACPayload) DecryptFRMPayload(key [16]byte) error {
 	if err := p.EncryptFRMPayload(key); err != nil {
 		return err
 	}

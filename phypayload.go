@@ -70,7 +70,7 @@ func NewPHYPayload(uplink bool) PHYPayload {
 }
 
 // calculateMIC calculates and returns the MIC.
-func (p PHYPayload) calculateMIC(key []byte) ([]byte, error) {
+func (p PHYPayload) calculateMIC(key [16]byte) ([]byte, error) {
 	if p.MACPayload == nil {
 		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
 	}
@@ -105,7 +105,7 @@ func (p PHYPayload) calculateMIC(key []byte) ([]byte, error) {
 	binary.LittleEndian.PutUint32(b0[10:14], uint32(macPayload.FHDR.FCnt))
 	b0[15] = byte(len(micBytes))
 
-	hash, err := cmac.New(key)
+	hash, err := cmac.New(key[:])
 	if err != nil {
 		return []byte{}, err
 	}
@@ -125,7 +125,7 @@ func (p PHYPayload) calculateMIC(key []byte) ([]byte, error) {
 }
 
 // calculateJoinRequestMIC calculates and returns the join-request MIC.
-func (p PHYPayload) calculateJoinRequestMIC(key []byte) ([]byte, error) {
+func (p PHYPayload) calculateJoinRequestMIC(key [16]byte) ([]byte, error) {
 	if p.MACPayload == nil {
 		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
 	}
@@ -148,7 +148,7 @@ func (p PHYPayload) calculateJoinRequestMIC(key []byte) ([]byte, error) {
 	micBytes = append(micBytes, jrPayload.DevEUI[:]...)
 	micBytes = append(micBytes, jrPayload.DevNonce[:]...)
 
-	hash, err := cmac.New(key)
+	hash, err := cmac.New(key[:])
 	if err != nil {
 		return []byte{}, err
 	}
@@ -163,7 +163,7 @@ func (p PHYPayload) calculateJoinRequestMIC(key []byte) ([]byte, error) {
 }
 
 // calculateJoinAcceptMIC calculates and returns the join-accept MIC.
-func (p PHYPayload) calculateJoinAcceptMIC(key []byte) ([]byte, error) {
+func (p PHYPayload) calculateJoinAcceptMIC(key [16]byte) ([]byte, error) {
 	if p.MACPayload == nil {
 		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
 	}
@@ -196,7 +196,7 @@ func (p PHYPayload) calculateJoinAcceptMIC(key []byte) ([]byte, error) {
 	micBytes = append(micBytes, b...)
 	micBytes = append(micBytes, byte(jaPayload.RXDelay))
 
-	hash, err := cmac.New(key)
+	hash, err := cmac.New(key[:])
 	if err != nil {
 		return []byte{}, err
 	}
@@ -211,7 +211,7 @@ func (p PHYPayload) calculateJoinAcceptMIC(key []byte) ([]byte, error) {
 }
 
 // SetMIC calculates and sets the MIC field.
-func (p *PHYPayload) SetMIC(key []byte) error {
+func (p *PHYPayload) SetMIC(key [16]byte) error {
 	var mic []byte
 	var err error
 
@@ -237,7 +237,7 @@ func (p *PHYPayload) SetMIC(key []byte) error {
 }
 
 // ValidateMIC returns if the MIC is valid.
-func (p PHYPayload) ValidateMIC(key []byte) (bool, error) {
+func (p PHYPayload) ValidateMIC(key [16]byte) (bool, error) {
 	var mic []byte
 	var err error
 
@@ -268,7 +268,7 @@ func (p PHYPayload) ValidateMIC(key []byte) (bool, error) {
 // should only be done when the MACPayload is a JoinAcceptPayload.
 // Note that the encryption should be performed after SetMIC since the MIC
 // is part of the encrypted content.
-func (p *PHYPayload) EncryptMACPayload(key []byte) error {
+func (p *PHYPayload) EncryptMACPayload(key [16]byte) error {
 	if _, ok := p.MACPayload.(*JoinAcceptPayload); !ok {
 		return errors.New("lorawan: EncryptMACPayload can only be for *JoinAcceptPayload")
 	}
@@ -286,7 +286,7 @@ func (p *PHYPayload) EncryptMACPayload(key []byte) error {
 		return errors.New("lorawan: plaintext should be a multiple of 16")
 	}
 
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(key[:])
 	if err != nil {
 		return err
 	}
@@ -304,7 +304,7 @@ func (p *PHYPayload) EncryptMACPayload(key []byte) error {
 }
 
 // DecryptMACPayload decrypts the MACPayload with the given key.
-func (p *PHYPayload) DecryptMACPayload(key []byte) error {
+func (p *PHYPayload) DecryptMACPayload(key [16]byte) error {
 	dp, ok := p.MACPayload.(*DataPayload)
 	if !ok {
 		return errors.New("lorawan: MACPayload should be of type *DataPayload")
@@ -313,7 +313,7 @@ func (p *PHYPayload) DecryptMACPayload(key []byte) error {
 		return errors.New("lorawan: the DataPayload should be a multiple of 16")
 	}
 
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(key[:])
 	if err != nil {
 		return err
 	}
