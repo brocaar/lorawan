@@ -388,3 +388,29 @@ func (p *PHYPayload) UnmarshalBinary(data []byte) error {
 	}
 	return nil
 }
+
+// GobEncode implements the gob.GobEncoder interface.
+func (p PHYPayload) GobEncode() ([]byte, error) {
+	out := make([]byte, 1)
+	if p.uplink {
+		out[0] = 1
+	}
+
+	b, err := p.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, b...)
+	return out, nil
+}
+
+// GobDecode implements the gob.GobEncoder interface.
+func (p *PHYPayload) GobDecode(data []byte) error {
+	if len(data) < 1 {
+		return errors.New("lorawan: at least 1 byte needed for GobDecode")
+	}
+	if data[0] == 1 {
+		p.uplink = true
+	}
+	return p.UnmarshalBinary(data[1:])
+}

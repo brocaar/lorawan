@@ -98,6 +98,21 @@ func TestPHYPayloadData(t *testing.T) {
 					})
 				})
 			})
+
+			Convey("When using GobEncode", func() {
+				b, err := phy.GobEncode()
+				So(err, ShouldBeNil)
+
+				Convey("Then when using GobDecode, the packet is uplink and the MIC valid", func() {
+					newPHY := &PHYPayload{}
+					So(newPHY.GobDecode(b), ShouldBeNil)
+					So(newPHY.uplink, ShouldBeTrue)
+
+					valid, err := newPHY.ValidateMIC([16]byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2})
+					So(err, ShouldBeNil)
+					So(valid, ShouldBeTrue)
+				})
+			})
 		})
 	})
 }
