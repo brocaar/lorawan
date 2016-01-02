@@ -86,13 +86,13 @@ func (p PHYPayload) calculateMIC(key [16]byte) ([]byte, error) {
 
 	b, err = p.MHDR.MarshalBinary()
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 	micBytes = append(micBytes, b...)
 
 	b, err = macPayload.MarshalBinary()
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 	micBytes = append(micBytes, b...)
 
@@ -101,13 +101,17 @@ func (p PHYPayload) calculateMIC(key [16]byte) ([]byte, error) {
 	if !p.uplink {
 		b0[5] = 1
 	}
-	copy(b0[6:10], macPayload.FHDR.DevAddr[:])
+	b, err = macPayload.FHDR.DevAddr.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	copy(b0[6:10], b)
 	binary.LittleEndian.PutUint32(b0[10:14], uint32(macPayload.FHDR.FCnt))
 	b0[15] = byte(len(micBytes))
 
 	hash, err := cmac.New(key[:])
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	if _, err = hash.Write(b0); err != nil {
@@ -119,7 +123,7 @@ func (p PHYPayload) calculateMIC(key [16]byte) ([]byte, error) {
 
 	hb := hash.Sum([]byte{})
 	if len(hb) < 4 {
-		return []byte{}, errors.New("lorawan: the hash returned less than 4 bytes")
+		return nil, errors.New("lorawan: the hash returned less than 4 bytes")
 	}
 	return hb[0:4], nil
 }
@@ -144,6 +148,7 @@ func (p PHYPayload) calculateJoinRequestMIC(key [16]byte) ([]byte, error) {
 	}
 	micBytes = append(micBytes, b...)
 
+	// todo: fix endian bug
 	micBytes = append(micBytes, jrPayload.AppEUI[:]...)
 	micBytes = append(micBytes, jrPayload.DevEUI[:]...)
 	micBytes = append(micBytes, jrPayload.DevNonce[:]...)
@@ -182,6 +187,7 @@ func (p PHYPayload) calculateJoinAcceptMIC(key [16]byte) ([]byte, error) {
 	}
 	micBytes = append(micBytes, b...)
 
+	// todo: fix endian bug
 	micBytes = append(micBytes, jaPayload.AppNonce[:]...)
 	micBytes = append(micBytes, jaPayload.NetID[:]...)
 	micBytes = append(micBytes, jaPayload.DevAddr[:]...)

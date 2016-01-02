@@ -22,12 +22,12 @@ func TestDevAddr(t *testing.T) {
 			Convey("Then MarshalBinary returns []byte{1, 2, 3, 4}", func() {
 				b, err := a.MarshalBinary()
 				So(err, ShouldBeNil)
-				So(b, ShouldResemble, []byte{1, 2, 3, 4})
+				So(b, ShouldResemble, []byte{4, 3, 2, 1})
 			})
 		})
 
-		Convey("Given the slice []byte{1, 2, 3, 4}", func() {
-			b := []byte{1, 2, 3, 4}
+		Convey("Given the slice []byte{4, 3, 2, 1}", func() {
+			b := []byte{4, 3, 2, 1}
 			Convey("Then UnmarshalBinary returns DevAddr([4]byte{1, 2, 3, 4})", func() {
 				err := a.UnmarshalBinary(b)
 				So(err, ShouldBeNil)
@@ -112,10 +112,10 @@ func TestFHDR(t *testing.T) {
 			h.FOpts = []MACCommand{
 				{CID: LinkCheckAns, Payload: &LinkCheckAnsPayload{Margin: 7, GwCnt: 9}},
 			}
-			Convey("Then MarshalBinary returns []byte{1, 2, 3, 4, 179, 5, 0, 2, 7, 9}", func() {
+			Convey("Then MarshalBinary returns []byte{4, 3, 2, 1, 179, 5, 0, 2, 7, 9}", func() {
 				b, err := h.MarshalBinary()
 				So(err, ShouldBeNil)
-				So(b, ShouldResemble, []byte{1, 2, 3, 4, 179, 5, 0, 2, 7, 9})
+				So(b, ShouldResemble, []byte{4, 3, 2, 1, 179, 5, 0, 2, 7, 9})
 			})
 		})
 
@@ -139,8 +139,8 @@ func TestFHDR(t *testing.T) {
 			})
 		})
 
-		Convey("Given uplink=false and slice []byte{1, 2, 3, 4, 179, 5, 0, 2, 7, 9}", func() {
-			b := []byte{1, 2, 3, 4, 179, 5, 0, 2, 7, 9}
+		Convey("Given uplink=false and slice []byte{4, 2, 2, 1, 179, 5, 0, 2, 7, 9}", func() {
+			b := []byte{4, 3, 2, 1, 179, 5, 0, 2, 7, 9}
 			h.uplink = false
 			Convey("Then UnmarshalBinary does not return an error", func() {
 				err := h.UnmarshalBinary(b)

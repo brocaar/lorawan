@@ -11,7 +11,12 @@ type DevAddr [4]byte
 
 // MarshalBinary marshals the object in binary form.
 func (a DevAddr) MarshalBinary() ([]byte, error) {
-	return a[:], nil
+	out := make([]byte, len(a))
+	for i, v := range a {
+		// little endian
+		out[len(a)-i-1] = v
+	}
+	return out, nil
 }
 
 // UnmarshalBinary decodes the object from binary form.
@@ -20,7 +25,8 @@ func (a *DevAddr) UnmarshalBinary(data []byte) error {
 		return fmt.Errorf("lorawan: %d bytes of data are expected", len(a))
 	}
 	for i, v := range data {
-		a[i] = v
+		// little endian
+		a[len(a)-i-1] = v
 	}
 	return nil
 }
