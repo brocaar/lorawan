@@ -176,30 +176,19 @@ func (p PHYPayload) calculateJoinAcceptMIC(key [16]byte) ([]byte, error) {
 		return []byte{}, errors.New("lorawan: MACPayload should be of type *JoinAcceptPayload")
 	}
 
-	var b []byte
-	var err error
 	micBytes := make([]byte, 0, 13)
 
-	b, err = p.MHDR.MarshalBinary()
+	b, err := p.MHDR.MarshalBinary()
 	if err != nil {
 		return []byte{}, err
 	}
 	micBytes = append(micBytes, b...)
 
-	// todo: fix endian bug
-	micBytes = append(micBytes, jaPayload.AppNonce[:]...)
-	micBytes = append(micBytes, jaPayload.NetID[:]...)
-	micBytes = append(micBytes, jaPayload.DevAddr[:]...)
-
-	// in the 1.0 spec instead of DLSettings there is RFU field. the assumption
-	// is made that this should have been DLSettings, since the same goes
-	// for encrypt / decryption.
-	b, err = jaPayload.DLSettings.MarshalBinary()
+	b, err = jaPayload.MarshalBinary()
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 	micBytes = append(micBytes, b...)
-	micBytes = append(micBytes, byte(jaPayload.RXDelay))
 
 	hash, err := cmac.New(key[:])
 	if err != nil {

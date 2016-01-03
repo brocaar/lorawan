@@ -110,14 +110,17 @@ type JoinAcceptPayload struct {
 
 // MarshalBinary marshals the object in binary form.
 func (p JoinAcceptPayload) MarshalBinary() ([]byte, error) {
-	var b []byte
-	var err error
 	out := make([]byte, 0, 12)
 
-	out = append(out, p.AppNonce[:]...)
-	out = append(out, p.NetID[:]...)
+	// little endian
+	for i := len(p.AppNonce) - 1; i >= 0; i-- {
+		out = append(out, p.AppNonce[i])
+	}
+	for i := len(p.NetID) - 1; i >= 0; i-- {
+		out = append(out, p.NetID[i])
+	}
 
-	b, err = p.DevAddr.MarshalBinary()
+	b, err := p.DevAddr.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
@@ -139,8 +142,13 @@ func (p *JoinAcceptPayload) UnmarshalBinary(data []byte) error {
 		return errors.New("lorawan: 12 bytes of data are expected")
 	}
 
-	copy(p.AppNonce[:], data[0:3])
-	copy(p.NetID[:], data[3:6])
+	// little endian
+	for i, v := range data[0:3] {
+		p.AppNonce[2-i] = v
+	}
+	for i, v := range data[3:6] {
+		p.NetID[2-i] = v
+	}
 
 	if err := p.DevAddr.UnmarshalBinary(data[6:10]); err != nil {
 		return err

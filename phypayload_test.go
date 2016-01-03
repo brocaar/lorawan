@@ -163,6 +163,7 @@ func TestPHYPayloadJoinRequest(t *testing.T) {
 }
 
 func TestPHYPayloadJoinAccept(t *testing.T) {
+	// todo: disabled for now, need some real-world testing to make sure the expected data is correct
 	SkipConvey("Given an empty PHYPayload with empty JoinAcceptPayload", t, func() {
 		p := PHYPayload{MACPayload: &JoinAcceptPayload{}}
 		Convey("Then MarshalBinary returns []byte with 17 0x00", func() {
@@ -376,7 +377,7 @@ func ExampleNewPHYPayload_joinRequest() {
 	// [0 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 3 3 9 185 123 50]
 }
 
-func SkipExampleNewPHYPayload_joinAcceptSend() {
+func ExampleNewPHYPayload_joinAcceptSend() {
 	uplink := false
 	appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
@@ -408,10 +409,10 @@ func SkipExampleNewPHYPayload_joinAcceptSend() {
 	fmt.Println(bytes)
 
 	// Output:
-	// [32 64 253 162 88 11 45 30 206 20 214 140 149 191 32 154 238 227 185 68 130]
+	// [32 35 207 51 84 137 170 227 24 60 11 224 186 168 222 229 243 52 73 242 18]
 }
 
-func SkipExampleNewPHYPayload_joinAcceptReceive() {
+func ExampleNewPHYPayload_joinAcceptReceive() {
 	uplink := false
 	appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	bytes := []byte{32, 171, 84, 244, 227, 34, 30, 148, 118, 211, 1, 33, 90, 24, 50, 81, 139, 128, 229, 23, 154}
