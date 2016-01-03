@@ -118,50 +118,44 @@ func TestPHYPayloadData(t *testing.T) {
 }
 
 func TestPHYPayloadJoinRequest(t *testing.T) {
-	SkipConvey("Given an empty PHYPayload with empty JoinRequestPayload", t, func() {
-		p := PHYPayload{MACPayload: &JoinRequestPayload{}}
-		Convey("Then MarshalBinary returns []byte with 23 0x00 bytes", func() {
-			exp := make([]byte, 23)
-			b, err := p.MarshalBinary()
-			So(err, ShouldBeNil)
-			So(b, ShouldResemble, exp)
-		})
+	Convey("Given a set of known and an empty PHYPayload", t, func() {
+		data, err := base64.StdEncoding.DecodeString("AAQDAgEEAwIBBQQDAgUEAwItEGqZDhI=")
+		So(err, ShouldBeNil)
 
-		Convey("Given MHDR=(MType=JoinRequest, Major=LoRaWANR1), MACPayload=JoinRequestPayload(AppEUI=[8]byte{1, 1, 1, 1, 1, 1, 1, 1}, DevEUI=[8]byte{2, 2, 2, 2, 2, 2, 2, 2} and DevNonce=[2]byte{3, 3}), MIC=[4]byte{4, 5, 6, 7}", func() {
-			p.MHDR = MHDR{MType: JoinRequest, Major: LoRaWANR1}
-			p.MACPayload = &JoinRequestPayload{
-				AppEUI:   [8]byte{1, 1, 1, 1, 1, 1, 1, 1},
-				DevEUI:   [8]byte{2, 2, 2, 2, 2, 2, 2, 2},
-				DevNonce: [2]byte{3, 3},
-			}
-			p.MIC = [4]byte{4, 5, 6, 7}
+		phy := NewPHYPayload(true) // uplink=true
 
-			Convey("Then MarshalBinary returns []byte{0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3,  4, 5, 6, 7}", func() {
-				b, err := p.MarshalBinary()
-				So(err, ShouldBeNil)
-				So(b, ShouldResemble, []byte{0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 5, 6, 7})
+		Convey("Then UnmarshalBinary does not fail", func() {
+			So(phy.UnmarshalBinary(data), ShouldBeNil)
+
+			Convey("Then the MHDR contains the expected data", func() {
+				So(phy.MHDR.MType, ShouldEqual, JoinRequest)
+				So(phy.MHDR.Major, ShouldEqual, LoRaWANR1)
 			})
-		})
 
-		Convey("Given the slice []byte{0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 5, 6, 7}", func() {
-			b := []byte{0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 5, 6, 7}
+			Convey("Then the MIC is valid", func() {
+				appKey := [16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+				valid, err := phy.ValidateMIC(appKey)
+				So(err, ShouldBeNil)
+				So(valid, ShouldBeTrue)
+			})
 
-			Convey("Then UnmarshalBinary does not return an error", func() {
-				err := p.UnmarshalBinary(b)
+			Convey("Then the MACPayload is of type *JoinRequestPayload", func() {
+				jrPl, ok := phy.MACPayload.(*JoinRequestPayload)
+				So(ok, ShouldBeTrue)
+
+				Convey("Then the JoinRequestPayload contains the expected data", func() {
+					So(jrPl.AppEUI, ShouldResemble, EUI64{1, 2, 3, 4, 1, 2, 3, 4})
+					So(jrPl.DevEUI, ShouldResemble, EUI64{2, 3, 4, 5, 2, 3, 4, 5})
+					So(jrPl.DevNonce, ShouldResemble, [2]byte{16, 45})
+				})
+			})
+
+			Convey("When marshalling the PHYPayload", func() {
+				b, err := phy.MarshalBinary()
 				So(err, ShouldBeNil)
 
-				Convey("Then MHDR=(MType=JoinRequest, Major=LoRaWANR1)", func() {
-					So(p.MHDR, ShouldResemble, MHDR{MType: JoinRequest, Major: LoRaWANR1})
-				})
-				Convey("Then MACPayload=JoinRequestPayload(AppEUI=[8]byte{1, 1, 1, 1, 1, 1, 1, 1}, DevEUI=[8]byte{2, 2, 2, 2, 2, 2, 2, 2} and DevNonce=[2]byte{3, 3})", func() {
-					So(p.MACPayload, ShouldResemble, &JoinRequestPayload{
-						AppEUI:   [8]byte{1, 1, 1, 1, 1, 1, 1, 1},
-						DevEUI:   [8]byte{2, 2, 2, 2, 2, 2, 2, 2},
-						DevNonce: [2]byte{3, 3},
-					})
-				})
-				Convey("MIC=[4]byte{4, 5, 6, 7}", func() {
-					So(p.MIC, ShouldResemble, [4]byte{4, 5, 6, 7})
+				Convey("Then it equals to the input data", func() {
+					So(b, ShouldResemble, data)
 				})
 			})
 		})
@@ -352,7 +346,7 @@ func ExampleNewPHYPayload() {
 	// [128 4 3 2 1 0 0 0 10 226 100 212 247 181 106 14 117]
 }
 
-func SkipExampleNewPHYPayload_joinRequest() {
+func ExampleNewPHYPayload_joinRequest() {
 	uplink := true
 	appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 

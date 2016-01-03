@@ -3,7 +3,33 @@ package lorawan
 import (
 	"encoding"
 	"errors"
+	"fmt"
 )
+
+// EUI64 data type
+type EUI64 [8]byte
+
+// MarshalBinary implements encoding.BinaryMarshaler.
+func (e EUI64) MarshalBinary() ([]byte, error) {
+	out := make([]byte, len(e))
+	// little endian
+	for i, v := range e {
+		out[len(e)-i-1] = v
+	}
+	return out, nil
+}
+
+// UnmarshalBinary implements encoding.BinaryUnmarshaler.
+func (e *EUI64) UnmarshalBinary(data []byte) error {
+	if len(data) != len(e) {
+		return fmt.Errorf("lorawan: %d bytes of data are expected", len(e))
+	}
+	for i, v := range data {
+		// little endian
+		e[len(e)-i-1] = v
+	}
+	return nil
+}
 
 // Payload is the interface that every payload needs to implement.
 type Payload interface {
@@ -28,20 +54,31 @@ func (p *DataPayload) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
+type AppEUI [8]byte
+
 // JoinRequestPayload represents the join-request message payload.
 type JoinRequestPayload struct {
-	AppEUI   [8]byte
-	DevEUI   [8]byte
+	AppEUI   EUI64
+	DevEUI   EUI64
 	DevNonce [2]byte
 }
 
 // MarshalBinary marshals the object in binary form.
 func (p JoinRequestPayload) MarshalBinary() ([]byte, error) {
-	b := make([]byte, 0, 18)
-	b = append(b, p.AppEUI[:]...)
-	b = append(b, p.DevEUI[:]...)
-	b = append(b, p.DevNonce[:]...)
-	return b, nil
+	out := make([]byte, 0, 18)
+	b, err := p.AppEUI.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, b...)
+	b, err = p.DevEUI.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, b...)
+	// little endian
+	out = append(out, p.DevNonce[1], p.DevNonce[0])
+	return out, nil
 }
 
 // UnmarshalBinary decodes the object from binary form.
@@ -49,9 +86,15 @@ func (p *JoinRequestPayload) UnmarshalBinary(data []byte) error {
 	if len(data) != 18 {
 		return errors.New("lorawan: 18 bytes of data are expected")
 	}
-	copy(p.AppEUI[:], data[0:8])
-	copy(p.DevEUI[:], data[8:16])
-	copy(p.DevNonce[:], data[16:18])
+	if err := p.AppEUI.UnmarshalBinary(data[0:8]); err != nil {
+		return err
+	}
+	if err := p.DevEUI.UnmarshalBinary(data[8:16]); err != nil {
+		return err
+	}
+	// little endian
+	p.DevNonce[1] = data[16]
+	p.DevNonce[0] = data[17]
 	return nil
 }
 

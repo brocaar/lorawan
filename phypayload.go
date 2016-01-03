@@ -138,20 +138,19 @@ func (p PHYPayload) calculateJoinRequestMIC(key [16]byte) ([]byte, error) {
 		return []byte{}, errors.New("lorawan: MACPayload should be of type *JoinRequestPayload")
 	}
 
-	var b []byte
-	var err error
 	micBytes := make([]byte, 0, 19)
 
-	b, err = p.MHDR.MarshalBinary()
+	b, err := p.MHDR.MarshalBinary()
 	if err != nil {
 		return []byte{}, err
 	}
 	micBytes = append(micBytes, b...)
 
-	// todo: fix endian bug
-	micBytes = append(micBytes, jrPayload.AppEUI[:]...)
-	micBytes = append(micBytes, jrPayload.DevEUI[:]...)
-	micBytes = append(micBytes, jrPayload.DevNonce[:]...)
+	b, err = jrPayload.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	micBytes = append(micBytes, b...)
 
 	hash, err := cmac.New(key[:])
 	if err != nil {
