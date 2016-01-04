@@ -2,12 +2,33 @@ package lorawan
 
 import (
 	"encoding"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // EUI64 data type
 type EUI64 [8]byte
+
+// MarshalJSON implements json.Marshaler.
+func (e EUI64) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + hex.EncodeToString(e[:]) + `"`), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (e *EUI64) UnmarshalJSON(data []byte) error {
+	hexStr := strings.Trim(string(data), `"`)
+	b, err := hex.DecodeString(hexStr)
+	if err != nil {
+		return err
+	}
+	if len(b) != len(e) {
+		return fmt.Errorf("lorawan: exactly %d bytes are expected", len(e))
+	}
+	copy(e[:], b)
+	return nil
+}
 
 // MarshalBinary implements encoding.BinaryMarshaler.
 func (e EUI64) MarshalBinary() ([]byte, error) {

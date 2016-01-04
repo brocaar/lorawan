@@ -2,8 +2,10 @@ package lorawan
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // DevAddr represents the device address.
@@ -28,6 +30,25 @@ func (a *DevAddr) UnmarshalBinary(data []byte) error {
 		// little endian
 		a[len(a)-i-1] = v
 	}
+	return nil
+}
+
+// MarshalJSON implements json.Marshaler.
+func (a DevAddr) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + hex.EncodeToString(a[:]) + `"`), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (a *DevAddr) UnmarshalJSON(data []byte) error {
+	hexStr := strings.Trim(string(data), `"`)
+	b, err := hex.DecodeString(hexStr)
+	if err != nil {
+		return err
+	}
+	if len(b) != len(a) {
+		return fmt.Errorf("lorawan: exactly %d bytes are expected", len(a))
+	}
+	copy(a[:], b)
 	return nil
 }
 
