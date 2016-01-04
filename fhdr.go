@@ -52,6 +52,11 @@ func (a *DevAddr) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// String implements fmt.Stringer.
+func (a DevAddr) String() string {
+	return hex.EncodeToString(a[:])
+}
+
 // FCtrl represents the FCtrl (frame control) field.
 type FCtrl struct {
 	ADR       bool

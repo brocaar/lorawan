@@ -30,6 +30,11 @@ func (e *EUI64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// String implement fmt.Stringer.
+func (e EUI64) String() string {
+	return hex.EncodeToString(e[:])
+}
+
 // MarshalBinary implements encoding.BinaryMarshaler.
 func (e EUI64) MarshalBinary() ([]byte, error) {
 	out := make([]byte, len(e))
@@ -74,8 +79,6 @@ func (p *DataPayload) UnmarshalBinary(data []byte) error {
 	copy(p.Bytes, data)
 	return nil
 }
-
-type AppEUI [8]byte
 
 // JoinRequestPayload represents the join-request message payload.
 type JoinRequestPayload struct {
