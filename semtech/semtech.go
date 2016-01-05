@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/brocaar/lorawan"
 )
 
 // PacketType defines the packet type.
@@ -33,7 +35,7 @@ const (
 type PushDataPacket struct {
 	ProtocolVersion uint8
 	RandomToken     uint16
-	GatewayMAC      [8]byte
+	GatewayMAC      lorawan.EUI64
 	Payload         PushDataPayload
 }
 
