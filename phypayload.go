@@ -5,7 +5,10 @@ package lorawan
 import (
 	"crypto/aes"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/jacobsa/crypto/cmac"
 )
@@ -31,6 +34,33 @@ const (
 const (
 	LoRaWANR1 major = 0
 )
+
+// AES128Key represents a 128 bit AES key.
+type AES128Key [16]byte
+
+// String implements fmt.Stringer.
+func (k AES128Key) String() string {
+	return hex.EncodeToString(k[:])
+}
+
+// MarshalJSON implements json.Marshaler.
+func (k AES128Key) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + k.String() + `"`), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (k *AES128Key) UnmarshalJSON(data []byte) error {
+	hexStr := strings.Trim(string(data), `"`)
+	b, err := hex.DecodeString(hexStr)
+	if err != nil {
+		return err
+	}
+	if len(b) != len(k) {
+		return fmt.Errorf("lorawan: exactly %d bytes are expected", len(k))
+	}
+	copy(k[:], b)
+	return nil
+}
 
 // MHDR represents the MAC header.
 type MHDR struct {
@@ -70,7 +100,7 @@ func NewPHYPayload(uplink bool) PHYPayload {
 }
 
 // calculateMIC calculates and returns the MIC.
-func (p PHYPayload) calculateMIC(key [16]byte) ([]byte, error) {
+func (p PHYPayload) calculateMIC(key AES128Key) ([]byte, error) {
 	if p.MACPayload == nil {
 		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
 	}
@@ -129,7 +159,7 @@ func (p PHYPayload) calculateMIC(key [16]byte) ([]byte, error) {
 }
 
 // calculateJoinRequestMIC calculates and returns the join-request MIC.
-func (p PHYPayload) calculateJoinRequestMIC(key [16]byte) ([]byte, error) {
+func (p PHYPayload) calculateJoinRequestMIC(key AES128Key) ([]byte, error) {
 	if p.MACPayload == nil {
 		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
 	}
@@ -167,7 +197,7 @@ func (p PHYPayload) calculateJoinRequestMIC(key [16]byte) ([]byte, error) {
 }
 
 // calculateJoinAcceptMIC calculates and returns the join-accept MIC.
-func (p PHYPayload) calculateJoinAcceptMIC(key [16]byte) ([]byte, error) {
+func (p PHYPayload) calculateJoinAcceptMIC(key AES128Key) ([]byte, error) {
 	if p.MACPayload == nil {
 		return []byte{}, errors.New("lorawan: MACPayload should not be empty")
 	}
@@ -205,7 +235,7 @@ func (p PHYPayload) calculateJoinAcceptMIC(key [16]byte) ([]byte, error) {
 }
 
 // SetMIC calculates and sets the MIC field.
-func (p *PHYPayload) SetMIC(key [16]byte) error {
+func (p *PHYPayload) SetMIC(key AES128Key) error {
 	var mic []byte
 	var err error
 
@@ -231,7 +261,7 @@ func (p *PHYPayload) SetMIC(key [16]byte) error {
 }
 
 // ValidateMIC returns if the MIC is valid.
-func (p PHYPayload) ValidateMIC(key [16]byte) (bool, error) {
+func (p PHYPayload) ValidateMIC(key AES128Key) (bool, error) {
 	var mic []byte
 	var err error
 
@@ -262,7 +292,7 @@ func (p PHYPayload) ValidateMIC(key [16]byte) (bool, error) {
 // should only be done when the MACPayload is a JoinAcceptPayload.
 // Note that the encryption should be performed after SetMIC since the MIC
 // is part of the encrypted content.
-func (p *PHYPayload) EncryptMACPayload(key [16]byte) error {
+func (p *PHYPayload) EncryptMACPayload(key AES128Key) error {
 	if _, ok := p.MACPayload.(*JoinAcceptPayload); !ok {
 		return errors.New("lorawan: EncryptMACPayload can only be for *JoinAcceptPayload")
 	}
@@ -298,7 +328,7 @@ func (p *PHYPayload) EncryptMACPayload(key [16]byte) error {
 }
 
 // DecryptMACPayload decrypts the MACPayload with the given key.
-func (p *PHYPayload) DecryptMACPayload(key [16]byte) error {
+func (p *PHYPayload) DecryptMACPayload(key AES128Key) error {
 	dp, ok := p.MACPayload.(*DataPayload)
 	if !ok {
 		return errors.New("lorawan: MACPayload should be of type *DataPayload")
