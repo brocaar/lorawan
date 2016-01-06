@@ -80,7 +80,7 @@ func TestPHYPayloadData(t *testing.T) {
 				Convey("Then one can get the corresponding device address", func() {
 					devAddr, err := phy.DevAddr()
 					So(err, ShouldBeNil)
-					So(*devAddr, ShouldResemble, DevAddr([4]byte{1, 2, 3, 4}))
+					So(devAddr, ShouldResemble, DevAddr([4]byte{1, 2, 3, 4}))
 				})
 
 				Convey("Then decrypting the FRMPayload does not error", func() {
@@ -140,8 +140,7 @@ func TestPHYPayloadJoinRequest(t *testing.T) {
 			})
 
 			Convey("Then no device address is associated", func() {
-				devAddr, err := phy.DevAddr()
-				So(devAddr, ShouldBeNil)
+				_, err := phy.DevAddr()
 				So(err, ShouldResemble, errors.New("lorawan: unable to get address of a join message"))
 			})
 
