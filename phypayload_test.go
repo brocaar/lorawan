@@ -2,6 +2,7 @@ package lorawan
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -76,6 +77,12 @@ func TestPHYPayloadData(t *testing.T) {
 					})
 				})
 
+				Convey("Then one can get the corresponding device address", func() {
+					devAddr, err := phy.DevAddr()
+					So(err, ShouldBeNil)
+					So(*devAddr, ShouldResemble, DevAddr([4]byte{1, 2, 3, 4}))
+				})
+
 				Convey("Then decrypting the FRMPayload does not error", func() {
 					appSKey := [16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 					So(macPl.DecryptFRMPayload(appSKey), ShouldBeNil)
@@ -130,6 +137,12 @@ func TestPHYPayloadJoinRequest(t *testing.T) {
 			Convey("Then the MHDR contains the expected data", func() {
 				So(phy.MHDR.MType, ShouldEqual, JoinRequest)
 				So(phy.MHDR.Major, ShouldEqual, LoRaWANR1)
+			})
+
+			Convey("Then no device address is associated", func() {
+				devAddr, err := phy.DevAddr()
+				So(devAddr, ShouldBeNil)
+				So(err, ShouldResemble, errors.New("lorawan: unable to get address of a join message"))
 			})
 
 			Convey("Then the MIC is valid", func() {
