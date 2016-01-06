@@ -288,6 +288,11 @@ func (p PHYPayload) ValidateMIC(key AES128Key) (bool, error) {
 	return true, nil
 }
 
+// DevAddr returns a device address (if any) associated to payload
+func (p PHYPayload) DevAddr() (*DevAddr, error) {
+	return nil, nil
+}
+
 // EncryptMACPayload encrypts the MACPayload with the given key. Note that this
 // should only be done when the MACPayload is a JoinAcceptPayload.
 // Note that the encryption should be performed after SetMIC since the MIC
