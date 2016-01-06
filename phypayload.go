@@ -288,6 +288,20 @@ func (p PHYPayload) ValidateMIC(key AES128Key) (bool, error) {
 	return true, nil
 }
 
+// DevAddr returns a device address (if any) associated to payload
+func (p PHYPayload) DevAddr() (DevAddr, error) {
+	if p.MACPayload == nil {
+		return DevAddr{}, errors.New("lorawan: MACPayload should not be empty")
+	}
+
+	macpayload, ok := p.MACPayload.(*MACPayload)
+	if !ok {
+		return DevAddr{}, errors.New("lorawan: unable to get address of a join message")
+	}
+
+	return macpayload.FHDR.DevAddr, nil
+}
+
 // EncryptMACPayload encrypts the MACPayload with the given key. Note that this
 // should only be done when the MACPayload is a JoinAcceptPayload.
 // Note that the encryption should be performed after SetMIC since the MIC
