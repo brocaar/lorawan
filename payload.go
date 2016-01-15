@@ -13,7 +13,7 @@ type EUI64 [8]byte
 
 // MarshalJSON implements json.Marshaler.
 func (e EUI64) MarshalJSON() ([]byte, error) {
-	return []byte(`"` + hex.EncodeToString(e[:]) + `"`), nil
+	return []byte(`"` + e.String() + `"`), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

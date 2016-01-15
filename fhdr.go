@@ -35,7 +35,7 @@ func (a *DevAddr) UnmarshalBinary(data []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (a DevAddr) MarshalJSON() ([]byte, error) {
-	return []byte(`"` + hex.EncodeToString(a[:]) + `"`), nil
+	return []byte(`"` + a.String() + `"`), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

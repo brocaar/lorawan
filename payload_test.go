@@ -7,6 +7,32 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestEUI64(t *testing.T) {
+	Convey("Given an empty EUI64", t, func() {
+		var eui EUI64
+
+		Convey("When the value is [8]{1, 2, 3, 4, 5, 6, 7, 8}", func() {
+			eui = [8]byte{1, 2, 3, 4, 5, 6, 7, 8}
+
+			Convey("Then MarshalJSON returns \"0102030405060708\"", func() {
+				b, err := eui.MarshalJSON()
+				So(err, ShouldBeNil)
+				So(string(b), ShouldEqual, `"0102030405060708"`)
+			})
+		})
+
+		Convey("Given the string \"0102030405060708\"", func() {
+			str := `"0102030405060708"`
+
+			Convey("Then UnmarshalJSON returns EUI64{1, 2, 3, 4, 5, 6, 7, 8}", func() {
+				err := eui.UnmarshalJSON([]byte(str))
+				So(err, ShouldBeNil)
+				So(eui, ShouldResemble, EUI64{1, 2, 3, 4, 5, 6, 7, 8})
+			})
+		})
+	})
+}
+
 func TestDataPayload(t *testing.T) {
 	Convey("Given an empty DataPayload", t, func() {
 		var p DataPayload
