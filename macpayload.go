@@ -50,6 +50,7 @@ func (p *MACPayload) unmarshalPayload(data []byte) error {
 	if p.FPort == 0 {
 		// payload contains MAC commands
 		var pLen int
+		p.FRMPayload = make([]Payload, 0)
 		for i := 0; i < len(data); i++ {
 			if _, s, err := getMACPayloadAndSize(p.uplink, cid(data[i])); err != nil {
 				pLen = 0
