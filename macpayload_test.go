@@ -67,6 +67,43 @@ func TestMACPayload(t *testing.T) {
 			})
 		})
 
+		Convey("Given uplink=true FHDR(DevAddr=[4]{1, 2, 3, 4}), FPort=0, FRMPayload=[]Payload{MACCommand{CID: DutyCycleAns}}", func() {
+			command := MACCommand{CID: DutyCycleAns}
+			p.uplink = true
+			p.FHDR.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
+			p.FPort = 0
+			p.FRMPayload = []Payload{&command}
+
+			Convey("Given the key [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
+				key := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+
+				Convey("Then EncryptFRMPayload does not return an error", func() {
+					err := p.EncryptFRMPayload(key)
+					So(err, ShouldBeNil)
+
+					Convey("Then DecryptFRMPayload does not return an error", func() {
+						err := p.DecryptFRMPayload(key)
+						So(err, ShouldBeNil)
+
+						Convey("Then FRMPayload contains one DataPayload(Bytes=[]byte{5, 6, 7})", func() {
+							So(p.FRMPayload, ShouldHaveLength, 1)
+							cmd, ok := p.FRMPayload[0].(*MACCommand)
+							So(ok, ShouldBeTrue)
+							So(cmd, ShouldResemble, &command)
+						})
+					})
+				})
+
+				Convey("Then (DecryptFRMPayload o EncryptFRMPayload) should be idempotent", func() {
+					p.EncryptFRMPayload(key)
+					p.DecryptFRMPayload(key)
+					p.EncryptFRMPayload(key)
+					p.DecryptFRMPayload(key)
+					So(p.FRMPayload, ShouldResemble, []Payload{&command})
+				})
+			})
+		})
+
 		Convey("Given uplink=true, FHDR(DevAddr=[4]{1, 2, 3, 4}), FPort=0, FRMPayload=[]Payload{MACCommand{CID: DevStatusAns, Payload: DevStatusAnsPayload(Battery=10, Margin=20)}}", func() {
 			p.uplink = true
 			p.FHDR.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
