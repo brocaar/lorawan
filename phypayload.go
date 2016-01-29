@@ -261,6 +261,11 @@ func (p *PHYPayload) SetMIC(key AES128Key) error {
 }
 
 // ValidateMIC returns if the MIC is valid.
+// When using 32 bit frame counters, only the least-signification 16 bits are
+// sent / received. In order to validate the MIC, the receiver needs to set
+// the FCnt to the full 32 bit value (based on the observation of the traffic).
+// See section '4.3.1.5 Frame counter (FCnt)' of the LoRaWAN 1.0 specification
+// for more details.
 func (p PHYPayload) ValidateMIC(key AES128Key) (bool, error) {
 	var mic []byte
 	var err error
