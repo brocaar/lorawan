@@ -136,7 +136,7 @@ func (p PHYPayload) calculateMIC(key AES128Key) ([]byte, error) {
 		return nil, err
 	}
 	copy(b0[6:10], b)
-	binary.LittleEndian.PutUint32(b0[10:14], uint32(macPayload.FHDR.FCnt))
+	binary.LittleEndian.PutUint32(b0[10:14], macPayload.FHDR.FCnt)
 	b0[15] = byte(len(micBytes))
 
 	hash, err := cmac.New(key[:])
