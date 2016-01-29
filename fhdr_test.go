@@ -119,6 +119,16 @@ func TestFHDR(t *testing.T) {
 			So(b, ShouldResemble, []byte{0, 0, 0, 0, 0, 0, 0})
 		})
 
+		Convey("Given the FCnt contains a value > 16 bits", func() {
+			h.FCnt = 65795
+
+			Convey("Then only the least-significant 16 bits are marshalled", func() {
+				b, err := h.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{0, 0, 0, 0, 0, 3, 1})
+			})
+		})
+
 		Convey("Given uplink=false, DevAddr=67305985, FCtrl=FCtrl(ADR=true, ADRACKReq=false, ACK=true, FPending=true), Fcnt=5, FOpts=[]MACCommand{(CID=LinkCheckAns, Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9))}", func() {
 			h.uplink = false
 			h.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
