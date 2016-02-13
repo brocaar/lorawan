@@ -11,6 +11,11 @@ import (
 // DevAddr represents the device address.
 type DevAddr [4]byte
 
+// NwkID returns the NwkID bits of the DevAddr.
+func (a DevAddr) NwkID() byte {
+	return a[0] >> 1 // 7 msb
+}
+
 // MarshalBinary marshals the object in binary form.
 func (a DevAddr) MarshalBinary() ([]byte, error) {
 	out := make([]byte, len(a))

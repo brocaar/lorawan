@@ -33,7 +33,7 @@ func (n *NetID) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// NwkID returns the seven LSB of the NetID.
+// NwkID returns the NwkID bits of the NetID.
 func (n NetID) NwkID() byte {
 	return n[2] & 127 // 7 lsb
 }

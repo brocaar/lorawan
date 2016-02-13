@@ -17,9 +17,16 @@ func TestDevAddr(t *testing.T) {
 			So(b, ShouldResemble, []byte{0, 0, 0, 0})
 		})
 
-		Convey("Given The DevAddr=67305985", func() {
-			a = DevAddr([4]byte{1, 2, 3, 4})
-			Convey("Then MarshalBinary returns []byte{1, 2, 3, 4}", func() {
+		Convey("Given the DevAddr{255, 1, 1, 1}", func() {
+			a = DevAddr{255, 1, 1, 1}
+			Convey("Then NwkID returns byte(127)", func() {
+				So(a.NwkID(), ShouldEqual, byte(127))
+			})
+		})
+
+		Convey("Given the DevAddr{1, 2, 3, 4}", func() {
+			a = DevAddr{1, 2, 3, 4}
+			Convey("Then MarshalBinary returns []byte{4, 3, 2, 1}", func() {
 				b, err := a.MarshalBinary()
 				So(err, ShouldBeNil)
 				So(b, ShouldResemble, []byte{4, 3, 2, 1})
