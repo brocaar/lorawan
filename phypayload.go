@@ -312,7 +312,7 @@ func (p *PHYPayload) EncryptMACPayload(key AES128Key) error {
 
 	pt = append(pt, p.MIC[0:4]...)
 	if len(pt)%16 != 0 {
-		return errors.New("lorawan: plaintext should be a multiple of 16")
+		return errors.New("lorawan: plaintext must be a multiple of 16 bytes")
 	}
 
 	block, err := aes.NewCipher(key[:])
@@ -323,12 +323,12 @@ func (p *PHYPayload) EncryptMACPayload(key AES128Key) error {
 		return errors.New("lorawan: block-size of 16 bytes is expected")
 	}
 	ct := make([]byte, len(pt))
-	for i := 0; i < len(pt)/16; i++ {
-		// decrypt is used for encryption, so that the node only has to implement
-		// the aes encryption (see lorawan specs)
-		block.Decrypt(ct[i*16:(i*16)+16], pt[i*16:(i*16)+16])
+	for i := 0; i < len(ct)/16; i++ {
+		offset := i * 16
+		block.Decrypt(ct[offset:offset+16], pt[offset:offset+16])
 	}
-	p.MACPayload = &DataPayload{Bytes: ct}
+	p.MACPayload = &DataPayload{Bytes: ct[0 : len(ct)-4]}
+	copy(p.MIC[:], ct[len(ct)-4:])
 	return nil
 }
 
@@ -338,8 +338,12 @@ func (p *PHYPayload) DecryptMACPayload(key AES128Key) error {
 	if !ok {
 		return errors.New("lorawan: MACPayload should be of type *DataPayload")
 	}
-	if len(dp.Bytes)%16 != 0 {
-		return errors.New("lorawan: the DataPayload should be a multiple of 16")
+
+	// append MIC to the ciphertext since it is encrypted too
+	ct := append(dp.Bytes, p.MIC[:]...)
+
+	if len(ct)%16 != 0 {
+		return errors.New("lorawan: plaintext must be a multiple of 16 bytes")
 	}
 
 	block, err := aes.NewCipher(key[:])
@@ -349,12 +353,15 @@ func (p *PHYPayload) DecryptMACPayload(key AES128Key) error {
 	if block.BlockSize() != 16 {
 		return errors.New("lorawan: block-size of 16 bytes is expected")
 	}
-	pt := make([]byte, len(dp.Bytes))
+	pt := make([]byte, len(ct))
 	for i := 0; i < len(pt)/16; i++ {
-		block.Encrypt(pt[i*16:i*16+16], dp.Bytes[i*16:i*16+16])
+		offset := i * 16
+		block.Encrypt(pt[offset:offset+16], ct[offset:offset+16])
 	}
+
 	p.MACPayload = &JoinAcceptPayload{}
-	return p.MACPayload.UnmarshalBinary(pt[0 : len(pt)-4]) // - MIC
+	copy(p.MIC[:], pt[len(pt)-4:len(pt)]) // set the decrypted MIC
+	return p.MACPayload.UnmarshalBinary(pt[0 : len(pt)-4])
 }
 
 // MarshalBinary marshals the object in binary form.
