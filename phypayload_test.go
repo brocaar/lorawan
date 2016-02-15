@@ -207,7 +207,7 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 					copy(appKey[:], appKeyBytes)
 
 					Convey("Then decrypting does not return an error", func() {
-						So(p.DecryptMACPayload(appKey), ShouldBeNil)
+						So(p.DecryptJoinAcceptPayload(appKey), ShouldBeNil)
 
 						Convey("Then the MACPayload is of type *JoinAcceptPayload", func() {
 							jaPL, ok := p.MACPayload.(*JoinAcceptPayload)
@@ -275,7 +275,7 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 					})
 
 					Convey("Then encrypting does not fail", func() {
-						So(p.EncryptMACPayload(appKey), ShouldBeNil)
+						So(p.EncryptJoinAcceptPayload(appKey), ShouldBeNil)
 
 						Convey("Then the hex representation of the packet is 20493eeb51fba2116f810edb3742975142", func() {
 							b, err := p.MarshalBinary()
@@ -387,7 +387,7 @@ func ExampleNewPHYPayload_joinAcceptSend() {
 	if err := payload.SetMIC(appKey); err != nil {
 		panic(err)
 	}
-	if err := payload.EncryptMACPayload(appKey); err != nil {
+	if err := payload.EncryptJoinAcceptPayload(appKey); err != nil {
 		panic(err)
 	}
 

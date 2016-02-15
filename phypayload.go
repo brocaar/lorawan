@@ -293,13 +293,12 @@ func (p PHYPayload) ValidateMIC(key AES128Key) (bool, error) {
 	return true, nil
 }
 
-// EncryptMACPayload encrypts the MACPayload with the given key. Note that this
-// should only be done when the MACPayload is a JoinAcceptPayload.
-// Note that the encryption should be performed after SetMIC since the MIC
-// is part of the encrypted content.
-func (p *PHYPayload) EncryptMACPayload(key AES128Key) error {
+// EncryptJoinAcceptPayload encrypts the join-accept payload with the given
+// AppKey. Note that encrypted must be performed after calling SetMIC
+// (sicne the MIC is part of the encrypted payload).
+func (p *PHYPayload) EncryptJoinAcceptPayload(appKey AES128Key) error {
 	if _, ok := p.MACPayload.(*JoinAcceptPayload); !ok {
-		return errors.New("lorawan: EncryptMACPayload can only be for *JoinAcceptPayload")
+		return errors.New("lorawan: MACPayload value must be of type *JoinAcceptPayload")
 	}
 
 	pt, err := p.MACPayload.MarshalBinary()
@@ -315,7 +314,7 @@ func (p *PHYPayload) EncryptMACPayload(key AES128Key) error {
 		return errors.New("lorawan: plaintext must be a multiple of 16 bytes")
 	}
 
-	block, err := aes.NewCipher(key[:])
+	block, err := aes.NewCipher(appKey[:])
 	if err != nil {
 		return err
 	}
@@ -332,11 +331,12 @@ func (p *PHYPayload) EncryptMACPayload(key AES128Key) error {
 	return nil
 }
 
-// DecryptMACPayload decrypts the MACPayload with the given key.
-func (p *PHYPayload) DecryptMACPayload(key AES128Key) error {
+// DecryptJoinAcceptPayload decrypts the join-accept payload with the given
+// AppKey. Note that you need to decrypte before you can validate the MIC.
+func (p *PHYPayload) DecryptJoinAcceptPayload(appKey AES128Key) error {
 	dp, ok := p.MACPayload.(*DataPayload)
 	if !ok {
-		return errors.New("lorawan: MACPayload should be of type *DataPayload")
+		return errors.New("lorawan: MACPayload must be of type *DataPayload")
 	}
 
 	// append MIC to the ciphertext since it is encrypted too
@@ -346,7 +346,7 @@ func (p *PHYPayload) DecryptMACPayload(key AES128Key) error {
 		return errors.New("lorawan: plaintext must be a multiple of 16 bytes")
 	}
 
-	block, err := aes.NewCipher(key[:])
+	block, err := aes.NewCipher(appKey[:])
 	if err != nil {
 		return err
 	}

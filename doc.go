@@ -48,11 +48,11 @@ Validating the MIC is done by calling ValidateMIC():
     valid, err := phyPayload.ValidateMIC(key)
 
 Encryption and decryption of the MACPayload (for join-accept) is done by
-calling EncryptMACPayload() and DecryptMACPayload(). Note that you need to
+calling EncryptJoinAcceptPayload() and DecryptJoinAcceptPayload(). Note that you need to
 call SetMIC BEFORE encryption.
 
-    err := phyPayload.EncryptMACPayload(key)
-    err := phyPayload.DecryptMACPayload(key)
+    err := phyPayload.EncryptJoinAcceptPayload(key)
+    err := phyPayload.DecryptJoinAcceptPayload(key)
 
 Encryption and decryption of the FRMPayload is done by calling
 EncryptFRMPayload() and DecryptFRMPayload(). After encryption (and thus
