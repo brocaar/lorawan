@@ -62,6 +62,19 @@ func (a DevAddr) String() string {
 	return hex.EncodeToString(a[:])
 }
 
+// Scan implements sql.Scanner.
+func (a *DevAddr) Scan(src interface{}) error {
+	b, ok := src.([]byte)
+	if !ok {
+		return errors.New("lorawan: []byte type expected")
+	}
+	if len(b) != len(a) {
+		return fmt.Errorf("lorawan []byte must have length %d", len(a))
+	}
+	copy(a[:], b)
+	return nil
+}
+
 // FCtrl represents the FCtrl (frame control) field.
 type FCtrl struct {
 	ADR       bool

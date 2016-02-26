@@ -30,6 +30,14 @@ func TestEUI64(t *testing.T) {
 				So(eui, ShouldResemble, EUI64{1, 2, 3, 4, 5, 6, 7, 8})
 			})
 		})
+
+		Convey("Given []byte{1, 2, 3, 4, 5, 6, 7, 8}", func() {
+			b := []byte{1, 2, 3, 4, 5, 6, 7, 8}
+			Convey("Then Scan scans the value correctly", func() {
+				So(eui.Scan(b), ShouldBeNil)
+				So(eui[:], ShouldResemble, b)
+			})
+		})
 	})
 }
 

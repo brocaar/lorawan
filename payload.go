@@ -57,6 +57,19 @@ func (e *EUI64) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
+// Scan implements sql.Scanner.
+func (a *EUI64) Scan(src interface{}) error {
+	b, ok := src.([]byte)
+	if !ok {
+		return errors.New("lorawan: []byte type expected")
+	}
+	if len(b) != len(a) {
+		return fmt.Errorf("lorawan []byte must have length %d", len(a))
+	}
+	copy(a[:], b)
+	return nil
+}
+
 // Payload is the interface that every payload needs to implement.
 type Payload interface {
 	encoding.BinaryMarshaler

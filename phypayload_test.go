@@ -31,6 +31,14 @@ func TestAES128Key(t *testing.T) {
 				So(key, ShouldResemble, AES128Key{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8})
 			})
 		})
+
+		Convey("Given []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
+			b := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+			Convey("Then Scan scans the value correctly.", func() {
+				So(key.Scan(b), ShouldBeNil)
+				So(key[:], ShouldResemble, b)
+			})
+		})
 	})
 }
 

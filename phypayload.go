@@ -62,6 +62,19 @@ func (k *AES128Key) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// Scan implements sql.Scanner.
+func (a *AES128Key) Scan(src interface{}) error {
+	b, ok := src.([]byte)
+	if !ok {
+		return errors.New("lorawan: []byte type expected")
+	}
+	if len(b) != len(a) {
+		return fmt.Errorf("lorawan []byte must have length %d", len(a))
+	}
+	copy(a[:], b)
+	return nil
+}
+
 // MHDR represents the MAC header.
 type MHDR struct {
 	MType mType

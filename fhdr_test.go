@@ -11,7 +11,7 @@ import (
 func TestDevAddr(t *testing.T) {
 	Convey("Given an empty DevAddr", t, func() {
 		var a DevAddr
-		Convey("Then MarshalBinary returns []byte{0, 0, 0, 0}", func() {
+		Convey("Then MarshalBinary returns ", func() {
 			b, err := a.MarshalBinary()
 			So(err, ShouldBeNil)
 			So(b, ShouldResemble, []byte{0, 0, 0, 0})
@@ -54,6 +54,14 @@ func TestDevAddr(t *testing.T) {
 				err := a.UnmarshalJSON([]byte(str))
 				So(err, ShouldBeNil)
 				So(a, ShouldResemble, DevAddr{1, 2, 3, 4})
+			})
+		})
+
+		Convey("Given []byte{1, 2, 3, 4}", func() {
+			b := []byte{1, 2, 3, 4}
+			Convey("Then Scan scans the value correctly", func() {
+				So(a.Scan(b), ShouldBeNil)
+				So(a[:], ShouldResemble, b)
 			})
 		})
 	})
