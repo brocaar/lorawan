@@ -1,4 +1,4 @@
-//go:generate stringer -type=mType
+//go:generate stringer -type=MType
 
 package lorawan
 
@@ -14,25 +14,25 @@ import (
 )
 
 // MType represents the message type.
-type mType byte
+type MType byte
 
 // Major defines the major version of data message.
-type major byte
+type Major byte
 
 // Supported message types (MType)
 const (
-	JoinRequest         mType = 0
-	JoinAccept          mType = (1 << 5)
-	UnconfirmedDataUp   mType = (1 << 6)
-	UnconfirmedDataDown mType = (1 << 6) ^ (1 << 5)
-	ConfirmedDataUp     mType = (1 << 7)
-	ConfirmedDataDown   mType = (1 << 7) ^ (1 << 5)
-	Proprietary         mType = (1 << 7) ^ (1 << 6) ^ (1 << 5)
+	JoinRequest         MType = 0
+	JoinAccept          MType = (1 << 5)
+	UnconfirmedDataUp   MType = (1 << 6)
+	UnconfirmedDataDown MType = (1 << 6) ^ (1 << 5)
+	ConfirmedDataUp     MType = (1 << 7)
+	ConfirmedDataDown   MType = (1 << 7) ^ (1 << 5)
+	Proprietary         MType = (1 << 7) ^ (1 << 6) ^ (1 << 5)
 )
 
 // Supported major versions
 const (
-	LoRaWANR1 major = 0
+	LoRaWANR1 Major = 0
 )
 
 // AES128Key represents a 128 bit AES key.
@@ -77,8 +77,8 @@ func (a *AES128Key) Scan(src interface{}) error {
 
 // MHDR represents the MAC header.
 type MHDR struct {
-	MType mType
-	Major major
+	MType MType
+	Major Major
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -91,8 +91,8 @@ func (h *MHDR) UnmarshalBinary(data []byte) error {
 	if len(data) != 1 {
 		return errors.New("lorawan: 1 byte of data is expected")
 	}
-	h.Major = major(data[0] & ((1 << 1) ^ (1 << 0)))
-	h.MType = mType(data[0] & ((1 << 7) ^ (1 << 6) ^ (1 << 5)))
+	h.Major = Major(data[0] & ((1 << 1) ^ (1 << 0)))
+	h.MType = MType(data[0] & ((1 << 7) ^ (1 << 6) ^ (1 << 5)))
 	return nil
 }
 
