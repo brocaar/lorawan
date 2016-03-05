@@ -3,7 +3,6 @@ package lorawan
 import (
 	"encoding/hex"
 	"fmt"
-	"strings"
 )
 
 // NetID represents the NetID.
@@ -14,15 +13,14 @@ func (n NetID) String() string {
 	return hex.EncodeToString(n[:])
 }
 
-// MarshalJSON implements json.Marshaler.
-func (n NetID) MarshalJSON() ([]byte, error) {
-	return []byte(`"` + n.String() + `"`), nil
+// MarshalText implements encoding.TextMarshaler.
+func (n NetID) MarshalText() ([]byte, error) {
+	return []byte(n.String()), nil
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
-func (n *NetID) UnmarshalJSON(data []byte) error {
-	hexStr := strings.Trim(string(data), `"`)
-	b, err := hex.DecodeString(hexStr)
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (n *NetID) UnmarshalText(text []byte) error {
+	b, err := hex.DecodeString(string(text))
 	if err != nil {
 		return err
 	}

@@ -13,10 +13,10 @@ func TestNetID(t *testing.T) {
 		Convey("When the value is [3]{1, 2, 219}", func() {
 			netID = [3]byte{1, 2, 219}
 
-			Convey("Then MarshalJSON returns \"0102db\"", func() {
-				b, err := netID.MarshalJSON()
+			Convey("Then MarshalText returns 0102db", func() {
+				b, err := netID.MarshalText()
 				So(err, ShouldBeNil)
-				So(string(b), ShouldEqual, `"0102db"`)
+				So(string(b), ShouldEqual, "0102db")
 			})
 
 			Convey("Then NwkID returns byte(91)", func() {
@@ -24,10 +24,10 @@ func TestNetID(t *testing.T) {
 			})
 		})
 
-		Convey("Given the string \"0102db\"", func() {
-			str := `"0102db"`
-			Convey("Then UnmarshalJSON returns NetID{1, 2, 219}", func() {
-				err := netID.UnmarshalJSON([]byte(str))
+		Convey("Given the string 0102db", func() {
+			str := "0102db"
+			Convey("Then UnmarshalText returns NetID{1, 2, 219}", func() {
+				err := netID.UnmarshalText([]byte(str))
 				So(err, ShouldBeNil)
 				So(netID, ShouldEqual, NetID{1, 2, 219})
 			})
