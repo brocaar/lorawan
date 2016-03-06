@@ -68,7 +68,7 @@ All payloads implement the Payload interface. Based on the MIC value, you
 should be able to know to which type to cast the Payload value, so you will
 be able to access its fields.
 
-See the examples section of the documentation for concrete usage examples
+See the examples section of the documentation for more usage examples
 of this package.
 
 When using this package, knowledge about the LoRaWAN specification is needed.
