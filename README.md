@@ -81,12 +81,6 @@ https://www.lora-alliance.org/For-Developers/LoRaWANDevelopers
 See https://godoc.org/github.com/brocaar/lorawan. There is also an examples
 section with usage examples.
 
-## Todo
-
-Although this package is based on the LoRaWAN spec (1.0) and contains a lot
-of testcases, testing with real hardware is needed to validate that it works
-correctly. I will have a gateway soon and be able to do more testing.
-
 ## License
 
 This package is licensed under the MIT license which can be found in ``LICENSE``.
