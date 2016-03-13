@@ -16,17 +16,17 @@ func TestAES128Key(t *testing.T) {
 		Convey("When the value is [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8}", func() {
 			key = [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8}
 
-			Convey("Then MarshalJSON returns \"01020304050607080102030405060708\"", func() {
-				b, err := key.MarshalJSON()
+			Convey("Then MarshalText returns 01020304050607080102030405060708", func() {
+				b, err := key.MarshalText()
 				So(err, ShouldBeNil)
-				So(string(b), ShouldEqual, `"01020304050607080102030405060708"`)
+				So(string(b), ShouldEqual, "01020304050607080102030405060708")
 			})
 		})
 
-		Convey("Given the string \"01020304050607080102030405060708\"", func() {
+		Convey("Given the string 01020304050607080102030405060708", func() {
 			str := "01020304050607080102030405060708"
-			Convey("Then UnmarshalJSON returns AES128Key{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8}", func() {
-				err := key.UnmarshalJSON([]byte(str))
+			Convey("Then UnmarshalText returns AES128Key{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8}", func() {
+				err := key.UnmarshalText([]byte(str))
 				So(err, ShouldBeNil)
 				So(key, ShouldResemble, AES128Key{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8})
 			})

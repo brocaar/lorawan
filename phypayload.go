@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/jacobsa/crypto/cmac"
 )
@@ -44,15 +43,14 @@ func (k AES128Key) String() string {
 	return hex.EncodeToString(k[:])
 }
 
-// MarshalJSON implements json.Marshaler.
-func (k AES128Key) MarshalJSON() ([]byte, error) {
-	return []byte(`"` + k.String() + `"`), nil
+// MarshalText implements encoding.TextMarshaler.
+func (k AES128Key) MarshalText() ([]byte, error) {
+	return []byte(k.String()), nil
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
-func (k *AES128Key) UnmarshalJSON(data []byte) error {
-	hexStr := strings.Trim(string(data), `"`)
-	b, err := hex.DecodeString(hexStr)
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (k *AES128Key) UnmarshalText(text []byte) error {
+	b, err := hex.DecodeString(string(text))
 	if err != nil {
 		return err
 	}
