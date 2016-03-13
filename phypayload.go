@@ -21,13 +21,14 @@ type Major byte
 
 // Supported message types (MType)
 const (
-	JoinRequest         MType = 0
-	JoinAccept          MType = (1 << 5)
-	UnconfirmedDataUp   MType = (1 << 6)
-	UnconfirmedDataDown MType = (1 << 6) ^ (1 << 5)
-	ConfirmedDataUp     MType = (1 << 7)
-	ConfirmedDataDown   MType = (1 << 7) ^ (1 << 5)
-	Proprietary         MType = (1 << 7) ^ (1 << 6) ^ (1 << 5)
+	JoinRequest MType = iota
+	JoinAccept
+	UnconfirmedDataUp
+	UnconfirmedDataDown
+	ConfirmedDataUp
+	ConfirmedDataDown
+	RFU
+	Proprietary
 )
 
 // Supported major versions
@@ -83,7 +84,7 @@ type MHDR struct {
 
 // MarshalBinary marshals the object in binary form.
 func (h MHDR) MarshalBinary() ([]byte, error) {
-	return []byte{byte(h.Major) ^ byte(h.MType)}, nil
+	return []byte{byte(h.Major) ^ (byte(h.MType) << 5)}, nil
 }
 
 // UnmarshalBinary decodes the object from binary form.
@@ -91,8 +92,8 @@ func (h *MHDR) UnmarshalBinary(data []byte) error {
 	if len(data) != 1 {
 		return errors.New("lorawan: 1 byte of data is expected")
 	}
-	h.Major = Major(data[0] & ((1 << 1) ^ (1 << 0)))
-	h.MType = MType(data[0] & ((1 << 7) ^ (1 << 6) ^ (1 << 5)))
+	h.Major = Major(data[0] & 3)
+	h.MType = MType((data[0] & 224) >> 5)
 	return nil
 }
 
