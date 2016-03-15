@@ -121,6 +121,20 @@ func (p *MACPayload) EncryptFRMPayload(key AES128Key) error {
 	if err != nil {
 		return err
 	}
+
+	unencrypted, err := DecryptFRMPayload(data, p.FHDR.DevAddr, p.FHDR.FCnt, p.uplink, key)
+	if err != nil {
+		return err
+	}
+
+	// store the encrypted data in a DataPayload
+	p.FRMPayload = []Payload{&DataPayload{Bytes: unencrypted}}
+
+	return nil
+}
+
+// DecryptFRMPayload decrypts the given raw payload with the given key
+func DecryptFRMPayload(data []byte, devAddr DevAddr, FCnt uint32, uplink bool, key AES128Key) ([]byte, error) {
 	pLen := len(data)
 	if pLen%16 != 0 {
 		// append with empty bytes so that len(data) is a multiple of 16
@@ -129,25 +143,25 @@ func (p *MACPayload) EncryptFRMPayload(key AES128Key) error {
 
 	block, err := aes.NewCipher(key[:])
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if block.BlockSize() != 16 {
-		return errors.New("lorawan: block size of 16 was expected")
+		return nil, errors.New("lorawan: block size of 16 was expected")
 	}
 
 	s := make([]byte, 16)
 	a := make([]byte, 16)
 	a[0] = 0x01
-	if !p.uplink {
+	if !uplink {
 		a[5] = 0x01
 	}
 
-	b, err := p.FHDR.DevAddr.MarshalBinary()
+	b, err := devAddr.MarshalBinary()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	copy(a[6:10], b)
-	binary.LittleEndian.PutUint32(a[10:14], uint32(p.FHDR.FCnt))
+	binary.LittleEndian.PutUint32(a[10:14], uint32(FCnt))
 
 	for i := 0; i < len(data)/16; i++ {
 		a[15] = byte(i + 1)
@@ -158,10 +172,7 @@ func (p *MACPayload) EncryptFRMPayload(key AES128Key) error {
 		}
 	}
 
-	// store the encrypted data in a DataPayload
-	p.FRMPayload = []Payload{&DataPayload{Bytes: data[0:pLen]}}
-
-	return nil
+	return data[0:pLen], nil
 }
 
 // DecryptFRMPayload decrypts the FRMPayload with the given key.
