@@ -121,45 +121,14 @@ func (p *MACPayload) EncryptFRMPayload(key AES128Key) error {
 	if err != nil {
 		return err
 	}
-	pLen := len(data)
-	if pLen%16 != 0 {
-		// append with empty bytes so that len(data) is a multiple of 16
-		data = append(data, make([]byte, 16-(pLen%16))...)
-	}
 
-	block, err := aes.NewCipher(key[:])
+	data, err = EncryptFRMPayload(key, p.uplink, p.FHDR.DevAddr, p.FHDR.FCnt, data)
 	if err != nil {
 		return err
-	}
-	if block.BlockSize() != 16 {
-		return errors.New("lorawan: block size of 16 was expected")
-	}
-
-	s := make([]byte, 16)
-	a := make([]byte, 16)
-	a[0] = 0x01
-	if !p.uplink {
-		a[5] = 0x01
-	}
-
-	b, err := p.FHDR.DevAddr.MarshalBinary()
-	if err != nil {
-		return err
-	}
-	copy(a[6:10], b)
-	binary.LittleEndian.PutUint32(a[10:14], uint32(p.FHDR.FCnt))
-
-	for i := 0; i < len(data)/16; i++ {
-		a[15] = byte(i + 1)
-		block.Encrypt(s, a)
-
-		for j := 0; j < len(s); j++ {
-			data[i*16+j] = data[i*16+j] ^ s[j]
-		}
 	}
 
 	// store the encrypted data in a DataPayload
-	p.FRMPayload = []Payload{&DataPayload{Bytes: data[0:pLen]}}
+	p.FRMPayload = []Payload{&DataPayload{Bytes: data}}
 
 	return nil
 }
@@ -169,15 +138,18 @@ func (p *MACPayload) DecryptFRMPayload(key AES128Key) error {
 	if err := p.EncryptFRMPayload(key); err != nil {
 		return err
 	}
-	if len(p.FRMPayload) != 1 {
-		return errors.New("lorawan: a single FRMPayload was expected after decrypting")
-	}
-	dp, ok := p.FRMPayload[0].(*DataPayload)
-	if !ok {
-		return errors.New("lorawan: a DataPayload was expected")
+
+	// the FRMPayload contains MAC commands, which we need to unmarshal
+	if p.FPort == 0 {
+		dp, ok := p.FRMPayload[0].(*DataPayload)
+		if !ok {
+			return errors.New("lorawan: a DataPayload was expected")
+		}
+
+		return p.unmarshalPayload(dp.Bytes)
 	}
 
-	return p.unmarshalPayload(dp.Bytes)
+	return nil
 }
 
 // UnmarshalBinary decodes the object from binary form.
@@ -216,4 +188,47 @@ func (p *MACPayload) UnmarshalBinary(data []byte) error {
 	}
 
 	return nil
+}
+
+// EncryptFRMPayload encrypts the FRMPayload (slice of bytes).
+// Note that EncryptFRMPayload is used for both encryption and decryption.
+func EncryptFRMPayload(key AES128Key, uplink bool, devAddr DevAddr, fCnt uint32, data []byte) ([]byte, error) {
+	pLen := len(data)
+	if pLen%16 != 0 {
+		// append with empty bytes so that len(data) is a multiple of 16
+		data = append(data, make([]byte, 16-(pLen%16))...)
+	}
+
+	block, err := aes.NewCipher(key[:])
+	if err != nil {
+		return nil, err
+	}
+	if block.BlockSize() != 16 {
+		return nil, errors.New("lorawan: block size of 16 was expected")
+	}
+
+	s := make([]byte, 16)
+	a := make([]byte, 16)
+	a[0] = 0x01
+	if !uplink {
+		a[5] = 0x01
+	}
+
+	b, err := devAddr.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	copy(a[6:10], b)
+	binary.LittleEndian.PutUint32(a[10:14], uint32(fCnt))
+
+	for i := 0; i < len(data)/16; i++ {
+		a[15] = byte(i + 1)
+		block.Encrypt(s, a)
+
+		for j := 0; j < len(s); j++ {
+			data[i*16+j] = data[i*16+j] ^ s[j]
+		}
+	}
+
+	return data[0:pLen], nil
 }
