@@ -138,11 +138,28 @@ func TestJoinAcceptPayload(t *testing.T) {
 			})
 		})
 
+		Convey("Given AppNonce=[3]byte{1, 1, 1}, NetID=[3]byte{2, 2, 2}, DevAddr=DevAddr([4]byte{1, 2, 3, 4}), DLSettings=(RX2DataRate=7, RX1DRoffset=6), RXDelay=9, CFlist= 867.1,867.3,867.5,867.7,867.9", func() {
+			p.AppNonce = [3]byte{1, 1, 1}
+			p.NetID = [3]byte{2, 2, 2}
+			p.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
+			p.DLSettings.RX2DataRate = 7
+			p.DLSettings.RX1DRoffset = 6
+			p.RXDelay = 9
+			p.CFlist = []float32{867.1, 867.3, 867.5, 867.7, 867.9}
+
+			Convey("Then MarshalBinary returns []byte{1,1,1,2,2,2,4,3,2,1,103,9,24,79,132,232,86,132,184,94,132,136,102,132,88,110,132,0}", func() {
+				b, err := p.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{1, 1, 1, 2, 2, 2, 4, 3, 2, 1, 103, 9, 24, 79, 132, 232, 86, 132, 184, 94, 132, 136, 102, 132, 88, 110, 132, 0})
+			})
+
+		})
+
 		Convey("Given a slice of bytes with an invalid size", func() {
 			b := make([]byte, 11)
 			Convey("Then UnmarshalBinary returns an error", func() {
 				err := p.UnmarshalBinary(b)
-				So(err, ShouldResemble, errors.New("lorawan: 12 bytes of data are expected"))
+				So(err, ShouldResemble, errors.New("lorawan: 12 bytes of data are expected; 28 bytes if CFlist is present"))
 			})
 		})
 
@@ -157,6 +174,21 @@ func TestJoinAcceptPayload(t *testing.T) {
 				So(p.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
 				So(p.DLSettings, ShouldResemble, DLsettings{RX2DataRate: 7, RX1DRoffset: 6})
 				So(p.RXDelay, ShouldEqual, 9)
+			})
+		})
+
+		Convey("Given the slice []byte{1, 1, 1, 2, 2, 2, 4, 3, 2, 1, 103, 9,24,79,132,232,86,132,184,94,132,136,102,132,88,110,132,0}", func() {
+			b := []byte{1, 1, 1, 2, 2, 2, 4, 3, 2, 1, 103, 9, 24, 79, 132, 232, 86, 132, 184, 94, 132, 136, 102, 132, 88, 110, 132, 0}
+			Convey("Then UnmarshalBinary returns a JoinAcceptPayload with AppNonce=[3]byte{1, 1, 1}, NetID=[3]byte{2, 2, 2}, DevAddr=DevAddr([4]byte{1, 2, 3, 4}), DLSettings=(RX2DataRate=7, RX1DRoffset=6), RXDelay=9, CFlist= 867.1,867.3,867.5,867.7,867.9", func() {
+				err := p.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+
+				So(p.AppNonce, ShouldResemble, [3]byte{1, 1, 1})
+				So(p.NetID, ShouldResemble, [3]byte{2, 2, 2})
+				So(p.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
+				So(p.DLSettings, ShouldResemble, DLsettings{RX2DataRate: 7, RX1DRoffset: 6})
+				So(p.RXDelay, ShouldEqual, 9)
+				So(p.CFlist, ShouldResemble, CFlist([]float32{867.1, 867.3, 867.5, 867.7, 867.9}))
 			})
 		})
 	})
