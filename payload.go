@@ -136,13 +136,13 @@ func (p *JoinRequestPayload) UnmarshalBinary(data []byte) error {
 }
 
 // JoinAcceptPayload represents the join-accept message payload.
-// todo: implement CFlist
 type JoinAcceptPayload struct {
 	AppNonce   [3]byte
 	NetID      [3]byte
 	DevAddr    DevAddr
 	DLSettings DLsettings
 	RXDelay    uint8
+	CFlist     CFlist
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -170,13 +170,20 @@ func (p JoinAcceptPayload) MarshalBinary() ([]byte, error) {
 	out = append(out, b...)
 	out = append(out, byte(p.RXDelay))
 
+	b, err = p.CFlist.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, b...)
+
 	return out, nil
 }
 
 // UnmarshalBinary decodes the object from binary form.
 func (p *JoinAcceptPayload) UnmarshalBinary(data []byte) error {
-	if len(data) != 12 {
-		return errors.New("lorawan: 12 bytes of data are expected")
+	l := len(data)
+	if l != 12 && l != 28 {
+		return errors.New("lorawan: 12 bytes of data are expected; 28 bytes if CFlist is present")
 	}
 
 	// little endian
@@ -194,5 +201,12 @@ func (p *JoinAcceptPayload) UnmarshalBinary(data []byte) error {
 		return err
 	}
 	p.RXDelay = uint8(data[11])
+
+	if l == 28 {
+		if err := p.CFlist.UnmarshalBinary(data[12:]); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
