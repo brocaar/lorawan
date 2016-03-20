@@ -17,20 +17,46 @@ func TestMACPayload(t *testing.T) {
 		})
 
 		Convey("Given FPort=1", func() {
-			p.FPort = 1
+			fPort := uint8(1)
+			p.FPort = &fPort
 
-			Convey("Given FRMPayload contains MACCommand(CID=LinkCheckReq)", func() {
+			Convey("Given FRMPayload contains a MACCommand", func() {
 				p.FRMPayload = []Payload{&MACCommand{CID: LinkCheckReq}}
-				Convey("Then MarshalBinary returns an error", func() {
+				Convey("Then MarshalBinary returns an error that FPort must be 0", func() {
 					_, err := p.MarshalBinary()
 					So(err, ShouldResemble, errors.New("lorawan: a MAC command is only allowed when FPort=0"))
 				})
 			})
 		})
 
+		Convey("Given FPort=nil", func() {
+
+			Convey("Given FRMPayload is not empty", func() {
+				p.FRMPayload = []Payload{&DataPayload{Bytes: []byte{1}}}
+				Convey("Then MarshalBinary returns an error that FPort must be set", func() {
+					_, err := p.MarshalBinary()
+					So(err, ShouldResemble, errors.New("lorawan: FPort must be set when FRMPayload is not empty"))
+				})
+			})
+		})
+
+		Convey("Given FPort=0", func() {
+			fPort := uint8(0)
+			p.FPort = &fPort
+
+			Convey("Given FOpts are set", func() {
+				p.FHDR.FOpts = []MACCommand{{CID: LinkCheckReq}}
+				Convey("Then MarshalBinary returns an error that FPort must not be 0", func() {
+					_, err := p.MarshalBinary()
+					So(err, ShouldResemble, errors.New("lorawan: FPort must not be 0 when FOpts are set"))
+				})
+			})
+		})
+
 		Convey("Given FHDR(DevAddr=[4]{1, 2, 3, 4}), FPort=1, FRMPayload=[]Payload{DataPayload(Bytes=[]byte{5, 6, 7})}", func() {
 			p.FHDR.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
-			p.FPort = 1
+			fPort := uint8(1)
+			p.FPort = &fPort
 			p.FRMPayload = []Payload{&DataPayload{[]byte{5, 6, 7}}}
 
 			Convey("Then MarshalBinary returns []byte{4, 3, 2, 1, 0, 0, 0, 1, 5, 6, 7}", func() {
@@ -71,7 +97,8 @@ func TestMACPayload(t *testing.T) {
 			command := MACCommand{CID: DutyCycleAns}
 			p.uplink = true
 			p.FHDR.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
-			p.FPort = 0
+			fPort := uint8(0)
+			p.FPort = &fPort
 			p.FRMPayload = []Payload{&command}
 
 			Convey("Given the key [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
@@ -107,7 +134,8 @@ func TestMACPayload(t *testing.T) {
 		Convey("Given uplink=true, FHDR(DevAddr=[4]{1, 2, 3, 4}), FPort=0, FRMPayload=[]Payload{MACCommand{CID: DevStatusAns, Payload: DevStatusAnsPayload(Battery=10, Margin=20)}}", func() {
 			p.uplink = true
 			p.FHDR.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
-			p.FPort = 0
+			fPort := uint8(0)
+			p.FPort = &fPort
 			p.FRMPayload = []Payload{&MACCommand{CID: DevStatusAns, Payload: &DevStatusAnsPayload{Battery: 10, Margin: 20}}}
 
 			Convey("Then MarshalBinary returns []byte{4, 3, 2, 1, 0, 0, 0, 0, 6, 10, 20}", func() {
@@ -133,14 +161,6 @@ func TestMACPayload(t *testing.T) {
 			})
 		})
 
-		Convey("Given the slice []byte{4, 3, 2, 1, 0, 0, 0, 1}", func() {
-			b := []byte{4, 3, 2, 1, 0, 0, 0, 1}
-			Convey("Then UnmarshalBinary returns an error", func() {
-				err := p.UnmarshalBinary(b)
-				So(err, ShouldResemble, errors.New("lorawan: data contains FPort but no FRMPayload"))
-			})
-		})
-
 		Convey("Given uplink=true and slice []byte{4, 3, 2, 1, 0, 0, 0, 0, 6, 10}", func() {
 			b := []byte{4, 3, 2, 1, 0, 0, 0, 0, 6, 10}
 			p.uplink = true
@@ -162,7 +182,8 @@ func TestMACPayload(t *testing.T) {
 					So(p.FHDR.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
 				})
 				Convey("Then FPort=0", func() {
-					So(p.FPort, ShouldEqual, 0)
+					So(p.FPort, ShouldNotBeNil)
+					So(*p.FPort, ShouldEqual, 0)
 				})
 				Convey("Then FRMPayload=[]Payload{MACCommand{CID: DevStatusAns, Payload: DevStatusAnsPayload(Battery=10, Margin=20)}}", func() {
 					So(p.FRMPayload, ShouldHaveLength, 1)
@@ -190,7 +211,8 @@ func TestMACPayload(t *testing.T) {
 					So(p.FHDR.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
 				})
 				Convey("Then FPort=1", func() {
-					So(p.FPort, ShouldEqual, 1)
+					So(p.FPort, ShouldNotBeNil)
+					So(*p.FPort, ShouldEqual, 1)
 				})
 				Convey("Then FRMPayload=[]Payload{DataPayload([]byte{6, 10, 20})}", func() {
 					So(p.FRMPayload, ShouldHaveLength, 1)

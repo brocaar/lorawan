@@ -99,7 +99,8 @@ func TestPHYPayloadData(t *testing.T) {
 				So(ok, ShouldBeTrue)
 
 				Convey("Then FPort is correct", func() {
-					So(macPl.FPort, ShouldEqual, 1)
+					So(macPl.FPort, ShouldNotBeNil)
+					So(*macPl.FPort, ShouldEqual, 1)
 				})
 
 				Convey("Then FHDR contains the expcted data", func() {
@@ -316,7 +317,8 @@ func ExampleNewPHYPayload() {
 		FCnt:  0,
 		FOpts: []MACCommand{}, // you can leave this out when there is no MAC command to send
 	}
-	macPayload.FPort = 10
+	fPort := uint8(10)
+	macPayload.FPort = &fPort
 	macPayload.FRMPayload = []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}}
 
 	if err := macPayload.EncryptFRMPayload(appSKey); err != nil {
