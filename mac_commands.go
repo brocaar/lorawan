@@ -327,42 +327,6 @@ func (s *DLsettings) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// CFList represents a list of Channel frequencies, in MHz.
-type CFlist []float32
-
-// MarshalBinary marshals the object in binary form.
-func (l CFlist) MarshalBinary() ([]byte, error) {
-	b := make([]byte, 0, 16)
-	for _, c := range l {
-		if c > 16777215 { // 2^24 - 1
-			return nil, errors.New("lorawan: frequency not allowed above 1.6777215 Ghz")
-		}
-		cb := make([]byte, 4, 4)
-		binary.LittleEndian.PutUint32(cb, uint32(c*10000))
-		b = append(b, cb[:3]...)
-	}
-	if len(b) == 0 {
-		return nil, nil
-	}
-	return append(b, 0), nil
-}
-
-// UnmarshalBinary decodes the object from binary form
-func (l *CFlist) UnmarshalBinary(data []byte) error {
-	if l == nil {
-		return errors.New("lorawan: unable to unmarshal a nil CFlist")
-	}
-	if len(data) != 16 {
-		return errors.New("lorawan: 16 bytes of data are expected")
-	}
-	*l = make([]float32, 5, 5)
-	for i := 0; i < 5; i++ {
-		f := binary.LittleEndian.Uint32([]byte{data[i*3], data[i*3+1], data[i*3+2], 0})
-		(*l)[i] = float32(f) / 10000
-	}
-	return nil
-}
-
 // RX2SetupReqPayload represents the RX2SetupReq payload.
 type RX2SetupReqPayload struct {
 	Frequency  uint32

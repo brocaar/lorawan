@@ -114,6 +114,31 @@ func TestJoinRequestPayload(t *testing.T) {
 	})
 }
 
+func TestCFList(t *testing.T) {
+	// marshal / unmarshal is already covered by JoinAccept test-case
+	Convey("Given an empty CFList", t, func() {
+		var l CFList
+
+		Convey("Then each frequency must be a multiple of 100", func() {
+			l[0] = 99
+			_, err := l.MarshalBinary()
+			So(err, ShouldResemble, errors.New("lorawan: frequency must be a multiple of 100"))
+			l[0] = 100
+			_, err = l.MarshalBinary()
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Then the frequency values must not exceed 2^24-1 * 100", func() {
+			l[0] = 1677721500
+			_, err := l.MarshalBinary()
+			So(err, ShouldBeNil)
+			l[0] = 1677721600
+			_, err = l.MarshalBinary()
+			So(err, ShouldResemble, errors.New("lorawan: max value of frequency is 2^24-1"))
+		})
+	})
+}
+
 func TestJoinAcceptPayload(t *testing.T) {
 	Convey("Given an empty JoinAcceptPayload", t, func() {
 		var p JoinAcceptPayload
@@ -138,16 +163,22 @@ func TestJoinAcceptPayload(t *testing.T) {
 			})
 		})
 
-		Convey("Given AppNonce=[3]byte{1, 1, 1}, NetID=[3]byte{2, 2, 2}, DevAddr=DevAddr([4]byte{1, 2, 3, 4}), DLSettings=(RX2DataRate=7, RX1DRoffset=6), RXDelay=9, CFlist= 867.1,867.3,867.5,867.7,867.9", func() {
+		Convey("Given AppNonce=[3]byte{1, 1, 1}, NetID=[3]byte{2, 2, 2}, DevAddr=DevAddr([4]byte{1, 2, 3, 4}), DLSettings=(RX2DataRate=7, RX1DRoffset=6), RXDelay=9, CFList=867.1, 867.3, 867.5, 867.7, 867.9", func() {
 			p.AppNonce = [3]byte{1, 1, 1}
 			p.NetID = [3]byte{2, 2, 2}
 			p.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
 			p.DLSettings.RX2DataRate = 7
 			p.DLSettings.RX1DRoffset = 6
 			p.RXDelay = 9
-			p.CFlist = []float32{867.1, 867.3, 867.5, 867.7, 867.9}
+			p.CFList = &CFList{
+				867100000,
+				867300000,
+				867500000,
+				867700000,
+				867900000,
+			}
 
-			Convey("Then MarshalBinary returns []byte{1,1,1,2,2,2,4,3,2,1,103,9,24,79,132,232,86,132,184,94,132,136,102,132,88,110,132,0}", func() {
+			Convey("Then MarshalBinary returns []byte{1, 1, 1, 2, 2, 2, 4, 3, 2, 1, 103, 9, 24, 79, 132, 232, 86, 132, 184, 94, 132, 136, 102, 132, 88, 110, 132, 0}", func() {
 				b, err := p.MarshalBinary()
 				So(err, ShouldBeNil)
 				So(b, ShouldResemble, []byte{1, 1, 1, 2, 2, 2, 4, 3, 2, 1, 103, 9, 24, 79, 132, 232, 86, 132, 184, 94, 132, 136, 102, 132, 88, 110, 132, 0})
@@ -159,7 +190,7 @@ func TestJoinAcceptPayload(t *testing.T) {
 			b := make([]byte, 11)
 			Convey("Then UnmarshalBinary returns an error", func() {
 				err := p.UnmarshalBinary(b)
-				So(err, ShouldResemble, errors.New("lorawan: 12 bytes of data are expected; 28 bytes if CFlist is present"))
+				So(err, ShouldResemble, errors.New("lorawan: 12 or 28 bytes of data are expected (28 bytes if CFList is present)"))
 			})
 		})
 
@@ -188,7 +219,14 @@ func TestJoinAcceptPayload(t *testing.T) {
 				So(p.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
 				So(p.DLSettings, ShouldResemble, DLsettings{RX2DataRate: 7, RX1DRoffset: 6})
 				So(p.RXDelay, ShouldEqual, 9)
-				So(p.CFlist, ShouldResemble, CFlist([]float32{867.1, 867.3, 867.5, 867.7, 867.9}))
+				So(p.CFList, ShouldNotBeNil)
+				So(p.CFList, ShouldResemble, &CFList{
+					867100000,
+					867300000,
+					867500000,
+					867700000,
+					867900000,
+				})
 			})
 		})
 	})
