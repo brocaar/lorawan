@@ -108,6 +108,7 @@ func TestPHYPayloadData(t *testing.T) {
 						DevAddr: [4]byte{1, 2, 3, 4},
 						FCnt:    1,
 						FCtrl:   FCtrl{ADR: true},
+						uplink:  true,
 					})
 				})
 

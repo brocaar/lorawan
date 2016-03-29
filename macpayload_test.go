@@ -161,6 +161,19 @@ func TestMACPayload(t *testing.T) {
 			})
 		})
 
+		Convey("Given uplink=true and slice []byte{4, 3, 2, 1, 1, 0, 0, 2}", func() {
+			b := []byte{4, 3, 2, 1, 1, 0, 0, 2}
+			p.uplink = true
+			Convey("Then UnmarshalBinary returns no error", func() {
+				err := p.UnmarshalBinary(b)
+				So(err, ShouldBeNil)
+			})
+			Convey("Then FHDR.uplink is set to true", func() {
+				p.UnmarshalBinary(b)
+				So(p.FHDR.uplink, ShouldBeTrue)
+			})
+		})
+
 		Convey("Given uplink=true and slice []byte{4, 3, 2, 1, 0, 0, 0, 0, 6, 10}", func() {
 			b := []byte{4, 3, 2, 1, 0, 0, 0, 0, 6, 10}
 			p.uplink = true
