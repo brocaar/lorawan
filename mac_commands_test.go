@@ -11,10 +11,10 @@ func TestGetMACPayloadAndSize(t *testing.T) {
 	Convey("Given uplink=false and CID=LinkADRReq", t, func() {
 		uplink := false
 		c := LinkADRReq
-		Convey("Then getMACPayloadAndSize returns LinkADRAnsPayload{} with size 4", func() {
+		Convey("Then getMACPayloadAndSize returns LinkADRReqPayload{} with size 4", func() {
 			p, s, err := getMACPayloadAndSize(uplink, c)
 			So(err, ShouldBeNil)
-			So(p, ShouldHaveSameTypeAs, &LinkADRAnsPayload{})
+			So(p, ShouldHaveSameTypeAs, &LinkADRReqPayload{})
 			So(s, ShouldEqual, 4)
 		})
 
@@ -24,7 +24,7 @@ func TestGetMACPayloadAndSize(t *testing.T) {
 			p2, _, err := getMACPayloadAndSize(uplink, c)
 			So(err, ShouldBeNil)
 
-			So(fmt.Sprintf("%p", p1.(*LinkADRAnsPayload)), ShouldNotEqual, fmt.Sprintf("%p", p2.(*LinkADRAnsPayload)))
+			So(fmt.Sprintf("%p", p1.(*LinkADRReqPayload)), ShouldNotEqual, fmt.Sprintf("%p", p2.(*LinkADRReqPayload)))
 		})
 	})
 
