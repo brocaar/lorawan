@@ -113,7 +113,7 @@ func TestPHYPayloadData(t *testing.T) {
 
 				Convey("Then decrypting the FRMPayload does not error", func() {
 					appSKey := [16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-					So(macPl.DecryptFRMPayload(true, appSKey), ShouldBeNil)
+					So(phy.DecryptFRMPayload(appSKey), ShouldBeNil)
 
 					Convey("Then the DataPayload contains the expected data", func() {
 						So(macPl.FRMPayload, ShouldHaveLength, 1)
@@ -123,13 +123,60 @@ func TestPHYPayloadData(t *testing.T) {
 					})
 
 					Convey("When encrypting the FRMPayload again and marshalling the PHYPayload", func() {
-						So(macPl.EncryptFRMPayload(true, appSKey), ShouldBeNil)
+						So(phy.EncryptFRMPayload(appSKey), ShouldBeNil)
 						b, err := phy.MarshalBinary()
 						So(err, ShouldBeNil)
 
 						Convey("Then it equals to the input data", func() {
 							So(b, ShouldResemble, data)
 						})
+					})
+				})
+			})
+		})
+	})
+}
+
+func TestPHYPayloadUplinkMACEncryption(t *testing.T) {
+	Convey("Given uplink=true FHDR(DevAddr=[4]{1, 2, 3, 4}), FPort=0, FRMPayload=[]Payload{MACCommand{CID: DutyCycleAns}}", t, func() {
+		fPort := uint8(0)
+
+		command := &MACCommand{
+			CID: DutyCycleAns,
+		}
+
+		phy := PHYPayload{
+			MHDR: MHDR{
+				MType: ConfirmedDataUp,
+				Major: LoRaWANR1,
+			},
+			MACPayload: &MACPayload{
+				FPort: &fPort,
+				FHDR: FHDR{
+					DevAddr: [4]byte{1, 2, 3, 4},
+				},
+				FRMPayload: []Payload{command},
+			},
+		}
+
+		Convey("Given the key [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
+			key := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+
+			Convey("Then EncryptFRMPayload does not return an error", func() {
+				err := phy.EncryptFRMPayload(key)
+				So(err, ShouldBeNil)
+
+				Convey("Then DecryptFRMPayload does not return an error", func() {
+					err := phy.DecryptFRMPayload(key)
+					So(err, ShouldBeNil)
+
+					Convey("Then FRMPayload contains one DataPayload(Bytes=[]byte{5, 6, 7})", func() {
+						macPL, ok := phy.MACPayload.(*MACPayload)
+						So(ok, ShouldBeTrue)
+						So(macPL.FRMPayload, ShouldHaveLength, 1)
+						cmd, ok := macPL.FRMPayload[0].(*MACCommand)
+						So(ok, ShouldBeTrue)
+						So(cmd, ShouldResemble, command)
 					})
 				})
 			})
@@ -283,37 +330,34 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 	})
 }
 
-func ExampleNewPHYPayload() {
+func ExamplePHYPayload() {
 	nwkSKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	appSKey := [16]byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
-
 	fPort := uint8(10)
-	macPayload := MACPayload{
-		FHDR: FHDR{
-			DevAddr: DevAddr([4]byte{1, 2, 3, 4}),
-			FCtrl: FCtrl{
-				ADR:       false,
-				ADRACKReq: false,
-				ACK:       false,
-			},
-			FCnt:  0,
-			FOpts: []MACCommand{}, // you can leave this out when there is no MAC command to send
-		},
-		FPort:      &fPort,
-		FRMPayload: []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}},
-	}
-
-	// true = encrypt for uplink
-	if err := macPayload.EncryptFRMPayload(true, appSKey); err != nil {
-		panic(err)
-	}
 
 	phy := PHYPayload{
 		MHDR: MHDR{
 			MType: ConfirmedDataUp,
 			Major: LoRaWANR1,
 		},
-		MACPayload: &macPayload,
+		MACPayload: &MACPayload{
+			FHDR: FHDR{
+				DevAddr: DevAddr([4]byte{1, 2, 3, 4}),
+				FCtrl: FCtrl{
+					ADR:       false,
+					ADRACKReq: false,
+					ACK:       false,
+				},
+				FCnt:  0,
+				FOpts: []MACCommand{}, // you can leave this out when there is no MAC command to send
+			},
+			FPort:      &fPort,
+			FRMPayload: []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}},
+		},
+	}
+
+	if err := phy.EncryptFRMPayload(appSKey); err != nil {
+		panic(err)
 	}
 
 	if err := phy.SetMIC(nwkSKey); err != nil {
@@ -331,7 +375,7 @@ func ExampleNewPHYPayload() {
 	// [128 4 3 2 1 0 0 0 10 226 100 212 247 181 106 14 117]
 }
 
-func ExampleNewPHYPayload_joinRequest() {
+func ExamplePHYPayload_joinRequest() {
 	appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
 	phy := PHYPayload{
@@ -361,7 +405,7 @@ func ExampleNewPHYPayload_joinRequest() {
 	// [0 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 3 3 9 185 123 50]
 }
 
-func ExampleNewPHYPayload_joinAcceptSend() {
+func ExamplePHYPayload_joinAcceptSend() {
 	appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
 	phy := PHYPayload{
