@@ -101,14 +101,6 @@ type PHYPayload struct {
 	MHDR       MHDR
 	MACPayload Payload
 	MIC        [4]byte
-	uplink     bool
-}
-
-// NewPHYPayload returns a new PHYPayload instance set to either uplink or downlink.
-// This is needed since there is a difference in how uplink and downlink
-// payloads are (un)marshalled and encrypted / decrypted.
-func NewPHYPayload(uplink bool) PHYPayload {
-	return PHYPayload{uplink: uplink}
 }
 
 // calculateMIC calculates and returns the MIC.
@@ -140,7 +132,7 @@ func (p PHYPayload) calculateMIC(key AES128Key) ([]byte, error) {
 
 	b0 := make([]byte, 16)
 	b0[0] = 0x49
-	if !p.uplink {
+	if !p.isUplink() {
 		b0[5] = 1
 	}
 	b, err = macPayload.FHDR.DevAddr.MarshalBinary()
@@ -373,17 +365,13 @@ func (p *PHYPayload) DecryptJoinAcceptPayload(appKey AES128Key) error {
 
 	p.MACPayload = &JoinAcceptPayload{}
 	copy(p.MIC[:], pt[len(pt)-4:len(pt)]) // set the decrypted MIC
-	return p.MACPayload.UnmarshalBinary(pt[0 : len(pt)-4])
+	return p.MACPayload.UnmarshalBinary(p.isUplink(), pt[0:len(pt)-4])
 }
 
 // MarshalBinary marshals the object in binary form.
 func (p PHYPayload) MarshalBinary() ([]byte, error) {
 	if p.MACPayload == nil {
 		return []byte{}, errors.New("lorawan: MACPayload should not be nil")
-	}
-
-	if mpl, ok := p.MACPayload.(*MACPayload); ok {
-		mpl.uplink = p.uplink
 	}
 
 	var out []byte
@@ -408,51 +396,43 @@ func (p *PHYPayload) UnmarshalBinary(data []byte) error {
 	if len(data) < 5 {
 		return errors.New("lorawan: at least 5 bytes needed to decode PHYPayload")
 	}
+	isUplink := p.isUplink()
 
+	// MHDR
 	if err := p.MHDR.UnmarshalBinary(data[0:1]); err != nil {
 		return err
 	}
 
+	// MACPayload
 	switch p.MHDR.MType {
 	case JoinRequest:
 		p.MACPayload = &JoinRequestPayload{}
 	case JoinAccept:
 		p.MACPayload = &DataPayload{}
 	default:
-		p.MACPayload = &MACPayload{uplink: p.uplink}
+		p.MACPayload = &MACPayload{}
 	}
-
-	if err := p.MACPayload.UnmarshalBinary(data[1 : len(data)-4]); err != nil {
+	if err := p.MACPayload.UnmarshalBinary(isUplink, data[1:len(data)-4]); err != nil {
 		return err
 	}
+
+	// MIC
 	for i := 0; i < 4; i++ {
 		p.MIC[i] = data[len(data)-4+i]
 	}
 	return nil
 }
 
-// GobEncode implements the gob.GobEncoder interface.
-func (p PHYPayload) GobEncode() ([]byte, error) {
-	out := make([]byte, 1)
-	if p.uplink {
-		out[0] = 1
+// isUplink returns a bool indicating if the packet is uplink or downlink.
+// Note that for MType Proprietary it can't derrive if the packet is uplink
+// or downlink. This is fine (I think) since it is also unknown how to
+// calculate the MIC and the format of the MACPayload. A pluggable
+// MIC calculation and MACPayload for Proprietary MType is still TODO.
+func (p PHYPayload) isUplink() bool {
+	switch p.MHDR.MType {
+	case JoinRequest, UnconfirmedDataUp, ConfirmedDataUp:
+		return true
+	default:
+		return false
 	}
-
-	b, err := p.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	out = append(out, b...)
-	return out, nil
-}
-
-// GobDecode implements the gob.GobEncoder interface.
-func (p *PHYPayload) GobDecode(data []byte) error {
-	if len(data) < 1 {
-		return errors.New("lorawan: at least 1 byte needed for GobDecode")
-	}
-	if data[0] == 1 {
-		p.uplink = true
-	}
-	return p.UnmarshalBinary(data[1:])
 }

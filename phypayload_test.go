@@ -77,7 +77,7 @@ func TestPHYPayloadData(t *testing.T) {
 		data, err := base64.StdEncoding.DecodeString("QAQDAgGAAQABppRkJhXWw7WC")
 		So(err, ShouldBeNil)
 
-		phy := NewPHYPayload(true) // uplink=true
+		var phy PHYPayload
 
 		Convey("Then UnmarshalBinary does not fail", func() {
 			So(phy.UnmarshalBinary(data), ShouldBeNil)
@@ -108,13 +108,12 @@ func TestPHYPayloadData(t *testing.T) {
 						DevAddr: [4]byte{1, 2, 3, 4},
 						FCnt:    1,
 						FCtrl:   FCtrl{ADR: true},
-						uplink:  true,
 					})
 				})
 
 				Convey("Then decrypting the FRMPayload does not error", func() {
 					appSKey := [16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-					So(macPl.DecryptFRMPayload(appSKey), ShouldBeNil)
+					So(macPl.DecryptFRMPayload(true, appSKey), ShouldBeNil)
 
 					Convey("Then the DataPayload contains the expected data", func() {
 						So(macPl.FRMPayload, ShouldHaveLength, 1)
@@ -124,7 +123,7 @@ func TestPHYPayloadData(t *testing.T) {
 					})
 
 					Convey("When encrypting the FRMPayload again and marshalling the PHYPayload", func() {
-						So(macPl.EncryptFRMPayload(appSKey), ShouldBeNil)
+						So(macPl.EncryptFRMPayload(true, appSKey), ShouldBeNil)
 						b, err := phy.MarshalBinary()
 						So(err, ShouldBeNil)
 
@@ -132,21 +131,6 @@ func TestPHYPayloadData(t *testing.T) {
 							So(b, ShouldResemble, data)
 						})
 					})
-				})
-			})
-
-			Convey("When using GobEncode", func() {
-				b, err := phy.GobEncode()
-				So(err, ShouldBeNil)
-
-				Convey("Then when using GobDecode, the packet is uplink and the MIC valid", func() {
-					newPHY := &PHYPayload{}
-					So(newPHY.GobDecode(b), ShouldBeNil)
-					So(newPHY.uplink, ShouldBeTrue)
-
-					valid, err := newPHY.ValidateMIC([16]byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2})
-					So(err, ShouldBeNil)
-					So(valid, ShouldBeTrue)
 				})
 			})
 		})
@@ -158,7 +142,7 @@ func TestPHYPayloadJoinRequest(t *testing.T) {
 		data, err := base64.StdEncoding.DecodeString("AAQDAgEEAwIBBQQDAgUEAwItEGqZDhI=")
 		So(err, ShouldBeNil)
 
-		phy := NewPHYPayload(true) // uplink=true
+		var phy PHYPayload
 
 		Convey("Then UnmarshalBinary does not fail", func() {
 			So(phy.UnmarshalBinary(data), ShouldBeNil)
@@ -303,41 +287,40 @@ func ExampleNewPHYPayload() {
 	nwkSKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	appSKey := [16]byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
 
-	// uplink and downlink messages are (un)marshalled and encrypted / decrypted
-	// differently
-	uplink := true
-
-	macPayload := NewMACPayload(uplink)
-	macPayload.FHDR = FHDR{
-		DevAddr: DevAddr([4]byte{1, 2, 3, 4}),
-		FCtrl: FCtrl{
-			ADR:       false,
-			ADRACKReq: false,
-			ACK:       false,
-		},
-		FCnt:  0,
-		FOpts: []MACCommand{}, // you can leave this out when there is no MAC command to send
-	}
 	fPort := uint8(10)
-	macPayload.FPort = &fPort
-	macPayload.FRMPayload = []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}}
+	macPayload := MACPayload{
+		FHDR: FHDR{
+			DevAddr: DevAddr([4]byte{1, 2, 3, 4}),
+			FCtrl: FCtrl{
+				ADR:       false,
+				ADRACKReq: false,
+				ACK:       false,
+			},
+			FCnt:  0,
+			FOpts: []MACCommand{}, // you can leave this out when there is no MAC command to send
+		},
+		FPort:      &fPort,
+		FRMPayload: []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}},
+	}
 
-	if err := macPayload.EncryptFRMPayload(appSKey); err != nil {
+	// true = encrypt for uplink
+	if err := macPayload.EncryptFRMPayload(true, appSKey); err != nil {
 		panic(err)
 	}
 
-	payload := NewPHYPayload(uplink)
-	payload.MHDR = MHDR{
-		MType: ConfirmedDataUp,
-		Major: LoRaWANR1,
+	phy := PHYPayload{
+		MHDR: MHDR{
+			MType: ConfirmedDataUp,
+			Major: LoRaWANR1,
+		},
+		MACPayload: &macPayload,
 	}
-	payload.MACPayload = macPayload
 
-	if err := payload.SetMIC(nwkSKey); err != nil {
+	if err := phy.SetMIC(nwkSKey); err != nil {
 		panic(err)
 	}
 
-	bytes, err := payload.MarshalBinary()
+	bytes, err := phy.MarshalBinary()
 	if err != nil {
 		panic(err)
 	}
@@ -349,25 +332,25 @@ func ExampleNewPHYPayload() {
 }
 
 func ExampleNewPHYPayload_joinRequest() {
-	uplink := true
 	appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
-	payload := NewPHYPayload(uplink)
-	payload.MHDR = MHDR{
-		MType: JoinRequest,
-		Major: LoRaWANR1,
-	}
-	payload.MACPayload = &JoinRequestPayload{
-		AppEUI:   [8]byte{1, 1, 1, 1, 1, 1, 1, 1},
-		DevEUI:   [8]byte{2, 2, 2, 2, 2, 2, 2, 2},
-		DevNonce: [2]byte{3, 3},
+	phy := PHYPayload{
+		MHDR: MHDR{
+			MType: JoinRequest,
+			Major: LoRaWANR1,
+		},
+		MACPayload: &JoinRequestPayload{
+			AppEUI:   [8]byte{1, 1, 1, 1, 1, 1, 1, 1},
+			DevEUI:   [8]byte{2, 2, 2, 2, 2, 2, 2, 2},
+			DevNonce: [2]byte{3, 3},
+		},
 	}
 
-	if err := payload.SetMIC(appKey); err != nil {
+	if err := phy.SetMIC(appKey); err != nil {
 		panic(err)
 	}
 
-	bytes, err := payload.MarshalBinary()
+	bytes, err := phy.MarshalBinary()
 	if err != nil {
 		panic(err)
 	}
@@ -379,30 +362,31 @@ func ExampleNewPHYPayload_joinRequest() {
 }
 
 func ExampleNewPHYPayload_joinAcceptSend() {
-	uplink := false
 	appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
-	payload := NewPHYPayload(uplink)
-	payload.MHDR = MHDR{
-		MType: JoinAccept,
-		Major: LoRaWANR1,
+	phy := PHYPayload{
+		MHDR: MHDR{
+			MType: JoinAccept,
+			Major: LoRaWANR1,
+		},
+		MACPayload: &JoinAcceptPayload{
+			AppNonce:   [3]byte{1, 1, 1},
+			NetID:      [3]byte{2, 2, 2},
+			DevAddr:    DevAddr([4]byte{1, 2, 3, 4}),
+			DLSettings: DLsettings{RX2DataRate: 0, RX1DRoffset: 0},
+			RXDelay:    0,
+		},
 	}
-	payload.MACPayload = &JoinAcceptPayload{
-		AppNonce:   [3]byte{1, 1, 1},
-		NetID:      [3]byte{2, 2, 2},
-		DevAddr:    DevAddr([4]byte{1, 2, 3, 4}),
-		DLSettings: DLsettings{RX2DataRate: 0, RX1DRoffset: 0},
-		RXDelay:    0,
-	}
+
 	// set the MIC before encryption
-	if err := payload.SetMIC(appKey); err != nil {
+	if err := phy.SetMIC(appKey); err != nil {
 		panic(err)
 	}
-	if err := payload.EncryptJoinAcceptPayload(appKey); err != nil {
+	if err := phy.EncryptJoinAcceptPayload(appKey); err != nil {
 		panic(err)
 	}
 
-	bytes, err := payload.MarshalBinary()
+	bytes, err := phy.MarshalBinary()
 	if err != nil {
 		panic(err)
 	}

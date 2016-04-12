@@ -62,7 +62,7 @@ func TestDataPayload(t *testing.T) {
 		Convey("Given the slice []byte{1, 2, 3, 4}", func() {
 			b := []byte{1, 2, 3, 4}
 			Convey("Then UnmarshalBinary returns DataPayload with Bytes=[]byte{1, 2, 3, 4}", func() {
-				err := p.UnmarshalBinary(b)
+				err := p.UnmarshalBinary(false, b)
 				So(err, ShouldBeNil)
 				So(p.Bytes, ShouldNotEqual, b) // make sure we get a new copy!
 				So(p.Bytes, ShouldResemble, b)
@@ -94,7 +94,7 @@ func TestJoinRequestPayload(t *testing.T) {
 		Convey("Given a slice of bytes with an invalid size", func() {
 			b := make([]byte, 17)
 			Convey("Then UnmarshalBinary returns an error", func() {
-				err := p.UnmarshalBinary(b)
+				err := p.UnmarshalBinary(false, b)
 				So(err, ShouldResemble, errors.New("lorawan: 18 bytes of data are expected"))
 			})
 		})
@@ -102,7 +102,7 @@ func TestJoinRequestPayload(t *testing.T) {
 		Convey("Given the slice []byte{1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3}", func() {
 			b := []byte{1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3}
 			Convey("Then UnmarshalBinary returns a JoinRequestPayload with AppEUI=[8]byte{1, 1, 1, 1, 1, 1, 1, 1}, DevEUI=[8]byte{2, 2, 2, 2, 2, 2, 2, 2} and DevNonce=[2]byte{3, 3}", func() {
-				err := p.UnmarshalBinary(b)
+				err := p.UnmarshalBinary(true, b)
 				So(err, ShouldBeNil)
 				So(p, ShouldResemble, JoinRequestPayload{
 					AppEUI:   [8]byte{1, 1, 1, 1, 1, 1, 1, 1},
@@ -189,7 +189,7 @@ func TestJoinAcceptPayload(t *testing.T) {
 		Convey("Given a slice of bytes with an invalid size", func() {
 			b := make([]byte, 11)
 			Convey("Then UnmarshalBinary returns an error", func() {
-				err := p.UnmarshalBinary(b)
+				err := p.UnmarshalBinary(false, b)
 				So(err, ShouldResemble, errors.New("lorawan: 12 or 28 bytes of data are expected (28 bytes if CFList is present)"))
 			})
 		})
@@ -197,7 +197,7 @@ func TestJoinAcceptPayload(t *testing.T) {
 		Convey("Given the slice []byte{1, 1, 1, 2, 2, 2, 4, 3, 2, 1, 103, 9}", func() {
 			b := []byte{1, 1, 1, 2, 2, 2, 4, 3, 2, 1, 103, 9}
 			Convey("Then UnmarshalBinary returns a JoinAcceptPayload with AppNonce=[3]byte{1, 1, 1}, NetID=[3]byte{2, 2, 2}, DevAddr=DevAddr([4]byte{1, 2, 3, 4}), DLSettings=(RX2DataRate=7, RX1DRoffset=6), RXDelay=9", func() {
-				err := p.UnmarshalBinary(b)
+				err := p.UnmarshalBinary(false, b)
 				So(err, ShouldBeNil)
 
 				So(p.AppNonce, ShouldResemble, [3]byte{1, 1, 1})
@@ -211,7 +211,7 @@ func TestJoinAcceptPayload(t *testing.T) {
 		Convey("Given the slice []byte{1, 1, 1, 2, 2, 2, 4, 3, 2, 1, 103, 9,24,79,132,232,86,132,184,94,132,136,102,132,88,110,132,0}", func() {
 			b := []byte{1, 1, 1, 2, 2, 2, 4, 3, 2, 1, 103, 9, 24, 79, 132, 232, 86, 132, 184, 94, 132, 136, 102, 132, 88, 110, 132, 0}
 			Convey("Then UnmarshalBinary returns a JoinAcceptPayload with AppNonce=[3]byte{1, 1, 1}, NetID=[3]byte{2, 2, 2}, DevAddr=DevAddr([4]byte{1, 2, 3, 4}), DLSettings=(RX2DataRate=7, RX1DRoffset=6), RXDelay=9, CFlist= 867.1,867.3,867.5,867.7,867.9", func() {
-				err := p.UnmarshalBinary(b)
+				err := p.UnmarshalBinary(false, b)
 				So(err, ShouldBeNil)
 
 				So(p.AppNonce, ShouldResemble, [3]byte{1, 1, 1})

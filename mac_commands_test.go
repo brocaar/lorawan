@@ -62,9 +62,8 @@ func TestMACCommand(t *testing.T) {
 		Convey("Given the slice []byte{2, 10, 15}", func() {
 			b := []byte{2, 10, 15}
 			Convey("Given the direction is downlink", func() {
-				m.uplink = false
 				Convey("Then UnmarshalBinary should return a MACCommand with CID=LinkCheckAns", func() {
-					err := m.UnmarshalBinary(b)
+					err := m.UnmarshalBinary(false, b)
 					So(err, ShouldBeNil)
 					So(m.CID, ShouldEqual, LinkCheckAns)
 					Convey("And Payload should be of type *LinkCheckAnsPayload", func() {
@@ -78,9 +77,8 @@ func TestMACCommand(t *testing.T) {
 			})
 
 			Convey("Given the direction is uplink", func() {
-				m.uplink = true
 				Convey("Then UnmarshalBinary should return an error", func() {
-					err := m.UnmarshalBinary(b)
+					err := m.UnmarshalBinary(true, b)
 					So(err, ShouldNotBeNil)
 				})
 			})

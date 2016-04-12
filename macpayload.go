@@ -12,16 +12,6 @@ type MACPayload struct {
 	FHDR       FHDR
 	FPort      *uint8 // optional, but must be set when FRMPayload is set
 	FRMPayload []Payload
-	uplink     bool // used for binary (un)marshaling and encryption / decryption
-}
-
-// NewMACPayload returns a new MACPayload set to either uplink or downlink.
-// This is needed since there is a difference in how uplink and downlink
-// payloads are (un)marshalled and encrypted / decrypted.
-func NewMACPayload(uplink bool) *MACPayload {
-	return &MACPayload{
-		uplink: uplink,
-	}
 }
 
 func (p MACPayload) marshalPayload() ([]byte, error) {
@@ -33,7 +23,6 @@ func (p MACPayload) marshalPayload() ([]byte, error) {
 			if p.FPort == nil || (p.FPort != nil && *p.FPort != 0) {
 				return []byte{}, errors.New("lorawan: a MAC command is only allowed when FPort=0")
 			}
-			mac.uplink = p.uplink
 			b, err = mac.MarshalBinary()
 		} else {
 			b, err = fp.MarshalBinary()
@@ -46,7 +35,7 @@ func (p MACPayload) marshalPayload() ([]byte, error) {
 	return out, nil
 }
 
-func (p *MACPayload) unmarshalPayload(data []byte) error {
+func (p *MACPayload) unmarshalPayload(uplink bool, data []byte) error {
 	if p.FPort == nil {
 		panic("lorawan: FPort must be set before calling unmarshalPayload, this is a bug!")
 	}
@@ -56,7 +45,7 @@ func (p *MACPayload) unmarshalPayload(data []byte) error {
 		var pLen int
 		p.FRMPayload = make([]Payload, 0)
 		for i := 0; i < len(data); i++ {
-			if _, s, err := getMACPayloadAndSize(p.uplink, cid(data[i])); err != nil {
+			if _, s, err := getMACPayloadAndSize(uplink, cid(data[i])); err != nil {
 				pLen = 0
 			} else {
 				pLen = s
@@ -67,8 +56,8 @@ func (p *MACPayload) unmarshalPayload(data []byte) error {
 				return errors.New("lorawan: not enough remaining bytes")
 			}
 
-			mc := &MACCommand{uplink: p.uplink}
-			if err := mc.UnmarshalBinary(data[i : i+1+pLen]); err != nil {
+			mc := &MACCommand{}
+			if err := mc.UnmarshalBinary(uplink, data[i:i+1+pLen]); err != nil {
 				return err
 			}
 			p.FRMPayload = append(p.FRMPayload, mc)
@@ -80,7 +69,7 @@ func (p *MACPayload) unmarshalPayload(data []byte) error {
 	} else {
 		// payload contains user defined data
 		p.FRMPayload = []Payload{&DataPayload{}}
-		if err := p.FRMPayload[0].UnmarshalBinary(data); err != nil {
+		if err := p.FRMPayload[0].UnmarshalBinary(uplink, data); err != nil {
 			return err
 		}
 	}
@@ -93,7 +82,6 @@ func (p MACPayload) MarshalBinary() ([]byte, error) {
 	var out []byte
 	var err error
 
-	p.FHDR.uplink = p.uplink
 	b, err = p.FHDR.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -121,15 +109,13 @@ func (p MACPayload) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary decodes the object from binary form.
-func (p *MACPayload) UnmarshalBinary(data []byte) error {
+func (p *MACPayload) UnmarshalBinary(uplink bool, data []byte) error {
 	dataLen := len(data)
 
 	// check that there are enough bytes to decode a minimal FHDR
 	if dataLen < 7 {
 		return errors.New("lorawan: at least 7 bytes needed to decode FHDR")
 	}
-
-	p.FHDR.uplink = p.uplink
 
 	// unmarshal FCtrl so we know the FOptsLen
 	if err := p.FHDR.FCtrl.UnmarshalBinary(data[4:5]); err != nil {
@@ -142,7 +128,7 @@ func (p *MACPayload) UnmarshalBinary(data []byte) error {
 	}
 
 	// decode the full FHDR (including optional FOpts)
-	if err := p.FHDR.UnmarshalBinary(data[0 : 7+p.FHDR.FCtrl.fOptsLen]); err != nil {
+	if err := p.FHDR.UnmarshalBinary(uplink, data[0:7+p.FHDR.FCtrl.fOptsLen]); err != nil {
 		return err
 	}
 
@@ -158,7 +144,7 @@ func (p *MACPayload) UnmarshalBinary(data []byte) error {
 			return errors.New("lorawan: FPort must not be 0 when FOpts are set")
 		}
 
-		if err := p.unmarshalPayload(data[7+p.FHDR.FCtrl.fOptsLen+1:]); err != nil {
+		if err := p.unmarshalPayload(uplink, data[7+p.FHDR.FCtrl.fOptsLen+1:]); err != nil {
 			return err
 		}
 	}
@@ -167,7 +153,7 @@ func (p *MACPayload) UnmarshalBinary(data []byte) error {
 }
 
 // EncryptFRMPayload encrypts the FRMPayload with the given key.
-func (p *MACPayload) EncryptFRMPayload(key AES128Key) error {
+func (p *MACPayload) EncryptFRMPayload(uplink bool, key AES128Key) error {
 	if len(p.FRMPayload) == 0 {
 		return nil
 	}
@@ -177,7 +163,7 @@ func (p *MACPayload) EncryptFRMPayload(key AES128Key) error {
 		return err
 	}
 
-	data, err = EncryptFRMPayload(key, p.uplink, p.FHDR.DevAddr, p.FHDR.FCnt, data)
+	data, err = EncryptFRMPayload(key, uplink, p.FHDR.DevAddr, p.FHDR.FCnt, data)
 	if err != nil {
 		return err
 	}
@@ -189,8 +175,8 @@ func (p *MACPayload) EncryptFRMPayload(key AES128Key) error {
 }
 
 // DecryptFRMPayload decrypts the FRMPayload with the given key.
-func (p *MACPayload) DecryptFRMPayload(key AES128Key) error {
-	if err := p.EncryptFRMPayload(key); err != nil {
+func (p *MACPayload) DecryptFRMPayload(uplink bool, key AES128Key) error {
+	if err := p.EncryptFRMPayload(uplink, key); err != nil {
 		return err
 	}
 
@@ -201,7 +187,7 @@ func (p *MACPayload) DecryptFRMPayload(key AES128Key) error {
 			return errors.New("lorawan: a DataPayload was expected")
 		}
 
-		return p.unmarshalPayload(dp.Bytes)
+		return p.unmarshalPayload(uplink, dp.Bytes)
 	}
 
 	return nil

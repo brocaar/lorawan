@@ -68,7 +68,7 @@ func TestMACPayload(t *testing.T) {
 			Convey("Given the key [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
 				key := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 				Convey("Then EncryptFRMPayload does not return an error", func() {
-					err := p.EncryptFRMPayload(key)
+					err := p.EncryptFRMPayload(false, key)
 					So(err, ShouldBeNil)
 
 					Convey("Then FRMPayload contains one DataPayload not equal to DataPayload(Bytes=[]byte{5, 6, 7})", func() {
@@ -79,7 +79,7 @@ func TestMACPayload(t *testing.T) {
 					})
 
 					Convey("Then DecryptFRMPayload does not return an error", func() {
-						err := p.DecryptFRMPayload(key)
+						err := p.DecryptFRMPayload(false, key)
 						So(err, ShouldBeNil)
 
 						Convey("Then FRMPayload contains one DataPayload(Bytes=[]byte{5, 6, 7})", func() {
@@ -95,7 +95,6 @@ func TestMACPayload(t *testing.T) {
 
 		Convey("Given uplink=true FHDR(DevAddr=[4]{1, 2, 3, 4}), FPort=0, FRMPayload=[]Payload{MACCommand{CID: DutyCycleAns}}", func() {
 			command := MACCommand{CID: DutyCycleAns}
-			p.uplink = true
 			p.FHDR.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
 			fPort := uint8(0)
 			p.FPort = &fPort
@@ -105,11 +104,11 @@ func TestMACPayload(t *testing.T) {
 				key := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 
 				Convey("Then EncryptFRMPayload does not return an error", func() {
-					err := p.EncryptFRMPayload(key)
+					err := p.EncryptFRMPayload(true, key)
 					So(err, ShouldBeNil)
 
 					Convey("Then DecryptFRMPayload does not return an error", func() {
-						err := p.DecryptFRMPayload(key)
+						err := p.DecryptFRMPayload(true, key)
 						So(err, ShouldBeNil)
 
 						Convey("Then FRMPayload contains one DataPayload(Bytes=[]byte{5, 6, 7})", func() {
@@ -122,17 +121,16 @@ func TestMACPayload(t *testing.T) {
 				})
 
 				Convey("Then (DecryptFRMPayload o EncryptFRMPayload) should be idempotent", func() {
-					p.EncryptFRMPayload(key)
-					p.DecryptFRMPayload(key)
-					p.EncryptFRMPayload(key)
-					p.DecryptFRMPayload(key)
+					p.EncryptFRMPayload(true, key)
+					p.DecryptFRMPayload(true, key)
+					p.EncryptFRMPayload(true, key)
+					p.DecryptFRMPayload(true, key)
 					So(p.FRMPayload, ShouldResemble, []Payload{&command})
 				})
 			})
 		})
 
 		Convey("Given uplink=true, FHDR(DevAddr=[4]{1, 2, 3, 4}), FPort=0, FRMPayload=[]Payload{MACCommand{CID: DevStatusAns, Payload: DevStatusAnsPayload(Battery=10, Margin=20)}}", func() {
-			p.uplink = true
 			p.FHDR.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
 			fPort := uint8(0)
 			p.FPort = &fPort
@@ -148,7 +146,7 @@ func TestMACPayload(t *testing.T) {
 		Convey("Given the slice []byte{4, 3, 2, 1, 0, 0}", func() {
 			b := []byte{4, 3, 2, 1, 0, 0}
 			Convey("Then UnmarshalBinary returns an error", func() {
-				err := p.UnmarshalBinary(b)
+				err := p.UnmarshalBinary(true, b)
 				So(err, ShouldResemble, errors.New("lorawan: at least 7 bytes needed to decode FHDR"))
 			})
 		})
@@ -156,39 +154,32 @@ func TestMACPayload(t *testing.T) {
 		Convey("Given the slice []byte{4, 3, 2, 1, 3, 0, 0, 0, 0}", func() {
 			b := []byte{4, 3, 2, 1, 3, 0, 0, 0, 0}
 			Convey("Then UnmarshalBinary returns an error", func() {
-				err := p.UnmarshalBinary(b)
+				err := p.UnmarshalBinary(true, b)
 				So(err, ShouldResemble, errors.New("lorawan: not enough bytes to decode FHDR"))
 			})
 		})
 
 		Convey("Given uplink=true and slice []byte{4, 3, 2, 1, 1, 0, 0, 2}", func() {
 			b := []byte{4, 3, 2, 1, 1, 0, 0, 2}
-			p.uplink = true
 			Convey("Then UnmarshalBinary returns no error", func() {
-				err := p.UnmarshalBinary(b)
+				err := p.UnmarshalBinary(true, b)
 				So(err, ShouldBeNil)
-			})
-			Convey("Then FHDR.uplink is set to true", func() {
-				p.UnmarshalBinary(b)
-				So(p.FHDR.uplink, ShouldBeTrue)
 			})
 		})
 
 		Convey("Given uplink=true and slice []byte{4, 3, 2, 1, 0, 0, 0, 0, 6, 10}", func() {
 			b := []byte{4, 3, 2, 1, 0, 0, 0, 0, 6, 10}
-			p.uplink = true
 			Convey("Then UnmarshalBinary returns an error", func() {
-				err := p.UnmarshalBinary(b)
+				err := p.UnmarshalBinary(true, b)
 				So(err, ShouldResemble, errors.New("lorawan: not enough remaining bytes"))
 			})
 		})
 
 		Convey("Given uplink=true and slice []byte{4, 3, 2, 1, 0, 0, 0, 0, 6, 10, 20}", func() {
 			b := []byte{4, 3, 2, 1, 0, 0, 0, 0, 6, 10, 20}
-			p.uplink = true
 
 			Convey("Then UnmarshalBinary does not return an error", func() {
-				err := p.UnmarshalBinary(b)
+				err := p.UnmarshalBinary(true, b)
 				So(err, ShouldBeNil)
 
 				Convey("Then FHDR(DevAddr=[4]byte{1, 2, 3, 4})", func() {
@@ -217,7 +208,7 @@ func TestMACPayload(t *testing.T) {
 			b := []byte{4, 3, 2, 1, 0, 0, 0, 1, 6, 10, 20}
 
 			Convey("Then UnmarshalBinary does not return an error", func() {
-				err := p.UnmarshalBinary(b)
+				err := p.UnmarshalBinary(false, b)
 				So(err, ShouldBeNil)
 
 				Convey("Then FHDR(DevAddr=[4]byte{1, 2, 3, 4})", func() {

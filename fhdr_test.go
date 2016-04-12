@@ -144,8 +144,7 @@ func TestFHDR(t *testing.T) {
 			})
 		})
 
-		Convey("Given uplink=false, DevAddr=67305985, FCtrl=FCtrl(ADR=true, ADRACKReq=false, ACK=true, FPending=true), Fcnt=5, FOpts=[]MACCommand{(CID=LinkCheckAns, Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9))}", func() {
-			h.uplink = false
+		Convey("Given DevAddr=67305985, FCtrl=FCtrl(ADR=true, ADRACKReq=false, ACK=true, FPending=true), Fcnt=5, FOpts=[]MACCommand{(CID=LinkCheckAns, Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9))}", func() {
 			h.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
 			h.FCtrl = FCtrl{ADR: true, ADRACKReq: false, ACK: true, FPending: true}
 			h.FCnt = 5
@@ -181,9 +180,8 @@ func TestFHDR(t *testing.T) {
 
 		Convey("Given uplink=false and slice []byte{4, 2, 2, 1, 179, 5, 0, 2, 7, 9}", func() {
 			b := []byte{4, 3, 2, 1, 179, 5, 0, 2, 7, 9}
-			h.uplink = false
 			Convey("Then UnmarshalBinary does not return an error", func() {
-				err := h.UnmarshalBinary(b)
+				err := h.UnmarshalBinary(false, b)
 				So(err, ShouldBeNil)
 
 				Convey("Then DevAddr=[4]{1, 2, 3, 4}", func() {
@@ -211,10 +209,9 @@ func TestFHDR(t *testing.T) {
 		})
 
 		Convey("Given uplink=false and slice []byte{1, 2, 3, 4, 179, 5, 0, 2, 7}", func() {
-			h.uplink = false
 			b := []byte{1, 2, 3, 4, 179, 5, 0, 2, 7}
 			Convey("Then UnmarshalBinary returns an error", func() {
-				err := h.UnmarshalBinary(b)
+				err := h.UnmarshalBinary(false, b)
 				So(err, ShouldResemble, errors.New("lorawan: not enough remaining bytes"))
 			})
 		})

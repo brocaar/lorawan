@@ -124,7 +124,6 @@ type FHDR struct {
 	FCtrl   FCtrl
 	FCnt    uint32       // only the least-significant 16 bits will be marshalled
 	FOpts   []MACCommand // max. number of allowed bytes is 15
-	uplink  bool         // used for the (un)marshaling, not part of the spec.
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -134,7 +133,6 @@ func (h FHDR) MarshalBinary() ([]byte, error) {
 	var opts []byte
 
 	for _, mac := range h.FOpts {
-		mac.uplink = h.uplink
 		b, err = mac.MarshalBinary()
 		if err != nil {
 			return []byte{}, err
@@ -167,7 +165,7 @@ func (h FHDR) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary decodes the object from binary form.
-func (h *FHDR) UnmarshalBinary(data []byte) error {
+func (h *FHDR) UnmarshalBinary(uplink bool, data []byte) error {
 	if len(data) < 7 {
 		return errors.New("lorawan: at least 7 bytes are expected")
 	}
@@ -185,7 +183,7 @@ func (h *FHDR) UnmarshalBinary(data []byte) error {
 	if len(data) > 7 {
 		var pLen int
 		for i := 0; i < len(data[7:]); i++ {
-			if _, s, err := getMACPayloadAndSize(h.uplink, cid(data[7+i])); err != nil {
+			if _, s, err := getMACPayloadAndSize(uplink, cid(data[7+i])); err != nil {
 				pLen = 0
 			} else {
 				pLen = s
@@ -196,8 +194,8 @@ func (h *FHDR) UnmarshalBinary(data []byte) error {
 				return errors.New("lorawan: not enough remaining bytes")
 			}
 
-			mc := MACCommand{uplink: h.uplink} // MACCommand needs to know if the msg is uplink or downlink
-			if err := mc.UnmarshalBinary(data[7+i : 7+i+1+pLen]); err != nil {
+			mc := MACCommand{}
+			if err := mc.UnmarshalBinary(uplink, data[7+i:7+i+1+pLen]); err != nil {
 				return err
 			}
 			h.FOpts = append(h.FOpts, mc)
