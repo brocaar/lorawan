@@ -32,10 +32,10 @@ func TestDevAddr(t *testing.T) {
 				So(b, ShouldResemble, []byte{4, 3, 2, 1})
 			})
 
-			Convey("Then MarshalJSON returns \"01020304\"", func() {
-				b, err := a.MarshalJSON()
+			Convey("Then MarshalText returns 01020304", func() {
+				b, err := a.MarshalText()
 				So(err, ShouldBeNil)
-				So(string(b), ShouldEqual, `"01020304"`)
+				So(string(b), ShouldEqual, "01020304")
 			})
 		})
 
@@ -48,10 +48,10 @@ func TestDevAddr(t *testing.T) {
 			})
 		})
 
-		Convey("Given the string \"01020304\"", func() {
-			str := `"01020304"`
-			Convey("Then UnmarshalJSON returns DevAddr{1, 2, 3, 4}", func() {
-				err := a.UnmarshalJSON([]byte(str))
+		Convey("Given the string 01020304", func() {
+			str := "01020304"
+			Convey("Then UnmarshalText returns DevAddr{1, 2, 3, 4}", func() {
+				err := a.UnmarshalText([]byte(str))
 				So(err, ShouldBeNil)
 				So(a, ShouldResemble, DevAddr{1, 2, 3, 4})
 			})

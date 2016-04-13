@@ -14,18 +14,18 @@ func TestEUI64(t *testing.T) {
 		Convey("When the value is [8]{1, 2, 3, 4, 5, 6, 7, 8}", func() {
 			eui = [8]byte{1, 2, 3, 4, 5, 6, 7, 8}
 
-			Convey("Then MarshalJSON returns \"0102030405060708\"", func() {
-				b, err := eui.MarshalJSON()
+			Convey("Then MarshalText returns 0102030405060708", func() {
+				b, err := eui.MarshalText()
 				So(err, ShouldBeNil)
-				So(string(b), ShouldEqual, `"0102030405060708"`)
+				So(string(b), ShouldEqual, "0102030405060708")
 			})
 		})
 
-		Convey("Given the string \"0102030405060708\"", func() {
-			str := `"0102030405060708"`
+		Convey("Given the string 0102030405060708", func() {
+			str := "0102030405060708"
 
-			Convey("Then UnmarshalJSON returns EUI64{1, 2, 3, 4, 5, 6, 7, 8}", func() {
-				err := eui.UnmarshalJSON([]byte(str))
+			Convey("Then UnmarshalText returns EUI64{1, 2, 3, 4, 5, 6, 7, 8}", func() {
+				err := eui.UnmarshalText([]byte(str))
 				So(err, ShouldBeNil)
 				So(eui, ShouldResemble, EUI64{1, 2, 3, 4, 5, 6, 7, 8})
 			})

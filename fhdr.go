@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"strings"
 )
 
 // DevAddr represents the device address.
@@ -38,18 +37,18 @@ func (a *DevAddr) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// MarshalJSON implements json.Marshaler.
-func (a DevAddr) MarshalJSON() ([]byte, error) {
-	return []byte(`"` + a.String() + `"`), nil
+// MarshalText implements encoding.TextMarshaler.
+func (a DevAddr) MarshalText() ([]byte, error) {
+	return []byte(a.String()), nil
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
-func (a *DevAddr) UnmarshalJSON(data []byte) error {
-	hexStr := strings.Trim(string(data), `"`)
-	b, err := hex.DecodeString(hexStr)
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (a *DevAddr) UnmarshalText(text []byte) error {
+	b, err := hex.DecodeString(string(text))
 	if err != nil {
 		return err
 	}
+
 	if len(b) != len(a) {
 		return fmt.Errorf("lorawan: exactly %d bytes are expected", len(a))
 	}
