@@ -364,14 +364,21 @@ func ExamplePHYPayload() {
 		panic(err)
 	}
 
+	str, err := phy.MarshalText()
+	if err != nil {
+		panic(err)
+	}
+
 	bytes, err := phy.MarshalBinary()
 	if err != nil {
 		panic(err)
 	}
 
+	fmt.Println(string(str))
 	fmt.Println(bytes)
 
 	// Output:
+	// gAQDAgEAAAAK4mTU97VqDnU=
 	// [128 4 3 2 1 0 0 0 10 226 100 212 247 181 106 14 117]
 }
 
@@ -394,14 +401,21 @@ func ExamplePHYPayload_joinRequest() {
 		panic(err)
 	}
 
+	str, err := phy.MarshalText()
+	if err != nil {
+		panic(err)
+	}
+
 	bytes, err := phy.MarshalBinary()
 	if err != nil {
 		panic(err)
 	}
 
+	fmt.Println(string(str))
 	fmt.Println(bytes)
 
 	// Output:
+	// AAEBAQEBAQEBAgICAgICAgIDAwm5ezI=
 	// [0 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 3 3 9 185 123 50]
 }
 
@@ -430,13 +444,43 @@ func ExamplePHYPayload_joinAcceptSend() {
 		panic(err)
 	}
 
+	str, err := phy.MarshalText()
+	if err != nil {
+		panic(err)
+	}
+
 	bytes, err := phy.MarshalBinary()
 	if err != nil {
 		panic(err)
 	}
 
+	fmt.Println(string(str))
 	fmt.Println(bytes)
 
 	// Output:
+	// ICPPM1SJquMYPAvguqje5fM=
 	// [32 35 207 51 84 137 170 227 24 60 11 224 186 168 222 229 243]
+}
+
+func ExamplePHYPayload_readJoinRequest() {
+	var phy PHYPayload
+	if err := phy.UnmarshalText([]byte("AAQDAgEEAwIBBQQDAgUEAwItEGqZDhI=")); err != nil {
+		panic(err)
+	}
+
+	jrPL, ok := phy.MACPayload.(*JoinRequestPayload)
+	if !ok {
+		panic("MACPayload must be a *JoinRequestPayload")
+	}
+
+	fmt.Println(phy.MHDR.MType)
+	fmt.Println(jrPL.AppEUI)
+	fmt.Println(jrPL.DevEUI)
+	fmt.Println(jrPL.DevNonce)
+
+	// Output:
+	// JoinRequest
+	// 0102030401020304
+	// 0203040502030405
+	// [16 45]
 }

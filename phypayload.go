@@ -4,6 +4,7 @@ package lorawan
 
 import (
 	"crypto/aes"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -473,6 +474,24 @@ func (p *PHYPayload) UnmarshalBinary(data []byte) error {
 		p.MIC[i] = data[len(data)-4+i]
 	}
 	return nil
+}
+
+// MarshalText encodes the PHYPayload into base64.
+func (p PHYPayload) MarshalText() ([]byte, error) {
+	b, err := p.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	return []byte(base64.StdEncoding.EncodeToString(b)), nil
+}
+
+// UnmarshalText decodes the PHYPayload from base64.
+func (p *PHYPayload) UnmarshalText(text []byte) error {
+	b, err := base64.StdEncoding.DecodeString(string(text))
+	if err != nil {
+		return err
+	}
+	return p.UnmarshalBinary(b)
 }
 
 // isUplink returns a bool indicating if the packet is uplink or downlink.
