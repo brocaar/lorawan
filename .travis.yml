@@ -4,6 +4,7 @@ go:
   - 1.6
 
 install:
+  - go get github.com/golang/lint/golint
   - go get -t ./...
 
 script: make test
