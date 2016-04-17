@@ -3,8 +3,10 @@
 // To select the desired band, use the corresponding build tag.
 package band
 
+// Modulation defines the modulation type.
 type Modulation string
 
+// Possible modulation types.
 const (
 	LoRaModulation Modulation = "LORA"
 	FSKModulation  Modulation = "FSK"
@@ -22,4 +24,10 @@ type DataRate struct {
 type MaxPayloadSize struct {
 	M int // The maximum MACPayload size length
 	N int // The maximum application payload length in the absence of the optional FOpt control field
+}
+
+// Channel defines the channel structure
+type Channel struct {
+	Frequency int   // frequency in Hz
+	DataRates []int // each int mapping to an index in DataRateConfiguration
 }
