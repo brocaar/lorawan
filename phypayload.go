@@ -63,15 +63,15 @@ func (k *AES128Key) UnmarshalText(text []byte) error {
 }
 
 // Scan implements sql.Scanner.
-func (a *AES128Key) Scan(src interface{}) error {
+func (k *AES128Key) Scan(src interface{}) error {
 	b, ok := src.([]byte)
 	if !ok {
 		return errors.New("lorawan: []byte type expected")
 	}
-	if len(b) != len(a) {
-		return fmt.Errorf("lorawan []byte must have length %d", len(a))
+	if len(b) != len(k) {
+		return fmt.Errorf("lorawan []byte must have length %d", len(k))
 	}
-	copy(a[:], b)
+	copy(k[:], b)
 	return nil
 }
 
