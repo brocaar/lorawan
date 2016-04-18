@@ -449,7 +449,6 @@ func (p *PHYPayload) UnmarshalBinary(data []byte) error {
 	if len(data) < 5 {
 		return errors.New("lorawan: at least 5 bytes needed to decode PHYPayload")
 	}
-	isUplink := p.isUplink()
 
 	// MHDR
 	if err := p.MHDR.UnmarshalBinary(data[0:1]); err != nil {
@@ -465,6 +464,8 @@ func (p *PHYPayload) UnmarshalBinary(data []byte) error {
 	default:
 		p.MACPayload = &MACPayload{}
 	}
+
+	isUplink := p.isUplink()
 	if err := p.MACPayload.UnmarshalBinary(isUplink, data[1:len(data)-4]); err != nil {
 		return err
 	}
