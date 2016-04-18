@@ -57,3 +57,26 @@ func TestUplinkAndDownlinkChannels(t *testing.T) {
 		}
 	})
 }
+
+func TestGetDataRate(t *testing.T) {
+	Convey("When iterating over all data rates", t, func() {
+		notImplemented := DataRate{}
+		for i, d := range DataRateConfiguration {
+			if d == notImplemented {
+				continue
+			}
+
+			expected := i
+
+			if i == 12 {
+				expected = 4
+			}
+
+			Convey(fmt.Sprintf("Then %v should be DR%d (test %d)", d, expected, i), func() {
+				dr, err := GetDataRate(d)
+				So(err, ShouldBeNil)
+				So(dr, ShouldEqual, expected)
+			})
+		}
+	})
+}

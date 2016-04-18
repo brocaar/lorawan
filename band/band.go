@@ -3,6 +3,8 @@
 // To select the desired band, use the corresponding build tag.
 package band
 
+import "errors"
+
 // Modulation defines the modulation type.
 type Modulation string
 
@@ -30,4 +32,14 @@ type MaxPayloadSize struct {
 type Channel struct {
 	Frequency int   // frequency in Hz
 	DataRates []int // each int mapping to an index in DataRateConfiguration
+}
+
+// GetDataRate returns the index of the given DataRate.
+func GetDataRate(dr DataRate) (int, error) {
+	for i, d := range DataRateConfiguration {
+		if d == dr {
+			return i, nil
+		}
+	}
+	return 0, errors.New("lorawan/band: the given DataRate does not exist")
 }
