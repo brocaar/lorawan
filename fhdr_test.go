@@ -215,5 +215,27 @@ func TestFHDR(t *testing.T) {
 				So(err, ShouldResemble, errors.New("lorawan: not enough remaining bytes"))
 			})
 		})
+
+		Convey("Given FOpts with a MACCommand with non-empty NewChannelReqPayload", func() {
+			m := MACCommand{
+				CID: NewChannelReq,
+				Payload: &NewChannelReqPayload{
+					ChIndex: 2,
+					Freq:    1234567,
+					MaxDR:   5,
+					MinDR:   1,
+				},
+			}
+			h.FOpts = []MACCommand{m}
+			Convey("When it is transformed into binary", func() {
+				b, err := h.MarshalBinary()
+				So(err, ShouldBeNil)
+				Convey("Then it can be converted back to the original payload", func() {
+					actual := FHDR{}
+					So(actual.UnmarshalBinary(false, b), ShouldBeNil)
+					So(actual.FOpts, ShouldResemble, []MACCommand{m})
+				})
+			})
+		})
 	})
 }
