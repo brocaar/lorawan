@@ -38,7 +38,7 @@ const Name = "US 902-928"
 
 // DataRateConfiguration defines the available data rates
 var DataRateConfiguration = [...]DataRate{
-	{Modulation: LoRaModulation, SpreadFactor: 12, Bandwidth: 125},
+	{Modulation: LoRaModulation, SpreadFactor: 10, Bandwidth: 125},
 	{Modulation: LoRaModulation, SpreadFactor: 9, Bandwidth: 125},
 	{Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 125},
 	{Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 125},
