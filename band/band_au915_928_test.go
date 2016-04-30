@@ -8,9 +8,9 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestUS902Band(t *testing.T) {
-	Convey("Given the US 902-928 band is selected", t, func() {
-		band, err := GetConfig(US_902_928)
+func TestAU915Band(t *testing.T) {
+	Convey("Given the AU 915-928 band is selected", t, func() {
+		band, err := GetConfig(AU_915_928)
 		So(err, ShouldBeNil)
 
 		Convey("When testing the uplink channels", func() {
@@ -19,10 +19,10 @@ func TestUS902Band(t *testing.T) {
 				Frequency int
 				DataRates []int
 			}{
-				{Channel: 0, Frequency: 902300000, DataRates: []int{0, 1, 2, 3}},
-				{Channel: 63, Frequency: 914900000, DataRates: []int{0, 1, 2, 3}},
-				{Channel: 64, Frequency: 903000000, DataRates: []int{4}},
-				{Channel: 71, Frequency: 914200000, DataRates: []int{4}},
+				{Channel: 0, Frequency: 915200000, DataRates: []int{0, 1, 2, 3}},
+				{Channel: 63, Frequency: 927800000, DataRates: []int{0, 1, 2, 3}},
+				{Channel: 64, Frequency: 915900000, DataRates: []int{4}},
+				{Channel: 71, Frequency: 927100000, DataRates: []int{4}},
 			}
 
 			for _, test := range testTable {
@@ -34,6 +34,7 @@ func TestUS902Band(t *testing.T) {
 		})
 
 		Convey("When testing the downlink channels", func() {
+
 			testTable := []struct {
 				Frequency    int
 				DataRate     int
@@ -41,9 +42,9 @@ func TestUS902Band(t *testing.T) {
 				ExpFrequency int
 				Err          error
 			}{
-				{Frequency: 914900000, DataRate: 3, Channel: 63, ExpFrequency: 927500000},
-				{Frequency: 914900000, DataRate: 4, Channel: 0, Err: errors.New("lorawan/band: unknown channel for frequency: 914900000 and data-rate: 4")},
-				{Frequency: 903000000, DataRate: 4, Channel: 64, ExpFrequency: 923300000},
+				{Frequency: 915900000, DataRate: 4, Channel: 64, ExpFrequency: 923300000},
+				{Frequency: 915900000, DataRate: 3, Channel: 0, Err: errors.New("lorawan/band: unknown channel for frequency: 915900000 and data-rate: 3")},
+				{Frequency: 915200000, DataRate: 3, Channel: 0, ExpFrequency: 923300000},
 			}
 
 			for _, test := range testTable {
