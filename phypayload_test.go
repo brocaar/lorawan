@@ -267,7 +267,7 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 							})
 
 							Convey("Then the DLSettings is empty", func() {
-								So(jaPL.DLSettings, ShouldResemble, DLsettings{})
+								So(jaPL.DLSettings, ShouldResemble, DLSettings{})
 							})
 
 							Convey("Then the RXDelay = 0", func() {
@@ -431,7 +431,7 @@ func ExamplePHYPayload_joinAcceptSend() {
 			AppNonce:   [3]byte{1, 1, 1},
 			NetID:      [3]byte{2, 2, 2},
 			DevAddr:    DevAddr([4]byte{1, 2, 3, 4}),
-			DLSettings: DLsettings{RX2DataRate: 0, RX1DRoffset: 0},
+			DLSettings: DLSettings{RX2DataRate: 0, RX1DROffset: 0},
 			RXDelay:    0,
 		},
 	}

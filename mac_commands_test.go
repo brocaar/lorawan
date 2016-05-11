@@ -357,9 +357,9 @@ func TestDutyCycleReqPayload(t *testing.T) {
 	})
 }
 
-func TestDLsettings(t *testing.T) {
-	Convey("Given an empty DLsettings", t, func() {
-		var s DLsettings
+func TestDLSettings(t *testing.T) {
+	Convey("Given an empty DLSettings", t, func() {
+		var s DLSettings
 		Convey("Then MarshalBinary returns []byte{0}", func() {
 			b, err := s.MarshalBinary()
 			So(err, ShouldBeNil)
@@ -374,17 +374,17 @@ func TestDLsettings(t *testing.T) {
 			})
 		})
 
-		Convey("Given a RX1DRoffset > 7", func() {
-			s.RX1DRoffset = 8
+		Convey("Given a RX1DROffset > 7", func() {
+			s.RX1DROffset = 8
 			Convey("Then MarshalBinary returns an error", func() {
 				_, err := s.MarshalBinary()
 				So(err, ShouldNotBeNil)
 			})
 		})
 
-		Convey("Given RX2DataRate=15 and RX1DRoffset=7", func() {
+		Convey("Given RX2DataRate=15 and RX1DROffset=7", func() {
 			s.RX2DataRate = 15
-			s.RX1DRoffset = 7
+			s.RX1DROffset = 7
 			Convey("Then MarshalBinary returns []byte{127}", func() {
 				b, err := s.MarshalBinary()
 				So(err, ShouldBeNil)
@@ -394,10 +394,10 @@ func TestDLsettings(t *testing.T) {
 
 		Convey("Given a slice []byte{127}", func() {
 			b := []byte{127}
-			Convey("Then UnmarshalBinary returns a DLsettings with RX2DataRate=15 and RX1DRoffset=7", func() {
+			Convey("Then UnmarshalBinary returns a DLSettings with RX2DataRate=15 and RX1DROffset=7", func() {
 				err := s.UnmarshalBinary(b)
 				So(err, ShouldBeNil)
-				So(s, ShouldResemble, DLsettings{RX2DataRate: 15, RX1DRoffset: 7})
+				So(s, ShouldResemble, DLSettings{RX2DataRate: 15, RX1DROffset: 7})
 			})
 		})
 	})
@@ -420,9 +420,9 @@ func TestRX2SetupReqPayload(t *testing.T) {
 			})
 		})
 
-		Convey("Given Frequency=262657 and DLsettings(RX2DataRate=11, RX1DRoffset=3)", func() {
+		Convey("Given Frequency=262657 and DLSettings(RX2DataRate=11, RX1DROffset=3)", func() {
 			p.Frequency = 262657
-			p.DLsettings = DLsettings{RX2DataRate: 11, RX1DRoffset: 3}
+			p.DLSettings = DLSettings{RX2DataRate: 11, RX1DROffset: 3}
 			Convey("Then MarshalBinary returns []byte{1, 2, 4, 59}", func() {
 				b, err := p.MarshalBinary()
 				So(err, ShouldBeNil)
@@ -432,10 +432,10 @@ func TestRX2SetupReqPayload(t *testing.T) {
 
 		Convey("Given a slice []byte{59, 1, 2, 4}", func() {
 			b := []byte{59, 1, 2, 4}
-			Convey("Then UnmarshalBinary returns a RX2SetupReqPayload with Frequency=262657 and DLsettings(RX2DataRate=11, RX1DRoffset=3)", func() {
+			Convey("Then UnmarshalBinary returns a RX2SetupReqPayload with Frequency=262657 and DLSettings(RX2DataRate=11, RX1DROffset=3)", func() {
 				exp := RX2SetupReqPayload{
 					Frequency:  262657,
-					DLsettings: DLsettings{RX2DataRate: 11, RX1DRoffset: 3},
+					DLSettings: DLSettings{RX2DataRate: 11, RX1DROffset: 3},
 				}
 				err := p.UnmarshalBinary(b)
 				So(err, ShouldBeNil)
@@ -457,7 +457,7 @@ func TestRX2SetupAnsPayload(t *testing.T) {
 		testTable := []struct {
 			ChannelACK     bool
 			RX2DataRateACK bool
-			RX1DRoffsetACK bool
+			RX1DROffsetACK bool
 			Bytes          []byte
 		}{
 			{true, false, false, []byte{1}},
@@ -467,10 +467,10 @@ func TestRX2SetupAnsPayload(t *testing.T) {
 		}
 
 		for _, test := range testTable {
-			Convey(fmt.Sprintf("Given ChannelACK=%v, RX2DataRateACK=%v, RX1DRoffsetACK=%v", test.ChannelACK, test.RX2DataRateACK, test.RX1DRoffsetACK), func() {
+			Convey(fmt.Sprintf("Given ChannelACK=%v, RX2DataRateACK=%v, RX1DROffsetACK=%v", test.ChannelACK, test.RX2DataRateACK, test.RX1DROffsetACK), func() {
 				p.ChannelACK = test.ChannelACK
 				p.RX2DataRateACK = test.RX2DataRateACK
-				p.RX1DRoffsetACK = test.RX1DRoffsetACK
+				p.RX1DROffsetACK = test.RX1DROffsetACK
 				Convey(fmt.Sprintf("Then marshalBinary returns %v", test.Bytes), func() {
 					b, err := p.MarshalBinary()
 					So(err, ShouldBeNil)
@@ -480,11 +480,11 @@ func TestRX2SetupAnsPayload(t *testing.T) {
 
 			Convey(fmt.Sprintf("Given slice %v", test.Bytes), func() {
 				b := test.Bytes
-				Convey(fmt.Sprintf("Then UnmarshalBinary returns a RX2SetupAnsPayload with ChannelACK=%v, RX2DataRateACK=%v, RX1DRoffsetACK=%v", test.ChannelACK, test.RX2DataRateACK, test.RX1DRoffsetACK), func() {
+				Convey(fmt.Sprintf("Then UnmarshalBinary returns a RX2SetupAnsPayload with ChannelACK=%v, RX2DataRateACK=%v, RX1DROffsetACK=%v", test.ChannelACK, test.RX2DataRateACK, test.RX1DROffsetACK), func() {
 					exp := RX2SetupAnsPayload{
 						ChannelACK:     test.ChannelACK,
 						RX2DataRateACK: test.RX2DataRateACK,
-						RX1DRoffsetACK: test.RX1DRoffsetACK,
+						RX1DROffsetACK: test.RX1DROffsetACK,
 					}
 					err := p.UnmarshalBinary(b)
 					So(err, ShouldBeNil)
