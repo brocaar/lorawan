@@ -34,7 +34,6 @@ func TestAU915Band(t *testing.T) {
 		})
 
 		Convey("When testing the downlink channels", func() {
-
 			testTable := []struct {
 				Frequency    int
 				DataRate     int
@@ -79,6 +78,31 @@ func TestAU915Band(t *testing.T) {
 					dr, err := band.GetDataRate(d)
 					So(err, ShouldBeNil)
 					So(dr, ShouldEqual, expected)
+				})
+			}
+		})
+
+		Convey("When testing GetRX1DataRateForOffset", func() {
+			testTable := []struct {
+				DR       int
+				DROffset int
+				RX1DR    int
+				Error    error
+			}{
+				{0, 0, 10, nil},
+				{0, 1, 9, nil},
+				{0, 4, 0, errors.New("lorawan/band: invalid data-rate offset: 4")},
+				{4, 0, 13, nil},
+				{5, 0, 0, errors.New("lorawan/band: invalid data-rate: 5")},
+			}
+
+			for _, test := range testTable {
+				Convey(fmt.Sprintf("Given DR %d, DR offset %d", test.DR, test.DROffset), func() {
+					dr, err := band.GetRX1DataRateForOffset(test.DR, test.DROffset)
+					Convey(fmt.Sprintf("Then RX1DR=%d, error=%s", dr, err), func() {
+						So(dr, ShouldEqual, test.RX1DR)
+						So(err, ShouldResemble, test.Error)
+					})
 				})
 			}
 		})
