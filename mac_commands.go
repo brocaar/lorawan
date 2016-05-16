@@ -38,6 +38,8 @@ type macPayloadInfo struct {
 
 // macPayloadRegistry contains the info for uplink and downlink MAC payloads
 // in the format map[uplink]map[CID].
+// Note that MAC command that do not have a payload are not included in this
+// list.
 var macPayloadRegistry = map[bool]map[cid]macPayloadInfo{
 	false: map[cid]macPayloadInfo{
 		LinkCheckAns:     {2, func() MACCommandPayload { return &LinkCheckAnsPayload{} }},

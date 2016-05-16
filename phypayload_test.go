@@ -137,47 +137,139 @@ func TestPHYPayloadData(t *testing.T) {
 	})
 }
 
-func TestPHYPayloadUplinkMACEncryption(t *testing.T) {
-	Convey("Given uplink=true FHDR(DevAddr=[4]{1, 2, 3, 4}), FPort=0, FRMPayload=[]Payload{MACCommand{CID: DutyCycleAns}}", t, func() {
-		fPort := uint8(0)
+func TestPHYPayloadMAC(t *testing.T) {
+	nwkSKey := [16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	fPort := uint8(0)
 
-		command := &MACCommand{
-			CID: DutyCycleAns,
+	Convey("Given a MAC command", t, func() {
+		mac := MACCommand{
+			CID:     LinkCheckReq,
+			Payload: nil,
 		}
 
-		phy := PHYPayload{
-			MHDR: MHDR{
-				MType: ConfirmedDataUp,
-				Major: LoRaWANR1,
-			},
-			MACPayload: &MACPayload{
-				FPort: &fPort,
-				FHDR: FHDR{
-					DevAddr: [4]byte{1, 2, 3, 4},
+		Convey("When the MAC command is added to the FRMPayload", func() {
+			phy := PHYPayload{
+				MHDR: MHDR{
+					MType: UnconfirmedDataUp,
+					Major: LoRaWANR1,
 				},
-				FRMPayload: []Payload{command},
-			},
-		}
+				MACPayload: &MACPayload{
+					FPort: &fPort,
+					FHDR: FHDR{
+						DevAddr: [4]byte{1, 2, 3, 4},
+					},
+					FRMPayload: []Payload{&mac},
+				},
+			}
 
-		Convey("Given the key [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}", func() {
-			key := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+			Convey("When encrypting the packet", func() {
+				So(phy.EncryptFRMPayload(nwkSKey), ShouldBeNil)
 
-			Convey("Then EncryptFRMPayload does not return an error", func() {
-				err := phy.EncryptFRMPayload(key)
-				So(err, ShouldBeNil)
+				Convey("Then the MIC is as expected", func() {
+					So(phy.SetMIC(nwkSKey), ShouldBeNil)
+					So(phy.MIC, ShouldResemble, [4]byte{44, 106, 82, 227})
 
-				Convey("Then DecryptFRMPayload does not return an error", func() {
-					err := phy.DecryptFRMPayload(key)
+					Convey("Then the binary slice is as expected", func() {
+						b, err := phy.MarshalBinary()
+						So(err, ShouldBeNil)
+						So(b, ShouldResemble, []byte{64, 4, 3, 2, 1, 0, 0, 0, 0, 105, 44, 106, 82, 227})
+					})
+				})
+			})
+
+			Convey("When unmarshaling a binary slice containing the MAC command", func() {
+				var phy PHYPayload
+				b := []byte{64, 4, 3, 2, 1, 0, 0, 0, 0, 105, 44, 106, 82, 227}
+
+				So(phy.UnmarshalBinary(b), ShouldBeNil)
+
+				Convey("Then marshaling the PHYPayload results in the same slice", func() {
+					b2, err := phy.MarshalBinary()
 					So(err, ShouldBeNil)
+					So(b2, ShouldResemble, b)
+				})
 
-					Convey("Then FRMPayload contains one DataPayload(Bytes=[]byte{5, 6, 7})", func() {
+				Convey("Then the MIC is valid", func() {
+					ok, err := phy.ValidateMIC(nwkSKey)
+					So(err, ShouldBeNil)
+					So(ok, ShouldBeTrue)
+				})
+
+				Convey("When decrypting", func() {
+					So(phy.DecryptFRMPayload(nwkSKey), ShouldBeNil)
+
+					Convey("Then the FRMPayload contains a MAC command", func() {
 						macPL, ok := phy.MACPayload.(*MACPayload)
 						So(ok, ShouldBeTrue)
 						So(macPL.FRMPayload, ShouldHaveLength, 1)
-						cmd, ok := macPL.FRMPayload[0].(*MACCommand)
+
+						macCMD, ok := macPL.FRMPayload[0].(*MACCommand)
 						So(ok, ShouldBeTrue)
-						So(cmd, ShouldResemble, command)
+
+						Convey("Then it is a LinkCheckReq", func() {
+							So(macCMD.CID, ShouldEqual, LinkCheckReq)
+						})
 					})
+				})
+			})
+		})
+
+		Convey("When the MAC commands is added to the FOpts", func() {
+			fPort = 1
+
+			phy := PHYPayload{
+				MHDR: MHDR{
+					MType: UnconfirmedDataUp,
+					Major: LoRaWANR1,
+				},
+				MACPayload: &MACPayload{
+					FPort: &fPort,
+					FHDR: FHDR{
+						DevAddr: [4]byte{1, 2, 3, 4},
+						FOpts:   []MACCommand{mac},
+					},
+					FRMPayload: []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}},
+				},
+			}
+
+			Convey("When encrypting the packet", func() {
+				So(phy.EncryptFRMPayload(nwkSKey), ShouldBeNil)
+
+				Convey("Then the MIC is as expected", func() {
+					So(phy.SetMIC(nwkSKey), ShouldBeNil)
+					So(phy.MIC, ShouldResemble, [4]byte{157, 11, 54, 159})
+
+					Convey("Then the binary slice is as expected", func() {
+						b, err := phy.MarshalBinary()
+						So(err, ShouldBeNil)
+
+						So(b, ShouldResemble, []byte{64, 4, 3, 2, 1, 1, 0, 0, 2, 1, 106, 55, 152, 245, 157, 11, 54, 159})
+					})
+				})
+			})
+
+			Convey("When unmarshaling a binary slice containg the MAC command", func() {
+				var phy PHYPayload
+				b := []byte{64, 4, 3, 2, 1, 1, 0, 0, 2, 1, 106, 55, 152, 245, 157, 11, 54, 159}
+				So(phy.UnmarshalBinary(b), ShouldBeNil)
+
+				Convey("Then marshaling it again results in the same slice", func() {
+					b2, err := phy.MarshalBinary()
+					So(err, ShouldBeNil)
+					So(b2, ShouldResemble, b)
+				})
+
+				Convey("Then the MIC is valid", func() {
+					ok, err := phy.ValidateMIC(nwkSKey)
+					So(err, ShouldBeNil)
+					So(ok, ShouldBeTrue)
+				})
+
+				Convey("Then the FOpts contains the same MAC command", func() {
+					macPL, ok := phy.MACPayload.(*MACPayload)
+					So(ok, ShouldBeTrue)
+					So(macPL.FHDR.FOpts, ShouldHaveLength, 1)
+					So(macPL.FHDR.FOpts[0].CID, ShouldEqual, LinkCheckReq)
 				})
 			})
 		})
