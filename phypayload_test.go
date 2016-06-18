@@ -162,6 +162,33 @@ func TestPHYPayloadMAC(t *testing.T) {
 				},
 			}
 
+			Convey("When marshaling the packet without encrypting", func() {
+				b, err := phy.MarshalBinary()
+				So(err, ShouldBeNil)
+
+				Convey("And unmarshaling from this slice of bytes", func() {
+					So(phy.UnmarshalBinary(b), ShouldBeNil)
+
+					Convey("Then the MAC command is stored as DataPayload", func() {
+						macPL, ok := phy.MACPayload.(*MACPayload)
+						So(ok, ShouldBeTrue)
+
+						So(macPL.FRMPayload, ShouldHaveLength, 1)
+						So(macPL.FRMPayload[0], ShouldHaveSameTypeAs, &DataPayload{})
+
+						Convey("When calling DecodeFRMPayloadToMACCommands", func() {
+							So(phy.DecodeFRMPayloadToMACCommands(), ShouldBeNil)
+
+							Convey("The FRMPayload has been decoded as MACCommand", func() {
+								So(macPL.FRMPayload, ShouldHaveLength, 1)
+								So(macPL.FRMPayload[0], ShouldHaveSameTypeAs, &MACCommand{})
+								So(macPL.FRMPayload[0], ShouldResemble, &mac)
+							})
+						})
+					})
+				})
+			})
+
 			Convey("When encrypting the packet", func() {
 				So(phy.EncryptFRMPayload(nwkSKey), ShouldBeNil)
 

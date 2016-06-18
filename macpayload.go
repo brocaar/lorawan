@@ -34,27 +34,36 @@ func (p MACPayload) marshalPayload() ([]byte, error) {
 	return out, nil
 }
 
-func (p *MACPayload) unmarshalMACCommandsToFRMPayload(uplink bool, data []byte) error {
+func (p *MACPayload) decodeFRMPayloadToMACCommands(uplink bool) error {
 	if p.FPort == nil || *p.FPort != 0 {
-		return fmt.Errorf("lorawan: FPort must be 0 when calling unmarshalMACCommands")
+		return fmt.Errorf("lorawan: FPort must be 0 when calling decodeFRMPayloadToMACCommands")
+	}
+
+	if len(p.FRMPayload) != 1 {
+		return fmt.Errorf("lorawan: exactly 1 Payload was expected in FRMPayload")
+	}
+
+	dataPL, ok := p.FRMPayload[0].(*DataPayload)
+	if !ok {
+		return fmt.Errorf("lorawan: expected *DataPayload, got %T", p.FRMPayload[0])
 	}
 
 	var pLen int
 	p.FRMPayload = make([]Payload, 0)
-	for i := 0; i < len(data); i++ {
-		if _, s, err := getMACPayloadAndSize(uplink, CID(data[i])); err != nil {
+	for i := 0; i < len(dataPL.Bytes); i++ {
+		if _, s, err := getMACPayloadAndSize(uplink, CID(dataPL.Bytes[i])); err != nil {
 			pLen = 0
 		} else {
 			pLen = s
 		}
 
 		// check if the remaining bytes are >= CID byte + payload size
-		if len(data[i:]) < pLen+1 {
+		if len(dataPL.Bytes[i:]) < pLen+1 {
 			return errors.New("lorawan: not enough remaining bytes")
 		}
 
 		mc := &MACCommand{}
-		if err := mc.UnmarshalBinary(uplink, data[i:i+1+pLen]); err != nil {
+		if err := mc.UnmarshalBinary(uplink, dataPL.Bytes[i:i+1+pLen]); err != nil {
 			return err
 		}
 		p.FRMPayload = append(p.FRMPayload, mc)
