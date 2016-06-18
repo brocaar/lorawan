@@ -38,15 +38,41 @@ func TestGetMACPayloadAndSize(t *testing.T) {
 			So(s, ShouldEqual, 1)
 		})
 	})
+
+	Convey("When testing mac commands within the proprietary range", t, func() {
+		Convey("Then getting an unregistered returns an error", func() {
+			_, _, err := getMACPayloadAndSize(true, CID(128))
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("When registering CID 128 with a payload-size of 12 for uplink", func() {
+			So(RegisterProprietaryMACCommand(true, CID(128), 12), ShouldBeNil)
+
+			Convey("Then getting the payload-size for this CID returns 12 and a ProprietaryMACCommandPayload type", func() {
+				pl, size, err := getMACPayloadAndSize(true, CID(128))
+				So(err, ShouldBeNil)
+				So(size, ShouldEqual, 12)
+				So(pl, ShouldHaveSameTypeAs, &ProprietaryMACCommandPayload{})
+			})
+		})
+	})
 }
 
 func TestMACCommand(t *testing.T) {
 	Convey("Given an empty MACCommand", t, func() {
 		var m MACCommand
-		Convey("Then MarshalBinary returns []byte{0}", func() {
-			b, err := m.MarshalBinary()
-			So(err, ShouldBeNil)
-			So(b, ShouldResemble, []byte{0})
+
+		Convey("Then the CID must be between 2 - 8 or 128 - 255", func() {
+			for i := 0; i <= 255; i++ {
+				m.CID = CID(i)
+
+				_, err := m.MarshalBinary()
+				if (i >= 2 && i <= 8) || (i >= 128 && i <= 255) {
+					So(err, ShouldBeNil)
+				} else {
+					So(err, ShouldNotBeNil)
+				}
+			}
 		})
 
 		Convey("Given CID=LinkCheckAns, Payload=LinkCheckAnsPayload(Margin=10, GwCnt=15)", func() {

@@ -107,6 +107,13 @@ func TestMACPayload(t *testing.T) {
 			b := []byte{4, 3, 2, 1, 0, 0, 0, 0, 6, 10}
 			Convey("Then UnmarshalBinary returns an error", func() {
 				err := p.UnmarshalBinary(true, b)
+				So(err, ShouldBeNil)
+
+				// normally the mac commands are unmarshaled after decryption
+				So(p.FRMPayload, ShouldHaveLength, 1)
+				dataPL, ok := p.FRMPayload[0].(*DataPayload)
+				So(ok, ShouldBeTrue)
+				err = p.unmarshalMACCommandsToFRMPayload(true, dataPL.Bytes)
 				So(err, ShouldResemble, errors.New("lorawan: not enough remaining bytes"))
 			})
 		})
@@ -127,6 +134,11 @@ func TestMACPayload(t *testing.T) {
 				})
 				Convey("Then FRMPayload=[]Payload{MACCommand{CID: DevStatusAns, Payload: DevStatusAnsPayload(Battery=10, Margin=20)}}", func() {
 					So(p.FRMPayload, ShouldHaveLength, 1)
+
+					// mac commands are normally unmarshaled when decrypting
+					dataPL, ok := p.FRMPayload[0].(*DataPayload)
+					So(ok, ShouldBeTrue)
+					So(p.unmarshalMACCommandsToFRMPayload(true, dataPL.Bytes), ShouldBeNil)
 
 					mac, ok := p.FRMPayload[0].(*MACCommand)
 					So(ok, ShouldBeTrue)

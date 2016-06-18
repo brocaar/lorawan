@@ -415,7 +415,7 @@ func (p *PHYPayload) DecryptFRMPayload(key AES128Key) error {
 			return errors.New("lorawan: a DataPayload was expected")
 		}
 
-		return macPL.unmarshalPayload(p.isUplink(), dp.Bytes)
+		return macPL.unmarshalMACCommandsToFRMPayload(p.isUplink(), dp.Bytes)
 	}
 
 	return nil
