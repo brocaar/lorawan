@@ -141,13 +141,21 @@ func TestPHYPayloadMAC(t *testing.T) {
 	nwkSKey := [16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	fPort := uint8(0)
 
-	Convey("Given a MAC command", t, func() {
-		mac := MACCommand{
+	Convey("Given two MAC commands", t, func() {
+		mac1 := MACCommand{
 			CID:     LinkCheckReq,
 			Payload: nil,
 		}
+		mac2 := MACCommand{
+			CID: LinkADRAns,
+			Payload: &LinkADRAnsPayload{
+				ChannelMaskACK: true,
+				DataRateACK:    false,
+				PowerACK:       true,
+			},
+		}
 
-		Convey("When the MAC command is added to the FRMPayload", func() {
+		Convey("When the MAC commands are added to the FRMPayload", func() {
 			phy := PHYPayload{
 				MHDR: MHDR{
 					MType: UnconfirmedDataUp,
@@ -158,7 +166,7 @@ func TestPHYPayloadMAC(t *testing.T) {
 					FHDR: FHDR{
 						DevAddr: [4]byte{1, 2, 3, 4},
 					},
-					FRMPayload: []Payload{&mac},
+					FRMPayload: []Payload{&mac1, &mac2},
 				},
 			}
 
@@ -179,10 +187,9 @@ func TestPHYPayloadMAC(t *testing.T) {
 						Convey("When calling DecodeFRMPayloadToMACCommands", func() {
 							So(phy.DecodeFRMPayloadToMACCommands(), ShouldBeNil)
 
-							Convey("The FRMPayload has been decoded as MACCommand", func() {
-								So(macPL.FRMPayload, ShouldHaveLength, 1)
-								So(macPL.FRMPayload[0], ShouldHaveSameTypeAs, &MACCommand{})
-								So(macPL.FRMPayload[0], ShouldResemble, &mac)
+							Convey("The FRMPayload has been decoded as MACCommands", func() {
+								So(macPL.FRMPayload, ShouldHaveLength, 2)
+								So(macPL.FRMPayload, ShouldResemble, []Payload{&mac1, &mac2})
 							})
 						})
 					})
@@ -194,19 +201,19 @@ func TestPHYPayloadMAC(t *testing.T) {
 
 				Convey("Then the MIC is as expected", func() {
 					So(phy.SetMIC(nwkSKey), ShouldBeNil)
-					So(phy.MIC, ShouldResemble, [4]byte{44, 106, 82, 227})
+					So(phy.MIC, ShouldResemble, [4]byte{238, 106, 165, 8})
 
 					Convey("Then the binary slice is as expected", func() {
 						b, err := phy.MarshalBinary()
 						So(err, ShouldBeNil)
-						So(b, ShouldResemble, []byte{64, 4, 3, 2, 1, 0, 0, 0, 0, 105, 44, 106, 82, 227})
+						So(b, ShouldResemble, []byte{64, 4, 3, 2, 1, 0, 0, 0, 0, 105, 54, 158, 238, 106, 165, 8})
 					})
 				})
 			})
 
-			Convey("When unmarshaling a binary slice containing the MAC command", func() {
+			Convey("When unmarshaling a binary slice containing the MAC commands", func() {
 				var phy PHYPayload
-				b := []byte{64, 4, 3, 2, 1, 0, 0, 0, 0, 105, 44, 106, 82, 227}
+				b := []byte{64, 4, 3, 2, 1, 0, 0, 0, 0, 105, 54, 158, 238, 106, 165, 8}
 
 				So(phy.UnmarshalBinary(b), ShouldBeNil)
 
@@ -225,23 +232,18 @@ func TestPHYPayloadMAC(t *testing.T) {
 				Convey("When decrypting", func() {
 					So(phy.DecryptFRMPayload(nwkSKey), ShouldBeNil)
 
-					Convey("Then the FRMPayload contains a MAC command", func() {
+					Convey("Then the FRMPayload contains the MAC commands", func() {
 						macPL, ok := phy.MACPayload.(*MACPayload)
 						So(ok, ShouldBeTrue)
-						So(macPL.FRMPayload, ShouldHaveLength, 1)
+						So(macPL.FRMPayload, ShouldHaveLength, 2)
 
-						macCMD, ok := macPL.FRMPayload[0].(*MACCommand)
-						So(ok, ShouldBeTrue)
-
-						Convey("Then it is a LinkCheckReq", func() {
-							So(macCMD.CID, ShouldEqual, LinkCheckReq)
-						})
+						So(macPL.FRMPayload, ShouldResemble, []Payload{&mac1, &mac2})
 					})
 				})
 			})
 		})
 
-		Convey("When the MAC commands is added to the FOpts", func() {
+		Convey("When the MAC commands are added to the FOpts", func() {
 			fPort = 1
 
 			phy := PHYPayload{
@@ -253,7 +255,7 @@ func TestPHYPayloadMAC(t *testing.T) {
 					FPort: &fPort,
 					FHDR: FHDR{
 						DevAddr: [4]byte{1, 2, 3, 4},
-						FOpts:   []MACCommand{mac},
+						FOpts:   []MACCommand{mac1, mac2},
 					},
 					FRMPayload: []Payload{&DataPayload{Bytes: []byte{1, 2, 3, 4}}},
 				},
@@ -264,20 +266,20 @@ func TestPHYPayloadMAC(t *testing.T) {
 
 				Convey("Then the MIC is as expected", func() {
 					So(phy.SetMIC(nwkSKey), ShouldBeNil)
-					So(phy.MIC, ShouldResemble, [4]byte{157, 11, 54, 159})
+					So(phy.MIC, ShouldResemble, [4]byte{182, 77, 192, 57})
 
 					Convey("Then the binary slice is as expected", func() {
 						b, err := phy.MarshalBinary()
 						So(err, ShouldBeNil)
 
-						So(b, ShouldResemble, []byte{64, 4, 3, 2, 1, 1, 0, 0, 2, 1, 106, 55, 152, 245, 157, 11, 54, 159})
+						So(b, ShouldResemble, []byte{64, 4, 3, 2, 1, 3, 0, 0, 2, 3, 5, 1, 106, 55, 152, 245, 182, 77, 192, 57})
 					})
 				})
 			})
 
-			Convey("When unmarshaling a binary slice containg the MAC command", func() {
+			Convey("When unmarshaling a binary slice containg the MAC commands", func() {
 				var phy PHYPayload
-				b := []byte{64, 4, 3, 2, 1, 1, 0, 0, 2, 1, 106, 55, 152, 245, 157, 11, 54, 159}
+				b := []byte{64, 4, 3, 2, 1, 3, 0, 0, 2, 3, 5, 1, 106, 55, 152, 245, 182, 77, 192, 57}
 				So(phy.UnmarshalBinary(b), ShouldBeNil)
 
 				Convey("Then marshaling it again results in the same slice", func() {
@@ -292,11 +294,11 @@ func TestPHYPayloadMAC(t *testing.T) {
 					So(ok, ShouldBeTrue)
 				})
 
-				Convey("Then the FOpts contains the same MAC command", func() {
+				Convey("Then the FOpts contains the same MAC commands", func() {
 					macPL, ok := phy.MACPayload.(*MACPayload)
 					So(ok, ShouldBeTrue)
-					So(macPL.FHDR.FOpts, ShouldHaveLength, 1)
-					So(macPL.FHDR.FOpts[0].CID, ShouldEqual, LinkCheckReq)
+					So(macPL.FHDR.FOpts, ShouldHaveLength, 2)
+					So(macPL.FHDR.FOpts, ShouldResemble, []MACCommand{mac1, mac2})
 				})
 			})
 		})
