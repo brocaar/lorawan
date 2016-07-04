@@ -1,7 +1,6 @@
 package band
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
@@ -39,25 +38,20 @@ func TestUS902Band(t *testing.T) {
 				DataRate     int
 				Channel      int
 				ExpFrequency int
-				Err          error
 			}{
 				{Frequency: 914900000, DataRate: 3, Channel: 63, ExpFrequency: 927500000},
-				{Frequency: 914900000, DataRate: 4, Channel: 0, Err: errors.New("lorawan/band: unknown channel for frequency: 914900000 and data-rate: 4")},
 				{Frequency: 903000000, DataRate: 4, Channel: 64, ExpFrequency: 923300000},
 			}
 
 			for _, test := range testTable {
-				Convey(fmt.Sprintf("Then frequency: %d and data rate: %d must return frequency: %d or error: %v", test.Frequency, test.DataRate, test.ExpFrequency, test.Err), func() {
-					txChan, err := band.GetChannel(test.Frequency, test.DataRate)
-
-					if test.Err != nil {
-						So(err, ShouldResemble, test.Err)
-					} else {
-						So(err, ShouldBeNil)
-						So(txChan, ShouldEqual, test.Channel)
-						rx1Chan := band.GetRX1Channel(txChan)
-						So(band.DownlinkChannels[rx1Chan].Frequency, ShouldEqual, test.ExpFrequency)
-					}
+				Convey(fmt.Sprintf("Then frequency: %d must return frequency: %d", test.Frequency, test.ExpFrequency), func() {
+					txChan, err := band.GetChannel(test.Frequency, nil)
+					So(err, ShouldBeNil)
+					So(txChan, ShouldEqual, test.Channel)
+					rx1Chan := band.GetRX1Channel(txChan)
+					freq, err := band.GetDownlinkFrequency(rx1Chan, nil)
+					So(err, ShouldBeNil)
+					So(freq, ShouldEqual, test.ExpFrequency)
 				})
 			}
 		})
