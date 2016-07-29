@@ -52,6 +52,10 @@ func TestUS902Band(t *testing.T) {
 					freq, err := band.GetDownlinkFrequency(rx1Chan, nil)
 					So(err, ShouldBeNil)
 					So(freq, ShouldEqual, test.ExpFrequency)
+
+					freq, err = band.GetRX1Frequency(test.Frequency)
+					So(err, ShouldBeNil)
+					So(freq, ShouldEqual, test.ExpFrequency)
 				})
 			}
 		})

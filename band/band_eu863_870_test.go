@@ -19,6 +19,14 @@ func TestEU863Band(t *testing.T) {
 			}
 		})
 
+		Convey("Then GetRX1Frequency returns the uplink frequency", func() {
+			for _, f := range []int{868100000, 868200000, 868300000} {
+				freq, err := band.GetRX1Frequency(f)
+				So(err, ShouldBeNil)
+				So(freq, ShouldEqual, f)
+			}
+		})
+
 		Convey("Given a CFList", func() {
 			cFlist := lorawan.CFList{
 				867100000,
