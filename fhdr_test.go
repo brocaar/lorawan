@@ -1,8 +1,10 @@
 package lorawan
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"log"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -178,7 +180,7 @@ func TestFHDR(t *testing.T) {
 			})
 		})
 
-		Convey("Given uplink=false and slice []byte{4, 2, 2, 1, 179, 5, 0, 2, 7, 9}", func() {
+		Convey("Given uplink=false and slice []byte{4, 3, 2, 1, 179, 5, 0, 2, 7, 9}", func() {
 			b := []byte{4, 3, 2, 1, 179, 5, 0, 2, 7, 9}
 			Convey("Then UnmarshalBinary does not return an error", func() {
 				err := h.UnmarshalBinary(false, b)
@@ -204,6 +206,43 @@ func TestFHDR(t *testing.T) {
 					p, ok := h.FOpts[0].Payload.(*LinkCheckAnsPayload)
 					So(ok, ShouldBeTrue)
 					So(p, ShouldResemble, &LinkCheckAnsPayload{Margin: 7, GwCnt: 9})
+				})
+			})
+		})
+
+		Convey("Given uplink=false and slice []byte{4, 3, 2, 1, 181, 5, 0, 2, 7, 9, 78, 79} (one known mac-command and some unknown data)", func() {
+			b := []byte{4, 3, 2, 1, 181, 5, 0, 2, 7, 9, 78, 79}
+			var logBytes bytes.Buffer
+			log.SetOutput(&logBytes)
+
+			Convey("Then UnmarshalBinary does not return an error", func() {
+				err := h.UnmarshalBinary(false, b)
+				So(err, ShouldBeNil)
+
+				Convey("Then DevAddr=[4]{1, 2, 3, 4}", func() {
+					So(h.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
+				})
+
+				Convey("Then FCtrl=FCtrl(ADR=true, ADRACKReq=false, ACK=true, FPending=true, fOptsLen=5)", func() {
+					So(h.FCtrl, ShouldResemble, FCtrl{ADR: true, ADRACKReq: false, ACK: true, FPending: true, fOptsLen: 5})
+				})
+
+				Convey("Then len(FOpts)=1", func() {
+					So(h.FOpts, ShouldHaveLength, 1)
+					Convey("Then CID=LinkCheckAns", func() {
+						So(h.FOpts[0].CID, ShouldEqual, LinkCheckAns)
+					})
+
+				})
+
+				Convey("Then Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9)", func() {
+					p, ok := h.FOpts[0].Payload.(*LinkCheckAnsPayload)
+					So(ok, ShouldBeTrue)
+					So(p, ShouldResemble, &LinkCheckAnsPayload{Margin: 7, GwCnt: 9})
+				})
+
+				Convey("Then a warning was printed", func() {
+					So(logBytes.String(), ShouldEndWith, "warning: unmarshal mac-command error (skipping remaining mac-command bytes): lorawan: invalid CID 4e\n")
 				})
 			})
 		})

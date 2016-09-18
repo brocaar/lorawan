@@ -1,7 +1,9 @@
 package lorawan
 
 import (
+	"bytes"
 	"errors"
+	"log"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -142,6 +144,43 @@ func TestMACPayload(t *testing.T) {
 					So(ok, ShouldBeTrue)
 					So(pl.Battery, ShouldEqual, 10)
 					So(pl.Margin, ShouldEqual, 20)
+				})
+			})
+		})
+
+		Convey("Given uplink=true and slice []byte{4, 3, 2, 1, 0, 0, 0, 0, 6, 10, 20, 78, 79} (one known and some unknown data)", func() {
+			b := []byte{4, 3, 2, 1, 0, 0, 0, 0, 6, 10, 20, 78, 79}
+			var logBytes bytes.Buffer
+			log.SetOutput(&logBytes)
+
+			Convey("Then UnmarshalBinary does not return an error", func() {
+				err := p.UnmarshalBinary(true, b)
+				So(err, ShouldBeNil)
+
+				// mac commands are normally unmarshaled when decrypting
+				So(p.decodeFRMPayloadToMACCommands(true), ShouldBeNil)
+
+				Convey("Then FHDR(DevAddr=[4]byte{1, 2, 3, 4})", func() {
+					So(p.FHDR.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
+				})
+				Convey("Then FPort=0", func() {
+					So(p.FPort, ShouldNotBeNil)
+					So(*p.FPort, ShouldEqual, 0)
+				})
+				Convey("Then FRMPayload=[]Payload{MACCommand{CID: DevStatusAns, Payload: DevStatusAnsPayload(Battery=10, Margin=20)}}", func() {
+
+					So(p.FRMPayload, ShouldHaveLength, 1)
+					mac, ok := p.FRMPayload[0].(*MACCommand)
+					So(ok, ShouldBeTrue)
+					So(mac.CID, ShouldEqual, DevStatusAns)
+
+					pl, ok := mac.Payload.(*DevStatusAnsPayload)
+					So(ok, ShouldBeTrue)
+					So(pl.Battery, ShouldEqual, 10)
+					So(pl.Margin, ShouldEqual, 20)
+				})
+				Convey("Then a warning was printed", func() {
+					So(logBytes.String(), ShouldEndWith, "warning: unmarshal mac-command error (skipping remaining mac-command bytes): lorawan: invalid CID 4e\n")
 				})
 			})
 		})
