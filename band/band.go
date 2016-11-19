@@ -53,8 +53,13 @@ type Channel struct {
 
 // Band defines an region specific ISM band implementation for LoRa.
 type Band struct {
-	// private variables
+	// dwellTime defines if dwell time limitation should be taken into account
 	dwellTime lorawan.DwellTime
+
+	// rx1DataRate defines the RX1 data-rate given the uplink data-rate
+	// and a RX1DROffset value. These values are retrievable by using
+	// the GetRX1DataRate method.
+	rx1DataRate [][]int
 
 	// DefaultTXPower defines the default radiated transmit output power
 	DefaultTXPower int
@@ -101,10 +106,6 @@ type Band struct {
 
 	// MaxPayloadSize defines the maximum payload size, per data-rate.
 	MaxPayloadSize []MaxPayloadSize
-
-	// RX1DataRate defines the RX1 data-rate given the uplink data-rate
-	// and a RX1DROffset value.
-	rx1DataRate [][]int
 
 	// TXPower defines the TX power configuration.
 	TXPower []int
