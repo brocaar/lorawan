@@ -737,3 +737,109 @@ func TestTXParamSetupReqPayload(t *testing.T) {
 		}
 	})
 }
+
+func TestDLChannelReqPayload(t *testing.T) {
+	Convey("Given an empty DLChannelReqPayload", t, func() {
+		var p DLChannelReqPayload
+
+		Convey("Then MarshalBinary returns []byte{0, 0, 0, 0}", func() {
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0, 0, 0, 0})
+		})
+
+		tests := []struct {
+			ChIndex uint8
+			Freq    uint32
+			Bytes   []byte
+			Error   error
+		}{
+			{0, 868100000, []byte{0, 40, 118, 132}, nil},
+			{1, 868200000, []byte{1, 16, 122, 132}, nil},
+			{0, 868100099, nil, errors.New("lorawan: Freq must be a multiple of 100")},
+		}
+
+		for i, test := range tests {
+			Convey(fmt.Sprintf("Given ChIndex: %d, Freq: %d [%d]", test.ChIndex, test.Freq, i), func() {
+				p.ChIndex = test.ChIndex
+				p.Freq = test.Freq
+
+				if test.Error != nil {
+					Convey(fmt.Sprintf("Then MarshalBinary returns error %s", test.Error), func() {
+						_, err := p.MarshalBinary()
+						So(err, ShouldResemble, test.Error)
+					})
+				} else {
+					Convey(fmt.Sprintf("Then MarshalBinary returns %v", test.Bytes), func() {
+						b, err := p.MarshalBinary()
+						So(err, ShouldBeNil)
+						So(b, ShouldResemble, test.Bytes)
+					})
+				}
+			})
+		}
+
+		for i, test := range tests {
+			if test.Error != nil {
+				continue
+			}
+
+			Convey(fmt.Sprintf("When unmarshaling %v [%d]", test.Bytes, i), func() {
+				So(p.UnmarshalBinary(test.Bytes), ShouldBeNil)
+
+				Convey(fmt.Sprintf("Then ChIndex: %d and Freq: %d are expected", test.ChIndex, test.Freq), func() {
+					So(p.ChIndex, ShouldEqual, test.ChIndex)
+					So(p.Freq, ShouldEqual, test.Freq)
+				})
+			})
+		}
+
+	})
+}
+
+func TestDLChannelAnsPayload(t *testing.T) {
+	Convey("Given an empty DLChannelAnsPayload", t, func() {
+		var p DLChannelAnsPayload
+
+		Convey("Then MarshalBinary returns []byte{0}", func() {
+			b, err := p.MarshalBinary()
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, []byte{0})
+		})
+
+		tests := []struct {
+			ChannelFrequencyOK    bool
+			UplinkFrequencyExists bool
+			Bytes                 []byte
+		}{
+			{false, false, []byte{0}},
+			{true, false, []byte{1}},
+			{false, true, []byte{2}},
+			{true, true, []byte{3}},
+		}
+
+		for i, test := range tests {
+			Convey(fmt.Sprintf("Given ChannelFrequencyOK: %t, UplinkFrequencyExists: %t [%d]", test.ChannelFrequencyOK, test.UplinkFrequencyExists, i), func() {
+				p.ChannelFrequencyOK = test.ChannelFrequencyOK
+				p.UplinkFrequencyExists = test.UplinkFrequencyExists
+
+				Convey(fmt.Sprintf("Then MarshalBinary returns %v", test.Bytes), func() {
+					b, err := p.MarshalBinary()
+					So(err, ShouldBeNil)
+					So(b, ShouldResemble, test.Bytes)
+				})
+			})
+		}
+
+		for i, test := range tests {
+			Convey(fmt.Sprintf("When Unmarshaling %v [%d]", test.Bytes, i), func() {
+				So(p.UnmarshalBinary(test.Bytes), ShouldBeNil)
+
+				Convey(fmt.Sprintf("Then ChannelFrequencyOK: %t and UplinkFrequencyExists: %t are expected", test.ChannelFrequencyOK, test.UplinkFrequencyExists), func() {
+					So(p.ChannelFrequencyOK, ShouldEqual, test.ChannelFrequencyOK)
+					So(p.UplinkFrequencyExists, ShouldEqual, test.UplinkFrequencyExists)
+				})
+			})
+		}
+	})
+}

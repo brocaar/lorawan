@@ -34,6 +34,8 @@ const (
 	RXTimingSetupAns CID = 0x08
 	TXParamSetupReq  CID = 0x09
 	TXParamSetupAns  CID = 0x09
+	DLChannelReq     CID = 0x0A
+	DLChannelAns     CID = 0x0A
 	// 0x80 to 0xFF reserved for proprietary network command extensions
 )
 
@@ -56,12 +58,14 @@ var macPayloadRegistry = map[bool]map[CID]macPayloadInfo{
 		NewChannelReq:    {5, func() MACCommandPayload { return &NewChannelReqPayload{} }},
 		RXTimingSetupReq: {1, func() MACCommandPayload { return &RXTimingSetupReqPayload{} }},
 		TXParamSetupReq:  {1, func() MACCommandPayload { return &TXParamSetupReqPayload{} }},
+		DLChannelReq:     {4, func() MACCommandPayload { return &DLChannelReqPayload{} }},
 	},
 	true: map[CID]macPayloadInfo{
 		LinkADRAns:      {1, func() MACCommandPayload { return &LinkADRAnsPayload{} }},
 		RXParamSetupAns: {1, func() MACCommandPayload { return &RX2SetupAnsPayload{} }},
 		DevStatusAns:    {2, func() MACCommandPayload { return &DevStatusAnsPayload{} }},
 		NewChannelAns:   {1, func() MACCommandPayload { return &NewChannelAnsPayload{} }},
+		DLChannelAns:    {1, func() MACCommandPayload { return &DLChannelAnsPayload{} }},
 	},
 }
 
@@ -655,5 +659,70 @@ func (p *TXParamSetupReqPayload) UnmarshalBinary(data []byte) error {
 	}
 	p.MaxEIRP = []uint8{8, 10, 12, 13, 14, 16, 18, 20, 21, 24, 26, 27, 29, 30, 33, 36}[data[0]&15]
 
+	return nil
+}
+
+// DLChannelReqPayload represents the DLChannelReq payload.
+type DLChannelReqPayload struct {
+	ChIndex uint8
+	Freq    uint32
+}
+
+// MarshalBinary encodes the object into bytes.
+func (p DLChannelReqPayload) MarshalBinary() ([]byte, error) {
+	b := make([]byte, 5)        // we need one byte more for PutUint32
+	if p.Freq/100 >= 16777216 { // 2^24
+		return b, errors.New("lorawan: max value of Freq is 2^24 - 1")
+	}
+
+	if p.Freq%100 != 0 {
+		return b, errors.New("lorawan: Freq must be a multiple of 100")
+	}
+
+	b[0] = p.ChIndex
+	binary.LittleEndian.PutUint32(b[1:5], p.Freq/100)
+
+	return b[0:4], nil
+}
+
+// UnmarshalBinary decodes the object from bytes.
+func (p *DLChannelReqPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 4 {
+		return errors.New("lorawan: 4 bytes of data are expected")
+	}
+
+	p.ChIndex = data[0]
+	b := make([]byte, 4)
+	copy(b, data[1:])
+	p.Freq = binary.LittleEndian.Uint32(b) * 100
+	return nil
+}
+
+// DLChannelAnsPayload represents the DLChannelAns payload.
+type DLChannelAnsPayload struct {
+	UplinkFrequencyExists bool
+	ChannelFrequencyOK    bool
+}
+
+// MarshalBinary encodes the object into bytes.
+func (p DLChannelAnsPayload) MarshalBinary() ([]byte, error) {
+	var b byte
+	if p.ChannelFrequencyOK {
+		b = b ^ 1
+	}
+	if p.UplinkFrequencyExists {
+		b = b ^ (1 << 1)
+	}
+	return []byte{b}, nil
+}
+
+// UnmarshalBinary decodes the object from bytes.
+func (p *DLChannelAnsPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+
+	p.ChannelFrequencyOK = data[0]&1 > 0
+	p.UplinkFrequencyExists = data[0]&(1<<1) > 0
 	return nil
 }
