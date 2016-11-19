@@ -15,6 +15,7 @@ type Name string
 
 // Available ISM bands.
 const (
+	AS_923     Name = "AS_923"
 	AU_915_928 Name = "AU_915_928"
 	EU_863_870 Name = "EU_863_870"
 	US_902_928 Name = "US_902_928"
@@ -52,6 +53,9 @@ type Channel struct {
 
 // Band defines an region specific ISM band implementation for LoRa.
 type Band struct {
+	// private variables
+	dwellTime lorawan.DwellTime
+
 	// DefaultTXPower defines the default radiated transmit output power
 	DefaultTXPower int
 
@@ -193,6 +197,8 @@ func (b *Band) GetRX1DataRateForOffset(dr, drOffset int) (int, error) {
 // of the repeater and dwell time arguments.
 func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 	switch name {
+	case AS_923:
+		return newAS923Band(repeaterCompatible, dt)
 	case AU_915_928:
 		return newAU915Band()
 	case EU_863_870:
