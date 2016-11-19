@@ -41,7 +41,7 @@ func newEU863Band() (Band, error) {
 			{M: 230, N: 222},
 		},
 
-		RX1DataRate: [][]int{
+		rx1DataRate: [][]int{
 			{0, 0, 0, 0, 0, 0},
 			{1, 0, 0, 0, 0, 0},
 			{2, 1, 0, 0, 0, 0},

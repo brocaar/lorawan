@@ -57,7 +57,7 @@ func newAU915Band() (Band, error) {
 			{}, // Not defined
 		},
 
-		RX1DataRate: [][]int{
+		rx1DataRate: [][]int{
 			{10, 9, 8, 8},
 			{11, 10, 9, 8},
 			{12, 11, 10, 9},

@@ -1,4 +1,5 @@
-// Package band provides band specific defaults and configuration.
+// Package band provides band specific defaults and configuration for
+// downlink communication with end-nodes.
 package band
 
 import (
@@ -99,7 +100,7 @@ type Band struct {
 
 	// RX1DataRate defines the RX1 data-rate given the uplink data-rate
 	// and a RX1DROffset value.
-	RX1DataRate [][]int
+	rx1DataRate [][]int
 
 	// TXPower defines the TX power configuration.
 	TXPower []int
@@ -118,6 +119,10 @@ type Band struct {
 	// getRX1FrequencyFunc implements a function which returns the RX1 frequency
 	// given the uplink frequency.
 	getRX1FrequencyFunc func(band *Band, txFrequency int) (int, error)
+
+	// getRX1DataRateFunc implements a function which returns the RX1 data-rate
+	// given the uplink data-rate and data-rate offset.
+	getRX1DataRateFunc func(band *Band, uplinkDR, rx1DROffset int) (int, error)
 }
 
 // GetRX1Channel returns the channel to use for RX1 given the channel used
@@ -130,6 +135,16 @@ func (b *Band) GetRX1Channel(txChannel int) int {
 // frequency.
 func (b *Band) GetRX1Frequency(txFrequency int) (int, error) {
 	return b.getRX1FrequencyFunc(b, txFrequency)
+}
+
+// GetRX1DataRate returns the RX1 data-rate given the uplink data-rate and
+// RX1 data-rate offset.
+func (b *Band) GetRX1DataRate(uplinkDR, rx1DROffset int) (int, error) {
+	// use the lookup table when no function has been defined
+	if b.getRX1DataRateFunc == nil {
+		return b.rx1DataRate[uplinkDR][rx1DROffset], nil
+	}
+	return b.getRX1DataRateFunc(b, uplinkDR, rx1DROffset)
 }
 
 // GetChannel returns the channel index given a frequency and an optional CFList.
@@ -177,18 +192,20 @@ func (b *Band) GetDataRate(dr DataRate) (int, error) {
 
 // GetRX1DataRateForOffset returns the data-rate for the given offset.
 func (b *Band) GetRX1DataRateForOffset(dr, drOffset int) (int, error) {
-	if dr >= len(b.RX1DataRate) {
+	if dr >= len(b.rx1DataRate) {
 		return 0, fmt.Errorf("lorawan/band: invalid data-rate: %d", dr)
 	}
 
-	if drOffset >= len(b.RX1DataRate[dr]) {
+	if drOffset >= len(b.rx1DataRate[dr]) {
 		return 0, fmt.Errorf("lorawan/band: invalid data-rate offset: %d", drOffset)
 	}
-	return b.RX1DataRate[dr][drOffset], nil
+	return b.rx1DataRate[dr][drOffset], nil
 }
 
 // GetConfig returns the band configuration for the given band.
-func GetConfig(name Name) (Band, error) {
+// Please refer to the LoRaWAN specification for more details about the effect
+// of the repeater and dwell time arguments.
+func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 	switch name {
 	case AU_915_928:
 		return newAU915Band()

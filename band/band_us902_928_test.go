@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/brocaar/lorawan"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestUS902Band(t *testing.T) {
 	Convey("Given the US 902-928 band is selected", t, func() {
-		band, err := GetConfig(US_902_928)
+		band, err := GetConfig(US_902_928, true, lorawan.DwellTimeNoLimit)
 		So(err, ShouldBeNil)
 
 		Convey("When testing the uplink channels", func() {
