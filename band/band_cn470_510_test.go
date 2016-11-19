@@ -46,12 +46,8 @@ func TestCN470Band(t *testing.T) {
 					txChan, err := band.GetChannel(test.Frequency, nil)
 					So(err, ShouldBeNil)
 					So(txChan, ShouldEqual, test.Channel)
-					rx1Chan := band.GetRX1Channel(txChan)
-					freq, err := band.GetDownlinkFrequency(rx1Chan, nil)
-					So(err, ShouldBeNil)
-					So(freq, ShouldEqual, test.ExpFrequency)
 
-					freq, err = band.GetRX1Frequency(test.Frequency)
+					freq, err := band.GetRX1Frequency(test.Frequency)
 					So(err, ShouldBeNil)
 					So(freq, ShouldEqual, test.ExpFrequency)
 				})

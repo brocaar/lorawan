@@ -36,7 +36,7 @@ func TestEU863Band(t *testing.T) {
 				867900000,
 			}
 
-			Convey("Then GetFrequency takes the CFList into consideration", func() {
+			Convey("Then GetChannel takes the CFList into consideration", func() {
 				tests := []int{
 					868100000,
 					868300000,
@@ -49,10 +49,6 @@ func TestEU863Band(t *testing.T) {
 				}
 
 				for expChannel, expFreq := range tests {
-					freq, err := band.GetDownlinkFrequency(expChannel, &cFlist)
-					So(err, ShouldBeNil)
-					So(freq, ShouldEqual, expFreq)
-
 					channel, err := band.GetChannel(expFreq, &cFlist)
 					So(err, ShouldBeNil)
 					So(channel, ShouldEqual, expChannel)

@@ -166,20 +166,6 @@ func (b *Band) GetChannel(frequency int, cFlist *lorawan.CFList) (int, error) {
 	return 0, fmt.Errorf("lorawan/band: unknown channel for frequency: %d", frequency)
 }
 
-// GetDownlinkFrequency returns the frequency for the given the channel number
-// and an optional CFList.
-func (b *Band) GetDownlinkFrequency(channel int, cFlist *lorawan.CFList) (int, error) {
-	if channel < len(b.DownlinkChannels) {
-		return b.DownlinkChannels[channel].Frequency, nil
-	}
-
-	if cFlist != nil && channel < len(b.DownlinkChannels)+len(cFlist) {
-		return int(cFlist[channel-len(b.DownlinkChannels)]), nil
-	}
-
-	return 0, fmt.Errorf("lorawan/band: channel %d is invalid", channel)
-}
-
 // GetDataRate returns the index of the given DataRate.
 func (b *Band) GetDataRate(dr DataRate) (int, error) {
 	for i, d := range b.DataRates {
