@@ -62,6 +62,15 @@ var macPayloadRegistry = map[bool]map[CID]macPayloadInfo{
 	},
 }
 
+// DwellTime defines the dwell time type.
+type DwellTime int
+
+// Possible dwell time options.
+const (
+	DwellTimeNoLimit DwellTime = iota
+	DwellTime400ms
+)
+
 // getMACPayloadAndSize returns a new MACCommandPayload instance and it's size.
 func getMACPayloadAndSize(uplink bool, c CID) (MACCommandPayload, int, error) {
 	macPayloadMutex.RLock()
