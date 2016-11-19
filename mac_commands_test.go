@@ -440,15 +440,15 @@ func TestRX2SetupReqPayload(t *testing.T) {
 		})
 
 		Convey("Given Frequency > 2^24-1", func() {
-			p.Frequency = 16777216 // 2^24
+			p.Frequency = 1677721600 // 2^24
 			Convey("Then MarshalBinary returns an error", func() {
 				_, err := p.MarshalBinary()
 				So(err, ShouldNotBeNil)
 			})
 		})
 
-		Convey("Given Frequency=262657 and DLSettings(RX2DataRate=11, RX1DROffset=3)", func() {
-			p.Frequency = 262657
+		Convey("Given Frequency=26265700 and DLSettings(RX2DataRate=11, RX1DROffset=3)", func() {
+			p.Frequency = 26265700
 			p.DLSettings = DLSettings{RX2DataRate: 11, RX1DROffset: 3}
 			Convey("Then MarshalBinary returns []byte{1, 2, 4, 59}", func() {
 				b, err := p.MarshalBinary()
@@ -459,9 +459,9 @@ func TestRX2SetupReqPayload(t *testing.T) {
 
 		Convey("Given a slice []byte{59, 1, 2, 4}", func() {
 			b := []byte{59, 1, 2, 4}
-			Convey("Then UnmarshalBinary returns a RX2SetupReqPayload with Frequency=262657 and DLSettings(RX2DataRate=11, RX1DROffset=3)", func() {
+			Convey("Then UnmarshalBinary returns a RX2SetupReqPayload with Frequency=26265700 and DLSettings(RX2DataRate=11, RX1DROffset=3)", func() {
 				exp := RX2SetupReqPayload{
-					Frequency:  262657,
+					Frequency:  26265700,
 					DLSettings: DLSettings{RX2DataRate: 11, RX1DROffset: 3},
 				}
 				err := p.UnmarshalBinary(b)
@@ -566,7 +566,7 @@ func TestNewChannelReqPayload(t *testing.T) {
 		})
 
 		Convey("Given Freq > 2^24 - 1", func() {
-			p.Freq = 16777216
+			p.Freq = 16777216 * 100
 			Convey("MarshalBinary returns an error", func() {
 				_, err := p.MarshalBinary()
 				So(err, ShouldNotBeNil)
@@ -589,9 +589,9 @@ func TestNewChannelReqPayload(t *testing.T) {
 			})
 		})
 
-		Convey("Given ChIndex=3, Freq=262657, MaxDR=5, MinDR=10", func() {
+		Convey("Given ChIndex=3, Freq=26265700, MaxDR=5, MinDR=10", func() {
 			p.ChIndex = 3
-			p.Freq = 262657
+			p.Freq = 26265700
 			p.MaxDR = 5
 			p.MinDR = 10
 			Convey("Then MarshalBinary returns []byte{3, 1, 2, 4, 90}", func() {
@@ -605,7 +605,7 @@ func TestNewChannelReqPayload(t *testing.T) {
 			b := []byte{3, 1, 2, 4, 90}
 			err := p.UnmarshalBinary(b)
 			So(err, ShouldBeNil)
-			So(p, ShouldResemble, NewChannelReqPayload{ChIndex: 3, Freq: 262657, MaxDR: 5, MinDR: 10})
+			So(p, ShouldResemble, NewChannelReqPayload{ChIndex: 3, Freq: 26265700, MaxDR: 5, MinDR: 10})
 		})
 	})
 }

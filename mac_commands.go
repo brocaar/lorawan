@@ -416,8 +416,11 @@ type RX2SetupReqPayload struct {
 // MarshalBinary marshals the object in binary form.
 func (p RX2SetupReqPayload) MarshalBinary() ([]byte, error) {
 	b := make([]byte, 5)
-	if p.Frequency >= 16777216 { // 2^24
+	if p.Frequency/100 >= 16777216 { // 2^24
 		return b, errors.New("lorawan: max value of Frequency is 2^24-1")
+	}
+	if p.Frequency%100 != 0 {
+		return b, errors.New("lorawan: Frequency must be a multiple of 100")
 	}
 	bytes, err := p.DLSettings.MarshalBinary()
 	if err != nil {
@@ -425,7 +428,7 @@ func (p RX2SetupReqPayload) MarshalBinary() ([]byte, error) {
 	}
 	b[0] = bytes[0]
 
-	binary.LittleEndian.PutUint32(b[1:5], p.Frequency)
+	binary.LittleEndian.PutUint32(b[1:5], p.Frequency/100)
 	// we don't return the last octet which is fine since we're only interested
 	// in the 24 LSB of Frequency
 	return b[0:4], nil
@@ -444,7 +447,7 @@ func (p *RX2SetupReqPayload) UnmarshalBinary(data []byte) error {
 	b := make([]byte, len(data))
 	copy(b, data)
 	b = append(b, byte(0))
-	p.Frequency = binary.LittleEndian.Uint32(b[1:5])
+	p.Frequency = binary.LittleEndian.Uint32(b[1:5]) * 100
 	return nil
 }
 
@@ -531,8 +534,11 @@ type NewChannelReqPayload struct {
 // MarshalBinary marshals the object in binary form.
 func (p NewChannelReqPayload) MarshalBinary() ([]byte, error) {
 	b := make([]byte, 5)
-	if p.Freq >= 16777216 { // 2^24
+	if p.Freq/100 >= 16777216 { // 2^24
 		return b, errors.New("lorawan: max value of Freq is 2^24 - 1")
+	}
+	if p.Freq%100 != 0 {
+		return b, errors.New("lorawan: Freq must be a multiple of 100")
 	}
 	if p.MaxDR > 15 {
 		return b, errors.New("lorawan: max value of MaxDR is 15")
@@ -543,7 +549,7 @@ func (p NewChannelReqPayload) MarshalBinary() ([]byte, error) {
 
 	// we're borrowing the last byte b[4] because PutUint32 needs 4 bytes,
 	// the last byte b[4] will be set to 0 because max Freq = 2^24 - 1
-	binary.LittleEndian.PutUint32(b[1:5], p.Freq)
+	binary.LittleEndian.PutUint32(b[1:5], p.Freq/100)
 	b[0] = p.ChIndex
 	b[4] = p.MinDR ^ (p.MaxDR << 4)
 
@@ -562,7 +568,7 @@ func (p *NewChannelReqPayload) UnmarshalBinary(data []byte) error {
 	b := make([]byte, len(data))
 	copy(b, data)
 	b[4] = byte(0)
-	p.Freq = binary.LittleEndian.Uint32(b[1:5])
+	p.Freq = binary.LittleEndian.Uint32(b[1:5]) * 100
 	return nil
 }
 

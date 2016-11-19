@@ -260,7 +260,7 @@ func TestFHDR(t *testing.T) {
 				CID: NewChannelReq,
 				Payload: &NewChannelReqPayload{
 					ChIndex: 2,
-					Freq:    1234567,
+					Freq:    868100000,
 					MaxDR:   5,
 					MinDR:   1,
 				},
