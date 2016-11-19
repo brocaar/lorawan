@@ -32,6 +32,8 @@ const (
 	NewChannelAns    CID = 0x07
 	RXTimingSetupReq CID = 0x08
 	RXTimingSetupAns CID = 0x08
+	TXParamSetupReq  CID = 0x09
+	TXParamSetupAns  CID = 0x09
 	// 0x80 to 0xFF reserved for proprietary network command extensions
 )
 
@@ -53,6 +55,7 @@ var macPayloadRegistry = map[bool]map[CID]macPayloadInfo{
 		RXParamSetupReq:  {4, func() MACCommandPayload { return &RX2SetupReqPayload{} }},
 		NewChannelReq:    {5, func() MACCommandPayload { return &NewChannelReqPayload{} }},
 		RXTimingSetupReq: {1, func() MACCommandPayload { return &RXTimingSetupReqPayload{} }},
+		TXParamSetupReq:  {1, func() MACCommandPayload { return &TXParamSetupReqPayload{} }},
 	},
 	true: map[CID]macPayloadInfo{
 		LinkADRAns:      {1, func() MACCommandPayload { return &LinkADRAnsPayload{} }},
@@ -606,5 +609,51 @@ func (p *RXTimingSetupReqPayload) UnmarshalBinary(data []byte) error {
 		return errors.New("lorawan: 1 byte of data is expected")
 	}
 	p.Delay = data[0]
+	return nil
+}
+
+// TXParamSetupReqPayload represents the TXParamSetupReq payload.
+type TXParamSetupReqPayload struct {
+	DownlinkDwelltime DwellTime
+	UplinkDwellTime   DwellTime
+	MaxEIRP           uint8
+}
+
+// MarshalBinary encodes the object into a bytes.
+func (p TXParamSetupReqPayload) MarshalBinary() ([]byte, error) {
+	var b uint8
+	for i, v := range []uint8{8, 10, 12, 13, 14, 16, 18, 20, 21, 24, 26, 27, 29, 30, 33, 36} {
+		if v == p.MaxEIRP {
+			b = uint8(i)
+		}
+	}
+	if b == 0 {
+		return nil, errors.New("lorawan: invalid MaxEIRP value")
+	}
+
+	if p.UplinkDwellTime == DwellTime400ms {
+		b = b ^ (1 << 4)
+	}
+	if p.DownlinkDwelltime == DwellTime400ms {
+		b = b ^ (1 << 5)
+	}
+
+	return []byte{b}, nil
+}
+
+// UnmarshalBinary decodes the object from bytes.
+func (p *TXParamSetupReqPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+
+	if data[0]&(1<<4) > 0 {
+		p.UplinkDwellTime = DwellTime400ms
+	}
+	if data[0]&(1<<5) > 0 {
+		p.DownlinkDwelltime = DwellTime400ms
+	}
+	p.MaxEIRP = []uint8{8, 10, 12, 13, 14, 16, 18, 20, 21, 24, 26, 27, 29, 30, 33, 36}[data[0]&15]
+
 	return nil
 }
