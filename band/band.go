@@ -210,7 +210,7 @@ func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, 
 	case KR_920_923:
 		return newKR920Band()
 	case US_902_928:
-		return newUS902Band()
+		return newUS902Band(repeaterCompatible)
 	default:
 		return Band{}, fmt.Errorf("lorawan/band: band %s is undefined", name)
 	}
