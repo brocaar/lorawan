@@ -91,12 +91,14 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 
 		MaxPayloadSize: maxPayloadSize,
 
-		// TODO: how can TXPower correctly be implemented? Most of the times
-		// it is specified as an absolute value in the specs, in this case
-		// it is a delta on the Max ERP.
-		// Maybe it should be defined as a label (string) instead of the value
-		// it holds?
-		TXPower: []int{},
+		TXPower: []int{
+			14,
+			14 - 2,
+			14 - 4,
+			14 - 6,
+			14 - 8,
+			14 - 10,
+		},
 
 		UplinkChannels: []Channel{
 			{Frequency: 923200000, DataRates: []int{0, 1, 2, 3, 4, 5}},
