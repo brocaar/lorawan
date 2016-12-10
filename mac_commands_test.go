@@ -13,16 +13,16 @@ func TestGetMACPayloadAndSize(t *testing.T) {
 		uplink := false
 		c := LinkADRReq
 		Convey("Then getMACPayloadAndSize returns LinkADRReqPayload{} with size 4", func() {
-			p, s, err := getMACPayloadAndSize(uplink, c)
+			p, s, err := GetMACPayloadAndSize(uplink, c)
 			So(err, ShouldBeNil)
 			So(p, ShouldHaveSameTypeAs, &LinkADRReqPayload{})
 			So(s, ShouldEqual, 4)
 		})
 
 		Convey("Then running getMACPayloadAndSize twice should return different objects", func() {
-			p1, _, err := getMACPayloadAndSize(uplink, c)
+			p1, _, err := GetMACPayloadAndSize(uplink, c)
 			So(err, ShouldBeNil)
-			p2, _, err := getMACPayloadAndSize(uplink, c)
+			p2, _, err := GetMACPayloadAndSize(uplink, c)
 			So(err, ShouldBeNil)
 
 			So(fmt.Sprintf("%p", p1.(*LinkADRReqPayload)), ShouldNotEqual, fmt.Sprintf("%p", p2.(*LinkADRReqPayload)))
@@ -33,7 +33,7 @@ func TestGetMACPayloadAndSize(t *testing.T) {
 		uplink := true
 		c := LinkADRAns
 		Convey("Then getMACPayloadAndSize returns LinkADRAnsPayload{} with size 1", func() {
-			p, s, err := getMACPayloadAndSize(uplink, c)
+			p, s, err := GetMACPayloadAndSize(uplink, c)
 			So(err, ShouldBeNil)
 			So(p, ShouldHaveSameTypeAs, &LinkADRAnsPayload{})
 			So(s, ShouldEqual, 1)
@@ -42,7 +42,7 @@ func TestGetMACPayloadAndSize(t *testing.T) {
 
 	Convey("When testing mac commands within the proprietary range", t, func() {
 		Convey("Then getting an unregistered returns an error", func() {
-			_, _, err := getMACPayloadAndSize(true, CID(128))
+			_, _, err := GetMACPayloadAndSize(true, CID(128))
 			So(err, ShouldNotBeNil)
 		})
 
@@ -50,7 +50,7 @@ func TestGetMACPayloadAndSize(t *testing.T) {
 			So(RegisterProprietaryMACCommand(true, CID(128), 12), ShouldBeNil)
 
 			Convey("Then getting the payload-size for this CID returns 12 and a ProprietaryMACCommandPayload type", func() {
-				pl, size, err := getMACPayloadAndSize(true, CID(128))
+				pl, size, err := GetMACPayloadAndSize(true, CID(128))
 				So(err, ShouldBeNil)
 				So(size, ShouldEqual, 12)
 				So(pl, ShouldHaveSameTypeAs, &ProprietaryMACCommandPayload{})
