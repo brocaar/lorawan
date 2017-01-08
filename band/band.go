@@ -18,6 +18,7 @@ const (
 	AS_923     Name = "AS_923"
 	AU_915_928 Name = "AU_915_928"
 	CN_470_510 Name = "CN_470_510"
+	EU_433     Name = "EU_433"
 	EU_863_870 Name = "EU_863_870"
 	KR_920_923 Name = "KR_920_923"
 	US_902_928 Name = "US_902_928"
@@ -205,6 +206,8 @@ func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, 
 		return newAU915Band(repeaterCompatible)
 	case CN_470_510:
 		return newCN470Band()
+	case EU_433:
+		return newEU433Band(repeaterCompatible)
 	case EU_863_870:
 		return newEU863Band(repeaterCompatible)
 	case KR_920_923:
