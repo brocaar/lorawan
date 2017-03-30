@@ -151,6 +151,12 @@ func (b *Band) GetRX1Frequency(txFrequency int) (int, error) {
 func (b *Band) GetRX1DataRate(uplinkDR, rx1DROffset int) (int, error) {
 	// use the lookup table when no function has been defined
 	if b.getRX1DataRateFunc == nil {
+		if uplinkDR > len(b.rx1DataRate)-1 {
+			return 0, errors.New("lorawan/band: invalid data-rate")
+		}
+		if rx1DROffset > len(b.rx1DataRate[uplinkDR])-1 {
+			return 0, errors.New("lorawan/band: invalid data-rate offset")
+		}
 		return b.rx1DataRate[uplinkDR][rx1DROffset], nil
 	}
 	return b.getRX1DataRateFunc(b, uplinkDR, rx1DROffset)
@@ -183,18 +189,6 @@ func (b *Band) GetDataRate(dr DataRate) (int, error) {
 		}
 	}
 	return 0, errors.New("lorawan/band: the given data-rate does not exist")
-}
-
-// GetRX1DataRateForOffset returns the data-rate for the given offset.
-func (b *Band) GetRX1DataRateForOffset(dr, drOffset int) (int, error) {
-	if dr >= len(b.rx1DataRate) {
-		return 0, fmt.Errorf("lorawan/band: invalid data-rate: %d", dr)
-	}
-
-	if drOffset >= len(b.rx1DataRate[dr]) {
-		return 0, fmt.Errorf("lorawan/band: invalid data-rate offset: %d", drOffset)
-	}
-	return b.rx1DataRate[dr][drOffset], nil
 }
 
 // GetConfig returns the band configuration for the given band.
