@@ -13,7 +13,7 @@ func TestKR920Band(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		Convey("Then GetRX1Channel returns the uplink channel", func() {
-			for i, _ := range band.UplinkChannels {
+			for i := range band.UplinkChannels {
 				c := band.GetRX1Channel(i)
 				So(c, ShouldEqual, i)
 			}
