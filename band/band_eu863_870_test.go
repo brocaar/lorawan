@@ -27,8 +27,8 @@ func TestEU863Band(t *testing.T) {
 			}
 		})
 
-		Convey("Given a CFList", func() {
-			cFlist := lorawan.CFList{
+		Convey("Given five extra channels", func() {
+			chans := []int{
 				867100000,
 				867300000,
 				867500000,
@@ -36,7 +36,11 @@ func TestEU863Band(t *testing.T) {
 				867900000,
 			}
 
-			Convey("Then GetChannel takes the CFList into consideration", func() {
+			for _, c := range chans {
+				band.AddChannel(c)
+			}
+
+			Convey("Then GetChannel takes the extra channels into consideration", func() {
 				tests := []int{
 					868100000,
 					868300000,
@@ -49,10 +53,22 @@ func TestEU863Band(t *testing.T) {
 				}
 
 				for expChannel, expFreq := range tests {
-					channel, err := band.GetChannel(expFreq, &cFlist)
+					channel, err := band.GetUplinkChannelNumber(expFreq)
 					So(err, ShouldBeNil)
 					So(channel, ShouldEqual, expChannel)
 				}
+			})
+
+			Convey("Then GetCFList returns the expected CFList", func() {
+				cFList := band.GetCFList()
+				So(cFList, ShouldNotBeNil)
+				So(*cFList, ShouldEqual, lorawan.CFList{
+					867100000,
+					867300000,
+					867500000,
+					867700000,
+					867900000,
+				})
 			})
 		})
 	})

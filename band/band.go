@@ -51,8 +51,9 @@ type MaxPayloadSize struct {
 
 // Channel defines the channel structure
 type Channel struct {
-	Frequency int   // frequency in Hz
-	DataRates []int // each int mapping to an index in DataRateConfiguration
+	Frequency      int   // frequency in Hz
+	DataRates      []int // each int mapping to an index in DataRateConfiguration
+	userConfigured bool  // user-configured channel
 }
 
 // Band defines an region specific ISM band implementation for LoRa.
@@ -162,19 +163,11 @@ func (b *Band) GetRX1DataRate(uplinkDR, rx1DROffset int) (int, error) {
 	return b.getRX1DataRateFunc(b, uplinkDR, rx1DROffset)
 }
 
-// GetChannel returns the channel index given a frequency and an optional CFList.
-func (b *Band) GetChannel(frequency int, cFlist *lorawan.CFList) (int, error) {
+// GetUplinkChannelNumber returns the channel number given a frequency.
+func (b *Band) GetUplinkChannelNumber(frequency int) (int, error) {
 	for chanNum, channel := range b.UplinkChannels {
 		if frequency == channel.Frequency {
 			return chanNum, nil
-		}
-	}
-
-	if cFlist != nil {
-		for chanNum, channel := range cFlist {
-			if frequency == int(channel) {
-				return chanNum + len(b.UplinkChannels), nil
-			}
 		}
 	}
 
@@ -189,6 +182,49 @@ func (b *Band) GetDataRate(dr DataRate) (int, error) {
 		}
 	}
 	return 0, errors.New("lorawan/band: the given data-rate does not exist")
+}
+
+// AddChannel adds an extra (user-configured) channel to the channels.
+// The DataRates wil be set to DR 0-5.
+// Note: this is only allowed when the band supports a CFList.
+func (b *Band) AddChannel(freq int) error {
+	if !b.ImplementsCFlist {
+		return errors.New("lorawan/band: band does not implement CFList")
+	}
+
+	c := Channel{
+		Frequency:      freq,
+		DataRates:      []int{0, 1, 2, 3, 4, 5},
+		userConfigured: true,
+	}
+
+	b.UplinkChannels = append(b.UplinkChannels, c)
+	b.DownlinkChannels = append(b.DownlinkChannels, c)
+
+	return nil
+}
+
+// GetCFList returns the CFList used for OTAA activation, or returns nil if
+// the band does not implement the CFList or when there are no extra channels.
+// Note that this only returns the first 5 extra channels.
+func (b *Band) GetCFList() *lorawan.CFList {
+	if !b.ImplementsCFlist {
+		return nil
+	}
+
+	var cFList lorawan.CFList
+	var i int
+	for _, c := range b.UplinkChannels {
+		if c.userConfigured && i < len(cFList) {
+			cFList[i] = uint32(c.Frequency)
+			i++
+		}
+	}
+
+	if cFList[0] == 0 {
+		return nil
+	}
+	return &cFList
 }
 
 // GetConfig returns the band configuration for the given band.
