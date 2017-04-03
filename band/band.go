@@ -54,6 +54,7 @@ type Channel struct {
 	Frequency      int   // frequency in Hz
 	DataRates      []int // each int mapping to an index in DataRateConfiguration
 	userConfigured bool  // user-configured channel
+	deactivated    bool  // used to deactivate on or multiple channels (e.g. for US ISM band)
 }
 
 // Band defines an region specific ISM band implementation for LoRa.
@@ -225,6 +226,48 @@ func (b *Band) GetCFList() *lorawan.CFList {
 		return nil
 	}
 	return &cFList
+}
+
+// DisableUplinkChannel disables the given uplink channel.
+func (b *Band) DisableUplinkChannel(i int) error {
+	if i > len(b.UplinkChannels)-1 {
+		return ErrChannelDoesNotExist
+	}
+
+	b.UplinkChannels[i].deactivated = true
+	return nil
+}
+
+// EnableUplinkChannel enables the given uplink channel.
+func (b *Band) EnableUplinkChannel(i int) error {
+	if i > len(b.UplinkChannels)-1 {
+		return ErrChannelDoesNotExist
+	}
+
+	b.UplinkChannels[i].deactivated = false
+	return nil
+}
+
+// GetEnabledUplinkChannels returns the enabled uplink channels.
+func (b *Band) GetEnabledUplinkChannels() []int {
+	var out []int
+	for i, c := range b.UplinkChannels {
+		if !c.deactivated {
+			out = append(out, i)
+		}
+	}
+	return out
+}
+
+// GetDisabledUplinkChannels returns the disabled uplink channels.
+func (b *Band) GetDisabledUplinkChannels() []int {
+	var out []int
+	for i, c := range b.UplinkChannels {
+		if c.deactivated {
+			out = append(out, i)
+		}
+	}
+	return out
 }
 
 // GetConfig returns the band configuration for the given band.

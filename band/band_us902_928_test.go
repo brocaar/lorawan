@@ -76,5 +76,48 @@ func TestUS902Band(t *testing.T) {
 				})
 			}
 		})
+
+		Convey("When requesting all enabled channels", func() {
+			active := band.GetEnabledUplinkChannels()
+
+			Convey("Then all channels are returned", func() {
+				So(active, ShouldHaveLength, 72)
+				for i, c := range active {
+					So(i, ShouldEqual, c)
+				}
+			})
+
+			Convey("Then no channels are disabled", func() {
+				So(band.GetDisabledUplinkChannels(), ShouldHaveLength, 0)
+			})
+		})
+
+		Convey("When activating only channels 8 - 15", func() {
+			for c := range band.GetEnabledUplinkChannels() {
+				So(band.DisableUplinkChannel(c), ShouldBeNil)
+			}
+			for c := 8; c < 16; c++ {
+				So(band.EnableUplinkChannel(c), ShouldBeNil)
+			}
+
+			Convey("Then only channels 8 - 15 are active", func() {
+				active := band.GetEnabledUplinkChannels()
+				So(active, ShouldHaveLength, 8)
+				So(active, ShouldResemble, []int{8, 9, 10, 11, 12, 13, 14, 15})
+			})
+
+			Convey("Then the other channels are inactive", func() {
+				inactive := band.GetDisabledUplinkChannels()
+				So(inactive, ShouldHaveLength, 72-8)
+				var expected []int
+				for i := 0; i < 8; i++ {
+					expected = append(expected, i)
+				}
+				for i := 16; i < 72; i++ {
+					expected = append(expected, i)
+				}
+				So(inactive, ShouldResemble, expected)
+			})
+		})
 	})
 }
