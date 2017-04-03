@@ -197,6 +197,7 @@ func (b *Band) AddChannel(freq int) error {
 		Frequency:      freq,
 		DataRates:      []int{0, 1, 2, 3, 4, 5},
 		userConfigured: true,
+		deactivated:    freq == 0,
 	}
 
 	b.UplinkChannels = append(b.UplinkChannels, c)
