@@ -68,5 +68,43 @@ func TestCN470Band(t *testing.T) {
 				})
 			}
 		})
+		Convey("When testing GetLinkADRReqPayloadsForEnabledChannels", func() {
+			tests := []struct {
+				Name                       string
+				NodeChannels               []int
+				DisabledChannels           []int
+				ExpectedLinkADRReqPayloads []lorawan.LinkADRReqPayload
+			}{
+				{
+					Name:         "all channels active",
+					NodeChannels: band.GetEnabledUplinkChannels(),
+				},
+				{
+					Name:             "channel 6, 38 and 45 disabled",
+					NodeChannels:     band.GetEnabledUplinkChannels(),
+					DisabledChannels: []int{6, 38, 45},
+					ExpectedLinkADRReqPayloads: []lorawan.LinkADRReqPayload{
+						{
+							ChMask:     lorawan.ChMask{true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true},
+							Redundancy: lorawan.Redundancy{ChMaskCntl: 0},
+						},
+						{
+							ChMask:     lorawan.ChMask{true, true, true, true, true, true, false, true, true, true, true, true, true, false, true, true},
+							Redundancy: lorawan.Redundancy{ChMaskCntl: 2},
+						},
+					},
+				},
+			}
+
+			for i, test := range tests {
+				Convey(fmt.Sprintf("testing %s [%d]", test.Name, i), func() {
+					for _, c := range test.DisabledChannels {
+						So(band.DisableUplinkChannel(c), ShouldBeNil)
+					}
+					pls := band.GetLinkADRReqPayloadsForEnabledChannels(test.NodeChannels)
+					So(pls, ShouldResemble, test.ExpectedLinkADRReqPayloads)
+				})
+			}
+		})
 	})
 }
