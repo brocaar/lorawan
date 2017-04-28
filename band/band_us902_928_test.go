@@ -119,5 +119,90 @@ func TestUS902Band(t *testing.T) {
 				So(inactive, ShouldResemble, expected)
 			})
 		})
+
+		Convey("When testing GetLinkADRReqPayloadsForEnabledChannels", func() {
+			tests := []struct {
+				Name                       string
+				NodeChannels               []int
+				DisableChannels            []int
+				EnableChannels             []int
+				ExpectedLinkADRReqPayloads []lorawan.LinkADRReqPayload
+			}{
+				{
+					Name:         "all channels active",
+					NodeChannels: band.GetEnabledUplinkChannels(),
+				},
+				{
+					Name:            "only activate channel 0 - 7",
+					NodeChannels:    band.GetEnabledUplinkChannels(),
+					DisableChannels: band.GetEnabledUplinkChannels(),
+					EnableChannels:  []int{0, 1, 2, 3, 4, 5, 6, 7},
+					ExpectedLinkADRReqPayloads: []lorawan.LinkADRReqPayload{
+						{
+							Redundancy: lorawan.Redundancy{ChMaskCntl: 7},
+						},
+						{
+							ChMask:     lorawan.ChMask{true, true, true, true, true, true, true, true},
+							Redundancy: lorawan.Redundancy{ChMaskCntl: 0},
+						},
+					},
+				},
+				{
+					Name:            "only activate channel 8 - 23",
+					NodeChannels:    band.GetEnabledUplinkChannels(),
+					DisableChannels: band.GetEnabledUplinkChannels(),
+					EnableChannels:  []int{8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23},
+					ExpectedLinkADRReqPayloads: []lorawan.LinkADRReqPayload{
+						{
+							Redundancy: lorawan.Redundancy{ChMaskCntl: 7},
+						},
+						{
+							ChMask:     lorawan.ChMask{false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true},
+							Redundancy: lorawan.Redundancy{ChMaskCntl: 0},
+						},
+						{
+							ChMask:     lorawan.ChMask{true, true, true, true, true, true, true, true},
+							Redundancy: lorawan.Redundancy{ChMaskCntl: 1},
+						},
+					},
+				},
+				{
+					Name:            "only activate channel 64 - 71",
+					NodeChannels:    band.GetEnabledUplinkChannels(),
+					DisableChannels: band.GetEnabledUplinkChannels(),
+					EnableChannels:  []int{64, 65, 66, 67, 68, 69, 70, 71},
+					ExpectedLinkADRReqPayloads: []lorawan.LinkADRReqPayload{
+						{
+							ChMask:     lorawan.ChMask{true, true, true, true, true, true, true, true},
+							Redundancy: lorawan.Redundancy{ChMaskCntl: 7},
+						},
+					},
+				},
+				{
+					Name:            "only disable channel 0 - 7",
+					NodeChannels:    band.GetEnabledUplinkChannels(),
+					DisableChannels: []int{0, 1, 2, 3, 4, 5, 6, 7},
+					ExpectedLinkADRReqPayloads: []lorawan.LinkADRReqPayload{
+						{
+							ChMask:     lorawan.ChMask{false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true},
+							Redundancy: lorawan.Redundancy{ChMaskCntl: 0},
+						},
+					},
+				},
+			}
+
+			for i, test := range tests {
+				Convey(fmt.Sprintf("testing %s [%d]", test.Name, i), func() {
+					for _, c := range test.DisableChannels {
+						So(band.DisableUplinkChannel(c), ShouldBeNil)
+					}
+					for _, c := range test.EnableChannels {
+						So(band.EnableUplinkChannel(c), ShouldBeNil)
+					}
+					pls := band.GetLinkADRReqPayloadsForEnabledChannels(test.NodeChannels)
+					So(pls, ShouldResemble, test.ExpectedLinkADRReqPayloads)
+				})
+			}
+		})
 	})
 }

@@ -68,6 +68,7 @@ func TestCN470Band(t *testing.T) {
 				})
 			}
 		})
+
 		Convey("When testing GetLinkADRReqPayloadsForEnabledChannels", func() {
 			tests := []struct {
 				Name                       string
