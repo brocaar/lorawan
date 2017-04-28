@@ -70,20 +70,36 @@ func TestCN470Band(t *testing.T) {
 		})
 
 		Convey("When testing GetLinkADRReqPayloadsForEnabledChannels", func() {
+			var allChannels []int
+			var filteredChannels []int
+
+			for i := 0; i < len(band.UplinkChannels); i++ {
+				allChannels = append(allChannels, i)
+			}
+			for i := 0; i < len(band.UplinkChannels); i++ {
+				if i == 6 || i == 38 || i == 45 {
+					continue
+				}
+				filteredChannels = append(filteredChannels, i)
+			}
+
 			tests := []struct {
 				Name                       string
 				NodeChannels               []int
-				DisabledChannels           []int
+				DisableChannels            []int
+				ExpectedUplinkChannels     []int
 				ExpectedLinkADRReqPayloads []lorawan.LinkADRReqPayload
 			}{
 				{
-					Name:         "all channels active",
-					NodeChannels: band.GetEnabledUplinkChannels(),
+					Name:                   "all channels active",
+					NodeChannels:           band.GetEnabledUplinkChannels(),
+					ExpectedUplinkChannels: allChannels,
 				},
 				{
-					Name:             "channel 6, 38 and 45 disabled",
-					NodeChannels:     band.GetEnabledUplinkChannels(),
-					DisabledChannels: []int{6, 38, 45},
+					Name:                   "channel 6, 38 and 45 disabled",
+					NodeChannels:           band.GetEnabledUplinkChannels(),
+					DisableChannels:        []int{6, 38, 45},
+					ExpectedUplinkChannels: filteredChannels,
 					ExpectedLinkADRReqPayloads: []lorawan.LinkADRReqPayload{
 						{
 							ChMask:     lorawan.ChMask{true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true},
@@ -99,11 +115,15 @@ func TestCN470Band(t *testing.T) {
 
 			for i, test := range tests {
 				Convey(fmt.Sprintf("testing %s [%d]", test.Name, i), func() {
-					for _, c := range test.DisabledChannels {
+					for _, c := range test.DisableChannels {
 						So(band.DisableUplinkChannel(c), ShouldBeNil)
 					}
 					pls := band.GetLinkADRReqPayloadsForEnabledChannels(test.NodeChannels)
 					So(pls, ShouldResemble, test.ExpectedLinkADRReqPayloads)
+
+					chans, err := band.GetEnabledChannelsForLinkADRReqPayloads(test.NodeChannels, pls)
+					So(err, ShouldBeNil)
+					So(chans, ShouldResemble, test.ExpectedUplinkChannels)
 				})
 			}
 		})

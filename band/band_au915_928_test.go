@@ -104,22 +104,30 @@ func TestAU915Band(t *testing.T) {
 		})
 
 		Convey("When testing GetLinkADRReqPayloadsForEnabledChannels", func() {
+			var filteredChans []int
+			for i := 8; i < len(band.UplinkChannels); i++ {
+				filteredChans = append(filteredChans, i)
+			}
+
 			tests := []struct {
 				Name                       string
 				NodeChannels               []int
 				DisableChannels            []int
 				EnableChannels             []int
+				ExpectedUplinkChannels     []int
 				ExpectedLinkADRReqPayloads []lorawan.LinkADRReqPayload
 			}{
 				{
-					Name:         "all channels active",
-					NodeChannels: band.GetEnabledUplinkChannels(),
+					Name:                   "all channels active",
+					NodeChannels:           band.GetUplinkChannels(),
+					ExpectedUplinkChannels: band.GetUplinkChannels(),
 				},
 				{
-					Name:            "only activate channel 0 - 7",
-					NodeChannels:    band.GetEnabledUplinkChannels(),
-					DisableChannels: band.GetEnabledUplinkChannels(),
-					EnableChannels:  []int{0, 1, 2, 3, 4, 5, 6, 7},
+					Name:                   "only activate channel 0 - 7",
+					NodeChannels:           band.GetEnabledUplinkChannels(),
+					DisableChannels:        band.GetEnabledUplinkChannels(),
+					EnableChannels:         []int{0, 1, 2, 3, 4, 5, 6, 7},
+					ExpectedUplinkChannels: []int{0, 1, 2, 3, 4, 5, 6, 7},
 					ExpectedLinkADRReqPayloads: []lorawan.LinkADRReqPayload{
 						{
 							Redundancy: lorawan.Redundancy{ChMaskCntl: 7},
@@ -131,10 +139,11 @@ func TestAU915Band(t *testing.T) {
 					},
 				},
 				{
-					Name:            "only activate channel 8 - 23",
-					NodeChannels:    band.GetEnabledUplinkChannels(),
-					DisableChannels: band.GetEnabledUplinkChannels(),
-					EnableChannels:  []int{8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23},
+					Name:                   "only activate channel 8 - 23",
+					NodeChannels:           band.GetEnabledUplinkChannels(),
+					DisableChannels:        band.GetEnabledUplinkChannels(),
+					EnableChannels:         []int{8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23},
+					ExpectedUplinkChannels: []int{8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23},
 					ExpectedLinkADRReqPayloads: []lorawan.LinkADRReqPayload{
 						{
 							Redundancy: lorawan.Redundancy{ChMaskCntl: 7},
@@ -150,10 +159,11 @@ func TestAU915Band(t *testing.T) {
 					},
 				},
 				{
-					Name:            "only activate channel 64 - 71",
-					NodeChannels:    band.GetEnabledUplinkChannels(),
-					DisableChannels: band.GetEnabledUplinkChannels(),
-					EnableChannels:  []int{64, 65, 66, 67, 68, 69, 70, 71},
+					Name:                   "only activate channel 64 - 71",
+					NodeChannels:           band.GetEnabledUplinkChannels(),
+					DisableChannels:        band.GetEnabledUplinkChannels(),
+					EnableChannels:         []int{64, 65, 66, 67, 68, 69, 70, 71},
+					ExpectedUplinkChannels: []int{64, 65, 66, 67, 68, 69, 70, 71},
 					ExpectedLinkADRReqPayloads: []lorawan.LinkADRReqPayload{
 						{
 							ChMask:     lorawan.ChMask{true, true, true, true, true, true, true, true},
@@ -162,9 +172,10 @@ func TestAU915Band(t *testing.T) {
 					},
 				},
 				{
-					Name:            "only disable channel 0 - 7",
-					NodeChannels:    band.GetEnabledUplinkChannels(),
-					DisableChannels: []int{0, 1, 2, 3, 4, 5, 6, 7},
+					Name:                   "only disable channel 0 - 7",
+					NodeChannels:           band.GetEnabledUplinkChannels(),
+					DisableChannels:        []int{0, 1, 2, 3, 4, 5, 6, 7},
+					ExpectedUplinkChannels: filteredChans,
 					ExpectedLinkADRReqPayloads: []lorawan.LinkADRReqPayload{
 						{
 							ChMask:     lorawan.ChMask{false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true},
@@ -184,6 +195,10 @@ func TestAU915Band(t *testing.T) {
 					}
 					pls := band.GetLinkADRReqPayloadsForEnabledChannels(test.NodeChannels)
 					So(pls, ShouldResemble, test.ExpectedLinkADRReqPayloads)
+
+					chans, err := band.GetEnabledChannelsForLinkADRReqPayloads(test.NodeChannels, pls)
+					So(err, ShouldBeNil)
+					So(chans, ShouldResemble, test.ExpectedUplinkChannels)
 				})
 			}
 		})

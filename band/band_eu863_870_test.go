@@ -46,11 +46,13 @@ func TestEU863Band(t *testing.T) {
 					Name                       string
 					NodeChannels               []int
 					DisabledChannels           []int
+					ExpectedUplinkChannels     []int
 					ExpectedLinkADRReqPayloads []lorawan.LinkADRReqPayload
 				}{
 					{
-						Name:         "no active node channels",
-						NodeChannels: []int{},
+						Name:                   "no active node channels",
+						NodeChannels:           []int{},
+						ExpectedUplinkChannels: []int{0, 1, 2},
 						ExpectedLinkADRReqPayloads: []lorawan.LinkADRReqPayload{
 							{
 								ChMask: lorawan.ChMask{true, true, true},
@@ -59,20 +61,23 @@ func TestEU863Band(t *testing.T) {
 						// we only activate the base channels
 					},
 					{
-						Name:         "base channels are active",
-						NodeChannels: []int{0, 1, 2},
+						Name:                   "base channels are active",
+						NodeChannels:           []int{0, 1, 2},
+						ExpectedUplinkChannels: []int{0, 1, 2},
 						// we do not activate the CFList channels as we don't
 						// now if the node knows about these frequencies
 					},
 					{
-						Name:         "base channels + CFList are active",
-						NodeChannels: []int{0, 1, 2, 3, 4, 5, 6, 7},
+						Name:                   "base channels + CFList are active",
+						NodeChannels:           []int{0, 1, 2, 3, 4, 5, 6, 7},
+						ExpectedUplinkChannels: []int{0, 1, 2, 3, 4, 5, 6, 7},
 						// nothing to do, network and node are in sync
 					},
 					{
-						Name:             "base channels + CFList are active on node, but CFList channels are disabled on the network",
-						NodeChannels:     []int{0, 1, 2, 3, 4, 5, 6, 7},
-						DisabledChannels: []int{3, 4, 5, 6, 7},
+						Name:                   "base channels + CFList are active on node, but CFList channels are disabled on the network",
+						NodeChannels:           []int{0, 1, 2, 3, 4, 5, 6, 7},
+						DisabledChannels:       []int{3, 4, 5, 6, 7},
+						ExpectedUplinkChannels: []int{0, 1, 2},
 						ExpectedLinkADRReqPayloads: []lorawan.LinkADRReqPayload{
 							{
 								ChMask: lorawan.ChMask{true, true, true},
@@ -89,6 +94,10 @@ func TestEU863Band(t *testing.T) {
 						}
 						pls := band.GetLinkADRReqPayloadsForEnabledChannels(test.NodeChannels)
 						So(pls, ShouldResemble, test.ExpectedLinkADRReqPayloads)
+
+						chans, err := band.GetEnabledChannelsForLinkADRReqPayloads(test.NodeChannels, pls)
+						So(err, ShouldBeNil)
+						So(chans, ShouldResemble, test.ExpectedUplinkChannels)
 					})
 				}
 
