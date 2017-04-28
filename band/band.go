@@ -259,6 +259,15 @@ func (b *Band) EnableUplinkChannel(i int) error {
 	return nil
 }
 
+// GetUplinkChannels returns all available uplink channels.
+func (b *Band) GetUplinkChannels() []int {
+	var out []int
+	for i := range b.UplinkChannels {
+		out = append(out, i)
+	}
+	return out
+}
+
 // GetEnabledUplinkChannels returns the enabled uplink channels.
 func (b *Band) GetEnabledUplinkChannels() []int {
 	var out []int
