@@ -68,6 +68,13 @@ func TestEU863Band(t *testing.T) {
 						// now if the node knows about these frequencies
 					},
 					{
+						Name:                   "base channels + two CFList channels are active",
+						NodeChannels:           []int{0, 1, 2, 3, 4},
+						ExpectedUplinkChannels: []int{0, 1, 2, 3, 4},
+						// we do not activate the CFList channels as we don't
+						// now if the node knows about these frequencies
+					},
+					{
 						Name:                   "base channels + CFList are active",
 						NodeChannels:           []int{0, 1, 2, 3, 4, 5, 6, 7},
 						ExpectedUplinkChannels: []int{0, 1, 2, 3, 4, 5, 6, 7},
