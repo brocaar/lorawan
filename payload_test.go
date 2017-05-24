@@ -200,8 +200,8 @@ func TestJoinAcceptPayload(t *testing.T) {
 				err := p.UnmarshalBinary(false, b)
 				So(err, ShouldBeNil)
 
-				So(p.AppNonce, ShouldResemble, [3]byte{1, 1, 1})
-				So(p.NetID, ShouldResemble, [3]byte{2, 2, 2})
+				So(p.AppNonce, ShouldResemble, AppNonce{1, 1, 1})
+				So(p.NetID, ShouldResemble, NetID{2, 2, 2})
 				So(p.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
 				So(p.DLSettings, ShouldResemble, DLSettings{RX2DataRate: 7, RX1DROffset: 6})
 				So(p.RXDelay, ShouldEqual, 9)
@@ -214,8 +214,8 @@ func TestJoinAcceptPayload(t *testing.T) {
 				err := p.UnmarshalBinary(false, b)
 				So(err, ShouldBeNil)
 
-				So(p.AppNonce, ShouldResemble, [3]byte{1, 1, 1})
-				So(p.NetID, ShouldResemble, [3]byte{2, 2, 2})
+				So(p.AppNonce, ShouldResemble, AppNonce{1, 1, 1})
+				So(p.NetID, ShouldResemble, NetID{2, 2, 2})
 				So(p.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
 				So(p.DLSettings, ShouldResemble, DLSettings{RX2DataRate: 7, RX1DROffset: 6})
 				So(p.RXDelay, ShouldEqual, 9)

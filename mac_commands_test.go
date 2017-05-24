@@ -349,7 +349,7 @@ func TestDutyCycleReqPayload(t *testing.T) {
 		})
 
 		Convey("Given a MaxDCCycle=15", func() {
-			p.MaxDCCycle = 16
+			p.MaxDCycle = 16
 			Convey("Then MarshalBinary returns an error", func() {
 				_, err := p.MarshalBinary()
 				So(err, ShouldNotBeNil)
@@ -357,7 +357,7 @@ func TestDutyCycleReqPayload(t *testing.T) {
 		})
 
 		Convey("Given a MaxDCCycle=254", func() {
-			p.MaxDCCycle = 254
+			p.MaxDCycle = 254
 			Convey("Then MarshalBinary returns an error", func() {
 				_, err := p.MarshalBinary()
 				So(err, ShouldNotBeNil)
@@ -365,7 +365,7 @@ func TestDutyCycleReqPayload(t *testing.T) {
 		})
 
 		Convey("Given A MaxDCCycle=13", func() {
-			p.MaxDCCycle = 13
+			p.MaxDCycle = 13
 			Convey("Then MarshalBinary returns []byte{13}", func() {
 				b, err := p.MarshalBinary()
 				So(err, ShouldBeNil)

@@ -201,7 +201,7 @@ func TestPHYPayloadMAC(t *testing.T) {
 
 				Convey("Then the MIC is as expected", func() {
 					So(phy.SetMIC(nwkSKey), ShouldBeNil)
-					So(phy.MIC, ShouldResemble, [4]byte{238, 106, 165, 8})
+					So(phy.MIC, ShouldResemble, MIC{238, 106, 165, 8})
 
 					Convey("Then the binary slice is as expected", func() {
 						b, err := phy.MarshalBinary()
@@ -266,7 +266,7 @@ func TestPHYPayloadMAC(t *testing.T) {
 
 				Convey("Then the MIC is as expected", func() {
 					So(phy.SetMIC(nwkSKey), ShouldBeNil)
-					So(phy.MIC, ShouldResemble, [4]byte{182, 77, 192, 57})
+					So(phy.MIC, ShouldResemble, MIC{182, 77, 192, 57})
 
 					Convey("Then the binary slice is as expected", func() {
 						b, err := phy.MarshalBinary()
@@ -334,7 +334,7 @@ func TestPHYPayloadJoinRequest(t *testing.T) {
 				Convey("Then the JoinRequestPayload contains the expected data", func() {
 					So(jrPl.AppEUI, ShouldResemble, EUI64{1, 2, 3, 4, 1, 2, 3, 4})
 					So(jrPl.DevEUI, ShouldResemble, EUI64{2, 3, 4, 5, 2, 3, 4, 5})
-					So(jrPl.DevNonce, ShouldResemble, [2]byte{16, 45})
+					So(jrPl.DevNonce, ShouldResemble, DevNonce{16, 45})
 				})
 			})
 
@@ -376,11 +376,11 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 							So(ok, ShouldBeTrue)
 
 							Convey("Then the AppNonce is [3]byte{87, 11, 199}", func() {
-								So(jaPL.AppNonce, ShouldEqual, [3]byte{87, 11, 199})
+								So(jaPL.AppNonce, ShouldEqual, AppNonce{87, 11, 199})
 							})
 
 							Convey("Then the NetID is [3]byte{34, 17, 1}", func() {
-								So(jaPL.NetID, ShouldEqual, [3]byte{34, 17, 1})
+								So(jaPL.NetID, ShouldEqual, NetID{34, 17, 1})
 							})
 
 							Convey("Then the DevAddr is [4]byte{2, 3, 25, 128}", func() {
@@ -398,7 +398,7 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 						})
 
 						Convey("Then the MIC is [4]byte{67, 72, 91, 188}", func() {
-							So(p.MIC, ShouldEqual, [4]byte{67, 72, 91, 188})
+							So(p.MIC, ShouldEqual, MIC{67, 72, 91, 188})
 						})
 
 						Convey("Then the MIC is valid", func() {
@@ -433,7 +433,7 @@ func TestPHYPayloadJoinAccept(t *testing.T) {
 					So(p.SetMIC(appKey), ShouldBeNil)
 
 					Convey("Then the MIC is [4]byte{67, 72, 91, 188}", func() {
-						So(p.MIC, ShouldEqual, [4]byte{67, 72, 91, 188})
+						So(p.MIC, ShouldEqual, MIC{67, 72, 91, 188})
 					})
 
 					Convey("Then encrypting does not fail", func() {
@@ -495,12 +495,19 @@ func ExamplePHYPayload_encode() {
 		panic(err)
 	}
 
+	phyJSON, err := phy.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Println(string(str))
 	fmt.Println(bytes)
+	fmt.Println(string(phyJSON))
 
 	// Output:
 	// gAQDAgEAAAAK4mTU97VqDnU=
 	// [128 4 3 2 1 0 0 0 10 226 100 212 247 181 106 14 117]
+	// {"mhdr":{"mType":"ConfirmedDataUp","major":"LoRaWANR1"},"macPayload":{"fhdr":{"devAddr":"01020304","fCtrl":{"adr":false,"adrAckReq":false,"ack":false,"fPending":false},"fCnt":0,"fOpts":[]},"fPort":10,"frmPayload":[{"bytes":"4mTU9w=="}]},"mic":"b56a0e75"}
 }
 
 func ExamplePHYPayload_decode() {
@@ -521,6 +528,11 @@ func ExamplePHYPayload_decode() {
 		panic("invalid mic")
 	}
 
+	phyJSON, err := phy.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+
 	if err := phy.DecryptFRMPayload(appSKey); err != nil {
 		panic(err)
 	}
@@ -534,9 +546,11 @@ func ExamplePHYPayload_decode() {
 		panic("*DataPayload expected")
 	}
 
+	fmt.Println(string(phyJSON))
 	fmt.Println(pl.Bytes)
 
 	// Output:
+	// {"mhdr":{"mType":"ConfirmedDataUp","major":"LoRaWANR1"},"macPayload":{"fhdr":{"devAddr":"01020304","fCtrl":{"adr":false,"adrAckReq":false,"ack":false,"fPending":false},"fCnt":0,"fOpts":null},"fPort":10,"frmPayload":[{"bytes":"4mTU9w=="}]},"mic":"b56a0e75"}
 	// [1 2 3 4]
 
 }
@@ -641,5 +655,5 @@ func ExamplePHYPayload_readJoinRequest() {
 	// JoinRequest
 	// 0102030401020304
 	// 0203040502030405
-	// [16 45]
+	// 102d
 }
