@@ -30,7 +30,7 @@ func newIN865Band(repeaterCompatible bool) (Band, error) {
 	}
 
 	return Band{
-		DefaultTXPower:   30,
+		DefaultTXPower:   27,
 		ImplementsCFlist: true,
 		RX2Frequency:     866550000,
 		RX2DataRate:      2,
@@ -70,17 +70,17 @@ func newIN865Band(repeaterCompatible bool) (Band, error) {
 		},
 
 		TXPower: []int{
-			30,
-			30 - 2,
-			30 - 4,
-			30 - 6,
-			30 - 8,
-			30 - 10,
-			30 - 12,
-			30 - 14,
-			30 - 16,
-			30 - 18,
-			30 - 20,
+			27,
+			27 - 2,
+			27 - 4,
+			27 - 6,
+			27 - 8,
+			27 - 10,
+			27 - 12,
+			27 - 14,
+			27 - 16,
+			27 - 18,
+			27 - 20,
 		},
 
 		UplinkChannels: []Channel{
