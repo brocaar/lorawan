@@ -69,18 +69,18 @@ func newIN865Band(repeaterCompatible bool) (Band, error) {
 			{7, 6, 5, 4, 3, 2, 7, 7},
 		},
 
-		TXPower: []int{
-			27,
-			27 - 2,
-			27 - 4,
-			27 - 6,
-			27 - 8,
-			27 - 10,
-			27 - 12,
-			27 - 14,
-			27 - 16,
-			27 - 18,
-			27 - 20,
+		TXPowerOffset: []int{
+			0,
+			-2,
+			-4,
+			-6,
+			-8,
+			-10,
+			-12,
+			-14,
+			-16,
+			-18,
+			-20,
 		},
 
 		UplinkChannels: []Channel{
