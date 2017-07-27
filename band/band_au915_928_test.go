@@ -67,7 +67,7 @@ func TestAU915Band(t *testing.T) {
 
 				expected := i
 				if i == 12 {
-					expected = 4
+					expected = 6
 				}
 
 				Convey(fmt.Sprintf("Then %v should be DR%d (test %d)", d, expected, i), func() {
@@ -85,11 +85,11 @@ func TestAU915Band(t *testing.T) {
 				RX1DR    int
 				Error    error
 			}{
-				{0, 0, 10, nil},
-				{0, 1, 9, nil},
-				{0, 4, 0, errors.New("lorawan/band: invalid data-rate offset")},
-				{4, 0, 13, nil},
-				{5, 0, 0, errors.New("lorawan/band: invalid data-rate")},
+				{0, 0, 8, nil},
+				{0, 1, 8, nil},
+				{0, 7, 0, errors.New("lorawan/band: invalid data-rate offset")},
+				{4, 0, 12, nil},
+				{7, 0, 0, errors.New("lorawan/band: invalid data-rate")},
 			}
 
 			for _, test := range testTable {
