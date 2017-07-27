@@ -20,10 +20,10 @@ func TestAU915Band(t *testing.T) {
 				Frequency int
 				DataRates []int
 			}{
-				{Channel: 0, Frequency: 915200000, DataRates: []int{0, 1, 2, 3}},
-				{Channel: 63, Frequency: 927800000, DataRates: []int{0, 1, 2, 3}},
-				{Channel: 64, Frequency: 915900000, DataRates: []int{4}},
-				{Channel: 71, Frequency: 927100000, DataRates: []int{4}},
+				{Channel: 0, Frequency: 915200000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+				{Channel: 63, Frequency: 927800000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+				{Channel: 64, Frequency: 915900000, DataRates: []int{6}},
+				{Channel: 71, Frequency: 927100000, DataRates: []int{6}},
 			}
 
 			for _, test := range testTable {
