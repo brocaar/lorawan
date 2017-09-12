@@ -552,7 +552,68 @@ func ExamplePHYPayload_decode() {
 	// Output:
 	// {"mhdr":{"mType":"ConfirmedDataUp","major":"LoRaWANR1"},"macPayload":{"fhdr":{"devAddr":"01020304","fCtrl":{"adr":false,"adrAckReq":false,"ack":false,"fPending":false},"fCnt":0,"fOpts":null},"fPort":10,"frmPayload":[{"bytes":"4mTU9w=="}]},"mic":"b56a0e75"}
 	// [1 2 3 4]
+}
 
+func ExamplePHYPayload_proprietary_encode() {
+	phy := PHYPayload{
+		MHDR: MHDR{
+			MType: Proprietary,
+			Major: LoRaWANR1,
+		},
+		MACPayload: &DataPayload{Bytes: []byte{5, 6, 7, 8, 9, 10}},
+		MIC:        MIC{1, 2, 3, 4},
+	}
+
+	str, err := phy.MarshalText()
+	if err != nil {
+		panic(err)
+	}
+
+	bytes, err := phy.MarshalBinary()
+	if err != nil {
+		panic(err)
+	}
+
+	phyJSON, err := phy.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(str))
+	fmt.Println(bytes)
+	fmt.Println(string(phyJSON))
+
+	// Output:
+	// 4AUGBwgJCgECAwQ=
+	// [224 5 6 7 8 9 10 1 2 3 4]
+	// {"mhdr":{"mType":"Proprietary","major":"LoRaWANR1"},"macPayload":{"bytes":"BQYHCAkK"},"mic":"01020304"}
+}
+
+func ExamplePHYPayload_proprietary_decode() {
+	var phy PHYPayload
+
+	if err := phy.UnmarshalText([]byte("4AUGBwgJCgECAwQ=")); err != nil {
+		panic(err)
+	}
+
+	phyJSON, err := phy.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+
+	pl, ok := phy.MACPayload.(*DataPayload)
+	if !ok {
+		panic("*DataPayload expected")
+	}
+
+	fmt.Println(phy.MIC)
+	fmt.Println(pl.Bytes)
+	fmt.Println(string(phyJSON))
+
+	// Output:
+	// 01020304
+	// [5 6 7 8 9 10]
+	// {"mhdr":{"mType":"Proprietary","major":"LoRaWANR1"},"macPayload":{"bytes":"BQYHCAkK"},"mic":"01020304"}
 }
 
 func ExamplePHYPayload_joinRequest() {
