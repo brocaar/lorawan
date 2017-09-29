@@ -1,6 +1,7 @@
 package lorawan
 
 import (
+	"database/sql/driver"
 	"errors"
 	"testing"
 
@@ -18,6 +19,12 @@ func TestEUI64(t *testing.T) {
 				b, err := eui.MarshalText()
 				So(err, ShouldBeNil)
 				So(string(b), ShouldEqual, "0102030405060708")
+			})
+
+			Convey("Then Value returns the expected value", func() {
+				v, err := eui.Value()
+				So(err, ShouldBeNil)
+				So(v, ShouldResemble, driver.Value(eui[:]))
 			})
 		})
 
@@ -37,6 +44,70 @@ func TestEUI64(t *testing.T) {
 				So(eui.Scan(b), ShouldBeNil)
 				So(eui[:], ShouldResemble, b)
 			})
+		})
+	})
+}
+
+func TestDevNonce(t *testing.T) {
+	Convey("Given an empty DevNonce", t, func() {
+		var nonce DevNonce
+
+		Convey("When setting the dev-nonce", func() {
+			nonce = DevNonce{1, 2}
+
+			Convey("Then MarshalText returns the expected value", func() {
+				b, err := nonce.MarshalText()
+				So(err, ShouldBeNil)
+				So(string(b), ShouldEqual, "0102")
+			})
+
+			Convey("Then Value returns the exepcted value", func() {
+				v, err := nonce.Value()
+				So(err, ShouldBeNil)
+				So(v, ShouldResemble, driver.Value(nonce[:]))
+			})
+		})
+
+		Convey("Then UnmarshalText sets the nonde correctly", func() {
+			So(nonce.UnmarshalText([]byte("0102")), ShouldBeNil)
+			So(nonce[:], ShouldResemble, []byte{1, 2})
+		})
+
+		Convey("Then Scan sets the nonce correctly", func() {
+			So(nonce.Scan([]byte{1, 2}), ShouldBeNil)
+			So(nonce[:], ShouldResemble, []byte{1, 2})
+		})
+	})
+}
+
+func TestAppNonce(t *testing.T) {
+	Convey("Given an empty AppNonce", t, func() {
+		var nonce AppNonce
+
+		Convey("When setting the app-nonce", func() {
+			nonce = AppNonce{1, 2, 3}
+
+			Convey("Then MarshalText returns the expected value", func() {
+				b, err := nonce.MarshalText()
+				So(err, ShouldBeNil)
+				So(string(b), ShouldEqual, "010203")
+			})
+
+			Convey("Then Value returns the exepcted value", func() {
+				v, err := nonce.Value()
+				So(err, ShouldBeNil)
+				So(v, ShouldResemble, driver.Value(nonce[:]))
+			})
+		})
+
+		Convey("Then UnmarshalText sets the nonde correctly", func() {
+			So(nonce.UnmarshalText([]byte("010203")), ShouldBeNil)
+			So(nonce[:], ShouldResemble, []byte{1, 2, 3})
+		})
+
+		Convey("Then Scan sets the nonce correctly", func() {
+			So(nonce.Scan([]byte{1, 2, 3}), ShouldBeNil)
+			So(nonce[:], ShouldResemble, []byte{1, 2, 3})
 		})
 	})
 }

@@ -1,6 +1,7 @@
 package lorawan
 
 import (
+	"database/sql/driver"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -20,6 +21,12 @@ func TestAES128Key(t *testing.T) {
 				b, err := key.MarshalText()
 				So(err, ShouldBeNil)
 				So(string(b), ShouldEqual, "01020304050607080102030405060708")
+			})
+
+			Convey("Then Value returns the expected value", func() {
+				v, err := key.Value()
+				So(err, ShouldBeNil)
+				So(v, ShouldResemble, driver.Value(key[:]))
 			})
 		})
 
