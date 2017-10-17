@@ -417,6 +417,24 @@ func TestDLSettings(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(b, ShouldResemble, []byte{127})
 			})
+
+			Convey("Then MarshalText returns 7f", func() {
+				b, err := s.MarshalText()
+				So(err, ShouldBeNil)
+				So(string(b), ShouldEqual, "7f")
+			})
+		})
+
+		Convey("Given the hex string 7f", func() {
+			h := "7f"
+
+			Convey("Then UnmarshalText returns a DLSettings with RX2DataRate=15 and RX1DROffset=7", func() {
+				So(s.UnmarshalText([]byte(h)), ShouldBeNil)
+				So(s, ShouldResemble, DLSettings{
+					RX2DataRate: 15,
+					RX1DROffset: 7,
+				})
+			})
 		})
 
 		Convey("Given a slice []byte{127}", func() {
