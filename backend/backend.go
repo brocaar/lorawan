@@ -247,14 +247,14 @@ type DLMetaData struct {
 // JoinReqPayload defines the JoinReq message payload.
 type JoinReqPayload struct {
 	BasePayload
-	MACVersion string          `json:"MACVersion"` // e.g. "1.0.2"
-	PHYPayload HEXBytes        `json:"PHYPayload"`
-	DevEUI     lorawan.EUI64   `json:"DevEUI"`
-	DevAddr    lorawan.DevAddr `json:"DevAddr"`
-	DLSettings HEXBytes        `json:"DLSettings"`
-	RxDelay    int             `json:"RxDelay"`
-	CFList     HEXBytes        `json:"CFList,omitempty"`     // Optional
-	CFListType int             `json:"CFListType,omitempty"` // Optional
+	MACVersion string             `json:"MACVersion"` // e.g. "1.0.2"
+	PHYPayload HEXBytes           `json:"PHYPayload"`
+	DevEUI     lorawan.EUI64      `json:"DevEUI"`
+	DevAddr    lorawan.DevAddr    `json:"DevAddr"`
+	DLSettings lorawan.DLSettings `json:"DLSettings"`
+	RxDelay    int                `json:"RxDelay"`
+	CFList     lorawan.CFList     `json:"CFList,omitempty"`     // Optional
+	CFListType int                `json:"CFListType,omitempty"` // Optional
 }
 
 // JoinAnsPayload defines the JoinAns message payload.
@@ -274,14 +274,14 @@ type JoinAnsPayload struct {
 // RejoinReqPayload defines the RejoinReq message payload.
 type RejoinReqPayload struct {
 	BasePayload
-	MACVersion string          `json:"MACVersion"` // e.g. "1.0.2"
-	PHYPayload HEXBytes        `json:"PHYPayload"`
-	DevEUI     lorawan.EUI64   `json:"DevEUI"`
-	DevAddr    lorawan.DevAddr `json:"DevAddr"`
-	DLSettings HEXBytes        `json:"DLSettings"`
-	RxDelay    int             `json:"RxDelay"`
-	CFList     HEXBytes        `json:"CFList,omitempty"`     // Optional
-	CFListType int             `json:"CFListType,omitempty"` // Optional
+	MACVersion string             `json:"MACVersion"` // e.g. "1.0.2"
+	PHYPayload HEXBytes           `json:"PHYPayload"`
+	DevEUI     lorawan.EUI64      `json:"DevEUI"`
+	DevAddr    lorawan.DevAddr    `json:"DevAddr"`
+	DLSettings lorawan.DLSettings `json:"DLSettings"`
+	RxDelay    int                `json:"RxDelay"`
+	CFList     lorawan.CFList     `json:"CFList,omitempty"`     // Optional
+	CFListType int                `json:"CFListType,omitempty"` // Optional
 }
 
 // RejoinAnsPayload defines the RejoinAns message payload.
@@ -349,16 +349,16 @@ type PRStopAnsPayload struct {
 // HRStartReqPayload defines the HRStartReq message payload.
 type HRStartReqPayload struct {
 	BasePayload
-	MACVersion             string          `json:"MACVersion"` // e.g. "1.0.2"
-	PHYPayload             HEXBytes        `json:"PHYPayload"`
-	DevAddr                lorawan.DevAddr `json:"DevAddr"`
-	DeviceProfile          DeviceProfile   `json:"DeviceProfile"`
-	ULMetaData             ULMetaData      `json:"ULMetaData"`
-	DLSettings             HEXBytes        `json:"DLSettings"`
-	RxDelay                int             `json:"RxDelay"`
-	CFList                 HEXBytes        `json:"CFList,omitempty"`       // Optional
-	CFListType             int             `json:"CFListType,omitempty"`   // Optional
-	DeviceProfileTimestamp string          `json:"DeviceProfileTimestamp"` // Timestamp of last DeviceProfile change (ISO 8601)
+	MACVersion             string             `json:"MACVersion"` // e.g. "1.0.2"
+	PHYPayload             HEXBytes           `json:"PHYPayload"`
+	DevAddr                lorawan.DevAddr    `json:"DevAddr"`
+	DeviceProfile          DeviceProfile      `json:"DeviceProfile"`
+	ULMetaData             ULMetaData         `json:"ULMetaData"`
+	DLSettings             lorawan.DLSettings `json:"DLSettings"`
+	RxDelay                int                `json:"RxDelay"`
+	CFList                 lorawan.CFList     `json:"CFList,omitempty"`       // Optional
+	CFListType             int                `json:"CFListType,omitempty"`   // Optional
+	DeviceProfileTimestamp string             `json:"DeviceProfileTimestamp"` // Timestamp of last DeviceProfile change (ISO 8601)
 }
 
 // HRStartAnsPayload defines the HRStartAns message payload.
