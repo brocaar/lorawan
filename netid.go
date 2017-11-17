@@ -1,7 +1,9 @@
 package lorawan
 
 import (
+	"database/sql/driver"
 	"encoding/hex"
+	"errors"
 	"fmt"
 )
 
@@ -34,4 +36,22 @@ func (n *NetID) UnmarshalText(text []byte) error {
 // NwkID returns the NwkID bits of the NetID.
 func (n NetID) NwkID() byte {
 	return n[2] & 127 // 7 lsb
+}
+
+// Value implements driver.Valuer.
+func (n NetID) Value() (driver.Value, error) {
+	return n[:], nil
+}
+
+// Scan implements sql.Scanner.
+func (n *NetID) Scan(src interface{}) error {
+	b, ok := src.([]byte)
+	if !ok {
+		return errors.New("lorawan: []byte type expected")
+	}
+	if len(b) != len(n) {
+		return fmt.Errorf("lorawan: []byte must have length %d", len(n))
+	}
+	copy(n[:], b)
+	return nil
 }

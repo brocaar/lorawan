@@ -1,6 +1,7 @@
 package lorawan
 
 import (
+	"database/sql/driver"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -22,6 +23,12 @@ func TestNetID(t *testing.T) {
 			Convey("Then NwkID returns byte(91)", func() {
 				So(netID.NwkID(), ShouldEqual, byte(91))
 			})
+
+			Convey("Then Value returns the expected value", func() {
+				v, err := netID.Value()
+				So(err, ShouldBeNil)
+				So(v, ShouldResemble, driver.Value(netID[:]))
+			})
 		})
 
 		Convey("Given the string 0102db", func() {
@@ -30,6 +37,14 @@ func TestNetID(t *testing.T) {
 				err := netID.UnmarshalText([]byte(str))
 				So(err, ShouldBeNil)
 				So(netID, ShouldEqual, NetID{1, 2, 219})
+			})
+		})
+
+		Convey("Given a byteslice", func() {
+			b := []byte{1, 2, 3}
+			Convey("Then Scan scans the value correctly", func() {
+				So(netID.Scan(b), ShouldBeNil)
+				So(netID[:], ShouldResemble, b)
 			})
 		})
 	})
