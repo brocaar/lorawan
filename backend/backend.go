@@ -212,9 +212,9 @@ type GWInfoElement struct {
 type ULMetaData struct {
 	DevEUI     lorawan.EUI64   `json:"DevEUI"`
 	DevAddr    lorawan.DevAddr `json:"DevAddr"`
-	FPort      int             `json:"FPort"`
-	FCntDown   int             `json:"FCntDown"`
-	FCntUp     int             `json:"FCntUp"`
+	FPort      uint8           `json:"FPort"`
+	FCntDown   uint32          `json:"FCntDown"`
+	FCntUp     uint32          `json:"FCntUp"`
 	Confirmed  bool            `json:"Confirmed"`
 	DataRate   int             `json:"DataRate"` // See data rate tables in Regional Parameters document
 	ULFreq     float64         `json:"ULFreq"`   // Floating point (MHz)
@@ -230,8 +230,8 @@ type ULMetaData struct {
 // DLMetaData defines the downlink metadata.
 type DLMetaData struct {
 	DevEUI         lorawan.EUI64   `json:"DevEUI"`
-	FPort          int             `json:"FPort"`
-	FCntDown       int             `json:"FCntDown"`
+	FPort          uint8           `json:"FPort"`
+	FCntDown       uint32          `json:"FCntDown"`
 	Confirmed      bool            `json:"Confirmed"`
 	DLFreq1        float64         `json:"DLFreq1,omitempty"` // TODO: In MHz? At least DLFreq1 or DLFreq2 SHALL be present.
 	DLFreq2        float64         `json:"DLFreq2,omitempty"` // TODO: In Mhz? At least DLFreq1 or DLFreq2 SHALL be present.
@@ -329,7 +329,7 @@ type PRStartAnsPayload struct {
 	Lifetime       *int            `json:"Lifetime,omitempty"` // Mandatory when Result=Success, in seconds
 	FNwkSIntKey    *KeyEnvelope    `json:"FNwkSIntKey"`        // Optional when Result=Success and not NwkSKey
 	NwkSKey        *KeyEnvelope    `json:"NwkSKey"`            // Optional when Result=Success and not FNwkSIntKey
-	FCntUp         *int            `json:"FCntUp"`             // Optional when Result=Success
+	FCntUp         *uint32         `json:"FCntUp"`             // Optional when Result=Success
 	ServiceProfile *ServiceProfile `json:"ServiceProfile"`     // Optional when Result=Success
 }
 
