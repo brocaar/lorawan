@@ -83,6 +83,11 @@ configuration. These can be found in the ``band`` sub-package.
 See https://godoc.org/github.com/brocaar/lorawan. There is also an examples
 section with usage examples.
 
+## Support
+
+For questions, feedback or support, please refer to the LoRa Server project
+forum: [https://forum.loraserver.io](https://forum.loraserver.io/).
+
 ## License
 
 This package is distributed under the MIT license which can be found in ``LICENSE``.
