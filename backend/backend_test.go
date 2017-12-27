@@ -1,7 +1,9 @@
 package backend
 
 import (
+	"encoding/json"
 	"testing"
+	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -61,6 +63,25 @@ func TestPercentage(t *testing.T) {
 		Convey("Then UnmarshalJSON unmarshals to the expected value", func() {
 			So(p.UnmarshalJSON([]byte("0.02")), ShouldBeNil)
 			So(p, ShouldEqual, Percentage(2))
+		})
+	})
+}
+
+func TestISO8601Time(t *testing.T) {
+	Convey("Given an ISO8601Time instance", t, func() {
+		ts := time.Date(2017, 12, 27, 17, 6, 35, 0, time.UTC)
+		isoTS := ISO8601Time(ts)
+
+		Convey("Then MarshalJSON returns the expected value", func() {
+			b, err := json.Marshal(isoTS)
+			So(err, ShouldBeNil)
+			So(string(b), ShouldEqual, `"2017-12-27T17:06:35Z"`)
+		})
+
+		Convey("Then UnmarshalJSON unmarshals to the expected value", func() {
+			var ts2 time.Time
+			So(json.Unmarshal([]byte(`"2017-12-27T17:06:35Z"`), &ts2), ShouldBeNil)
+			So(ts2.Equal(ts), ShouldBeTrue)
 		})
 	})
 }

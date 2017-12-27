@@ -123,6 +123,24 @@ func (hb *HEXBytes) UnmarshalText(text []byte) error {
 	return nil
 }
 
+// ISO8601Time defines an ISO 8601 encoded timestamp.
+type ISO8601Time time.Time
+
+// MarshalText implements encoding.TextMarshaler.
+func (t ISO8601Time) MarshalText() ([]byte, error) {
+	return []byte(time.Time(t).Format(time.RFC3339)), nil
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (t *ISO8601Time) UnmarshalText(text []byte) error {
+	ts, err := time.Parse(time.RFC3339, string(text))
+	if err != nil {
+		return err
+	}
+	*t = ISO8601Time(ts)
+	return nil
+}
+
 // Frequency defines the frequency type (in Hz).
 type Frequency int
 
@@ -221,7 +239,7 @@ type ULMetaData struct {
 	Margin     int             `json:"Margin"`   // Integer value reported by the end-device in DevStatusAns
 	Battery    int             `json:"Battery"`  // Integer value reported by the end-device in DevStatusAns
 	FNSULToken HEXBytes        `json:"FNSULToken"`
-	RecvTime   string          `json:"RecvTime"` // Use ISO 8601
+	RecvTime   ISO8601Time     `json:"RecvTime"`
 	RFRegion   RFRegion        `json:"RFRegion"`
 	GWCnt      int             `json:"GWCnt"`
 	GWInfo     []GWInfoElement `json:"GWInfo"`
@@ -358,7 +376,7 @@ type HRStartReqPayload struct {
 	RxDelay                int                `json:"RxDelay"`
 	CFList                 *lorawan.CFList    `json:"CFList,omitempty"`       // Optional
 	CFListType             *int               `json:"CFListType,omitempty"`   // Optional
-	DeviceProfileTimestamp string             `json:"DeviceProfileTimestamp"` // Timestamp of last DeviceProfile change (ISO 8601)
+	DeviceProfileTimestamp ISO8601Time        `json:"DeviceProfileTimestamp"` // Timestamp of last DeviceProfile change
 }
 
 // HRStartAnsPayload defines the HRStartAns message payload.
@@ -374,7 +392,7 @@ type HRStartAnsPayload struct {
 	DeviceProfile          *DeviceProfile  `json:"DeviceProfile,omitempty"`          // Optional, when Result=Failure
 	ServiceProfile         *ServiceProfile `json:"ServiceProfile,omitempty"`         // Mandatory when Result=Success
 	DLMetaData             *DLMetaData     `json:"DLMetaData,omitempty"`             // Mandatory when Result=Success
-	DeviceProfileTimestamp *string         `json:"DeviceProfileTimestamp,omitempty"` // Optional, when Result=Failure, timestamp of last DeviceProfile change (ISO 8601)
+	DeviceProfileTimestamp *ISO8601Time    `json:"DeviceProfileTimestamp,omitempty"` // Optional, when Result=Failure, timestamp of last DeviceProfile change
 }
 
 // HRStopReqPayload defines the HRStopReq message payload.
@@ -413,7 +431,7 @@ type ProfileAnsPayload struct {
 	BasePayload
 	Result                 Result         `json:"Result"`
 	DeviceProfile          *DeviceProfile `json:"DeviceProfile,omitempty"`          // Mandatory when Result=Success
-	DeviceProfileTimestamp *string        `json:"DeviceProfileTimestamp,omitempty"` // Mandatory when Result=Success. Timestamp of last DeviceProfile change (ISO 8601).
+	DeviceProfileTimestamp *ISO8601Time   `json:"DeviceProfileTimestamp,omitempty"` // Mandatory when Result=Success. Timestamp of last DeviceProfile change.
 	RoamingActivationType  *RoamingType   `json:"RoamingActivationType"`            // Mandatory when Result=Success.
 }
 
