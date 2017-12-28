@@ -216,50 +216,50 @@ type VSExtension struct {
 
 // GWInfoElement defines the gateway info element.
 type GWInfoElement struct {
-	ID        HEXBytes `json:"ID"` // TODO: shouldn't this be the gateway MAC (64 bit)?
-	RFRegion  RFRegion `json:"RFRegion"`
-	RSSI      int      `json:"RSSI"` // Signed integer, unit: dBm
-	SNR       float64  `json:"SRN"`  // Unit: dB
-	Lat       float64  `json:"Lat"`
-	Lon       float64  `json:"Lon"`
-	ULToken   HEXBytes `json:"ULToken"`
-	DLAllowed bool     `json:"DLAllowed"`
+	ID        HEXBytes `json:"ID,omitempty"` // TODO: shouldn't this be the gateway MAC (64 bit)?
+	RFRegion  RFRegion `json:"RFRegion,omitempty"`
+	RSSI      *int     `json:"RSSI,omitempty"` // Signed integer, unit: dBm
+	SNR       *float64 `json:"SRN,omitempty"`  // Unit: dB
+	Lat       *float64 `json:"Lat,omitempty"`
+	Lon       *float64 `json:"Lon,omitempty"`
+	ULToken   HEXBytes `json:"ULToken,omitempty"`
+	DLAllowed bool     `json:"DLAllowed,omitempty"`
 }
 
 // ULMetaData defines the uplink metadata.
 type ULMetaData struct {
-	DevEUI     lorawan.EUI64   `json:"DevEUI"`
-	DevAddr    lorawan.DevAddr `json:"DevAddr"`
-	FPort      uint8           `json:"FPort"`
-	FCntDown   uint32          `json:"FCntDown"`
-	FCntUp     uint32          `json:"FCntUp"`
-	Confirmed  bool            `json:"Confirmed"`
-	DataRate   int             `json:"DataRate"` // See data rate tables in Regional Parameters document
-	ULFreq     float64         `json:"ULFreq"`   // Floating point (MHz)
-	Margin     int             `json:"Margin"`   // Integer value reported by the end-device in DevStatusAns
-	Battery    int             `json:"Battery"`  // Integer value reported by the end-device in DevStatusAns
-	FNSULToken HEXBytes        `json:"FNSULToken"`
-	RecvTime   ISO8601Time     `json:"RecvTime"`
-	RFRegion   RFRegion        `json:"RFRegion"`
-	GWCnt      int             `json:"GWCnt"`
-	GWInfo     []GWInfoElement `json:"GWInfo"`
+	DevEUI     *lorawan.EUI64   `json:"DevEUI,omitempty"`
+	DevAddr    *lorawan.DevAddr `json:"DevAddr,omitempty"`
+	FPort      *uint8           `json:"FPort,omitempty"`
+	FCntDown   *uint32          `json:"FCntDown,omitempty"`
+	FCntUp     *uint32          `json:"FCntUp,omitempty"`
+	Confirmed  bool             `json:"Confirmed,omitempty"`
+	DataRate   *int             `json:"DataRate,omitempty"` // See data rate tables in Regional Parameters document
+	ULFreq     *float64         `json:"ULFreq,omitempty"`   // Floating point (MHz)
+	Margin     *int             `json:"Margin,omitempty"`   // Integer value reported by the end-device in DevStatusAns
+	Battery    *int             `json:"Battery,omitempty"`  // Integer value reported by the end-device in DevStatusAns
+	FNSULToken HEXBytes         `json:"FNSULToken,omitempty"`
+	RecvTime   ISO8601Time      `json:"RecvTime"`
+	RFRegion   RFRegion         `json:"RFRegion,omitempty"`
+	GWCnt      *int             `json:"GWCnt,omitempty"`
+	GWInfo     []GWInfoElement  `json:"GWInfo,omitempty"`
 }
 
 // DLMetaData defines the downlink metadata.
 type DLMetaData struct {
-	DevEUI         lorawan.EUI64   `json:"DevEUI"`
-	FPort          uint8           `json:"FPort"`
-	FCntDown       uint32          `json:"FCntDown"`
-	Confirmed      bool            `json:"Confirmed"`
-	DLFreq1        float64         `json:"DLFreq1,omitempty"` // TODO: In MHz? At least DLFreq1 or DLFreq2 SHALL be present.
-	DLFreq2        float64         `json:"DLFreq2,omitempty"` // TODO: In Mhz? At least DLFreq1 or DLFreq2 SHALL be present.
-	RXDelay1       int             `json:"RXDelay1"`
-	ClassMode      string          `json:"ClassMode"`           // Only "A" and "C" are supported
-	DataRate1      int             `json:"DataRate1,omitempty"` // Present only if DLFreq1 is present
-	DataRate2      int             `json:"DataRate2,omitempty"` // Present only if DLFreq2 is present
-	FNSULToken     HEXBytes        `json:"FNSULToken"`
+	DevEUI         *lorawan.EUI64  `json:"DevEUI,omitempty"`
+	FPort          *uint8          `json:"FPort,omitempty"`
+	FCntDown       *uint32         `json:"FCntDown,omitempty"`
+	Confirmed      bool            `json:"Confirmed,omitempty"`
+	DLFreq1        *float64        `json:"DLFreq1,omitempty"` // TODO: In MHz? At least DLFreq1 or DLFreq2 SHALL be present.
+	DLFreq2        *float64        `json:"DLFreq2,omitempty"` // TODO: In Mhz? At least DLFreq1 or DLFreq2 SHALL be present.
+	RXDelay1       *int            `json:"RXDelay1,omitempty"`
+	ClassMode      *string         `json:"ClassMode,omitempty"` // Only "A" and "C" are supported
+	DataRate1      *int            `json:"DataRate1,omitempty"` // Present only if DLFreq1 is present
+	DataRate2      *int            `json:"DataRate2,omitempty"` // Present only if DLFreq2 is present
+	FNSULToken     HEXBytes        `json:"FNSULToken,omitempty"`
 	GWInfo         []GWInfoElement `json:"GWInfo"`
-	HiPriorityFlag bool            `json:"HiPriorityFlag"`
+	HiPriorityFlag bool            `json:"HiPriorityFlag,omitempty"`
 }
 
 // JoinReqPayload defines the JoinReq message payload.
