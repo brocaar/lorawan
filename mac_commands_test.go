@@ -448,9 +448,9 @@ func TestDLSettings(t *testing.T) {
 	})
 }
 
-func TestRX2SetupReqPayload(t *testing.T) {
-	Convey("Given an empty RX2SetupReqPayload", t, func() {
-		var p RX2SetupReqPayload
+func TestRXParamSetupReqPayload(t *testing.T) {
+	Convey("Given an empty RXParamSetupReqPayload", t, func() {
+		var p RXParamSetupReqPayload
 		Convey("Then MarshalBinary returns []byte{0, 0, 0, 0}", func() {
 			b, err := p.MarshalBinary()
 			So(err, ShouldBeNil)
@@ -477,8 +477,8 @@ func TestRX2SetupReqPayload(t *testing.T) {
 
 		Convey("Given a slice []byte{59, 1, 2, 4}", func() {
 			b := []byte{59, 1, 2, 4}
-			Convey("Then UnmarshalBinary returns a RX2SetupReqPayload with Frequency=26265700 and DLSettings(RX2DataRate=11, RX1DROffset=3)", func() {
-				exp := RX2SetupReqPayload{
+			Convey("Then UnmarshalBinary returns a RXParamSetupReqPayload with Frequency=26265700 and DLSettings(RX2DataRate=11, RX1DROffset=3)", func() {
+				exp := RXParamSetupReqPayload{
 					Frequency:  26265700,
 					DLSettings: DLSettings{RX2DataRate: 11, RX1DROffset: 3},
 				}
@@ -490,9 +490,9 @@ func TestRX2SetupReqPayload(t *testing.T) {
 	})
 }
 
-func TestRX2SetupAnsPayload(t *testing.T) {
-	Convey("Given an empty RX2SetupAnsPayload", t, func() {
-		var p RX2SetupAnsPayload
+func TestRXParamSetupAnsPayload(t *testing.T) {
+	Convey("Given an empty RXParamSetupAnsPayload", t, func() {
+		var p RXParamSetupAnsPayload
 		Convey("Then MarshalBinary returns []byte{0}", func() {
 			b, err := p.MarshalBinary()
 			So(err, ShouldBeNil)
@@ -525,8 +525,8 @@ func TestRX2SetupAnsPayload(t *testing.T) {
 
 			Convey(fmt.Sprintf("Given slice %v", test.Bytes), func() {
 				b := test.Bytes
-				Convey(fmt.Sprintf("Then UnmarshalBinary returns a RX2SetupAnsPayload with ChannelACK=%v, RX2DataRateACK=%v, RX1DROffsetACK=%v", test.ChannelACK, test.RX2DataRateACK, test.RX1DROffsetACK), func() {
-					exp := RX2SetupAnsPayload{
+				Convey(fmt.Sprintf("Then UnmarshalBinary returns a RXParamSetupAnsPayload with ChannelACK=%v, RX2DataRateACK=%v, RX1DROffsetACK=%v", test.ChannelACK, test.RX2DataRateACK, test.RX1DROffsetACK), func() {
+					exp := RXParamSetupAnsPayload{
 						ChannelACK:     test.ChannelACK,
 						RX2DataRateACK: test.RX2DataRateACK,
 						RX1DROffsetACK: test.RX1DROffsetACK,

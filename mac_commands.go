@@ -62,7 +62,7 @@ var macPayloadRegistry = map[bool]map[CID]macPayloadInfo{
 		LinkCheckAns:     {2, func() MACCommandPayload { return &LinkCheckAnsPayload{} }},
 		LinkADRReq:       {4, func() MACCommandPayload { return &LinkADRReqPayload{} }},
 		DutyCycleReq:     {1, func() MACCommandPayload { return &DutyCycleReqPayload{} }},
-		RXParamSetupReq:  {4, func() MACCommandPayload { return &RX2SetupReqPayload{} }},
+		RXParamSetupReq:  {4, func() MACCommandPayload { return &RXParamSetupReqPayload{} }},
 		NewChannelReq:    {5, func() MACCommandPayload { return &NewChannelReqPayload{} }},
 		RXTimingSetupReq: {1, func() MACCommandPayload { return &RXTimingSetupReqPayload{} }},
 		TXParamSetupReq:  {1, func() MACCommandPayload { return &TXParamSetupReqPayload{} }},
@@ -70,7 +70,7 @@ var macPayloadRegistry = map[bool]map[CID]macPayloadInfo{
 	},
 	true: map[CID]macPayloadInfo{
 		LinkADRAns:      {1, func() MACCommandPayload { return &LinkADRAnsPayload{} }},
-		RXParamSetupAns: {1, func() MACCommandPayload { return &RX2SetupAnsPayload{} }},
+		RXParamSetupAns: {1, func() MACCommandPayload { return &RXParamSetupAnsPayload{} }},
 		DevStatusAns:    {2, func() MACCommandPayload { return &DevStatusAnsPayload{} }},
 		NewChannelAns:   {1, func() MACCommandPayload { return &NewChannelAnsPayload{} }},
 		DLChannelAns:    {1, func() MACCommandPayload { return &DLChannelAnsPayload{} }},
@@ -435,14 +435,14 @@ func (s *DLSettings) UnmarshalText(text []byte) error {
 	return s.UnmarshalBinary(b)
 }
 
-// RX2SetupReqPayload represents the RX2SetupReq payload.
-type RX2SetupReqPayload struct {
+// RXParamSetupReqPayload represents the RXParamSetupReq payload.
+type RXParamSetupReqPayload struct {
 	Frequency  uint32     `json:"frequency"`
 	DLSettings DLSettings `json:"dlSettings"`
 }
 
 // MarshalBinary marshals the object in binary form.
-func (p RX2SetupReqPayload) MarshalBinary() ([]byte, error) {
+func (p RXParamSetupReqPayload) MarshalBinary() ([]byte, error) {
 	b := make([]byte, 5)
 	if p.Frequency/100 >= 16777216 { // 2^24
 		return b, errors.New("lorawan: max value of Frequency is 2^24-1")
@@ -463,7 +463,7 @@ func (p RX2SetupReqPayload) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary decodes the object from binary form.
-func (p *RX2SetupReqPayload) UnmarshalBinary(data []byte) error {
+func (p *RXParamSetupReqPayload) UnmarshalBinary(data []byte) error {
 	if len(data) != 4 {
 		return errors.New("lorawan: 4 bytes of data are expected")
 	}
@@ -479,15 +479,15 @@ func (p *RX2SetupReqPayload) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// RX2SetupAnsPayload represents the RX2SetupAns payload.
-type RX2SetupAnsPayload struct {
+// RXParamSetupAnsPayload represents the RXParamSetupAns payload.
+type RXParamSetupAnsPayload struct {
 	ChannelACK     bool `json:"channelAck"`
 	RX2DataRateACK bool `json:"rx2DataRateAck"`
 	RX1DROffsetACK bool `json:"rx1DROffsetAck"`
 }
 
 // MarshalBinary marshals the object in binary form.
-func (p RX2SetupAnsPayload) MarshalBinary() ([]byte, error) {
+func (p RXParamSetupAnsPayload) MarshalBinary() ([]byte, error) {
 	var b byte
 	if p.ChannelACK {
 		b = b ^ (1 << 0)
@@ -502,7 +502,7 @@ func (p RX2SetupAnsPayload) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary decodes the object from binary form.
-func (p *RX2SetupAnsPayload) UnmarshalBinary(data []byte) error {
+func (p *RXParamSetupAnsPayload) UnmarshalBinary(data []byte) error {
 	if len(data) != 1 {
 		return errors.New("lorawan: 1 byte of data is expected")
 	}
