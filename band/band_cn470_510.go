@@ -109,7 +109,9 @@ func newCN470Band() (Band, error) {
 	for i := 0; i < 96; i++ {
 		band.UplinkChannels[i] = Channel{
 			Frequency: 470300000 + (i * 200000),
-			DataRates: []int{0, 1, 2, 3, 4, 5},
+			MinDR:     0,
+			MaxDR:     5,
+			enabled:   true,
 		}
 	}
 
@@ -117,7 +119,9 @@ func newCN470Band() (Band, error) {
 	for i := 0; i < 48; i++ {
 		band.DownlinkChannels[i] = Channel{
 			Frequency: 500300000 + (i * 200000),
-			DataRates: []int{0, 1, 2, 3, 4, 5},
+			MinDR:     0,
+			MaxDR:     5,
+			enabled:   true,
 		}
 	}
 

@@ -229,7 +229,9 @@ func newAU915Band(repeaterCompatible bool) (Band, error) {
 	for i := 0; i < 64; i++ {
 		band.UplinkChannels[i] = Channel{
 			Frequency: 915200000 + (i * 200000),
-			DataRates: []int{0, 1, 2, 3, 4, 5},
+			enabled:   true,
+			MinDR:     0,
+			MaxDR:     5,
 		}
 	}
 
@@ -237,7 +239,9 @@ func newAU915Band(repeaterCompatible bool) (Band, error) {
 	for i := 0; i < 8; i++ {
 		band.UplinkChannels[i+64] = Channel{
 			Frequency: 915900000 + (i * 1600000),
-			DataRates: []int{6},
+			MinDR:     6,
+			MaxDR:     6,
+			enabled:   true,
 		}
 	}
 
@@ -245,7 +249,9 @@ func newAU915Band(repeaterCompatible bool) (Band, error) {
 	for i := 0; i < 8; i++ {
 		band.DownlinkChannels[i] = Channel{
 			Frequency: 923300000 + (i * 600000),
-			DataRates: []int{8, 9, 10, 11, 12, 13},
+			MinDR:     8,
+			MaxDR:     13,
+			enabled:   true,
 		}
 	}
 

@@ -38,7 +38,7 @@ func TestEU863Band(t *testing.T) {
 			}
 
 			for _, c := range chans {
-				band.AddChannel(c)
+				band.AddChannel(c, 0, 5)
 			}
 
 			Convey("When testing GetLinkADRReqPayloadsForEnabledChannels", func() {

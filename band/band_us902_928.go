@@ -236,7 +236,9 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 	for i := 0; i < 64; i++ {
 		band.UplinkChannels[i] = Channel{
 			Frequency: 902300000 + (i * 200000),
-			DataRates: []int{0, 1, 2, 3},
+			MinDR:     0,
+			MaxDR:     3,
+			enabled:   true,
 		}
 	}
 
@@ -244,7 +246,9 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 	for i := 0; i < 8; i++ {
 		band.UplinkChannels[i+64] = Channel{
 			Frequency: 903000000 + (i * 1600000),
-			DataRates: []int{4},
+			MinDR:     4,
+			MaxDR:     4,
+			enabled:   true,
 		}
 	}
 
@@ -252,7 +256,9 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 	for i := 0; i < 8; i++ {
 		band.DownlinkChannels[i] = Channel{
 			Frequency: 923300000 + (i * 600000),
-			DataRates: []int{10, 11, 12, 13},
+			MinDR:     10,
+			MaxDR:     13,
+			enabled:   true,
 		}
 	}
 

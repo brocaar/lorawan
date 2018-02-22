@@ -103,13 +103,13 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 		},
 
 		UplinkChannels: []Channel{
-			{Frequency: 923200000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 923400000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+			{Frequency: 923200000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 923400000, MinDR: 0, MaxDR: 5, enabled: true},
 		},
 
 		DownlinkChannels: []Channel{
-			{Frequency: 923200000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 923400000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+			{Frequency: 923200000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 923400000, MinDR: 0, MaxDR: 5, enabled: true},
 		},
 
 		getRX1DataRateFunc: func(band *Band, uplinkDR, rx1DROffset int) (int, error) {

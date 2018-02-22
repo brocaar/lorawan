@@ -85,15 +85,15 @@ func newEU863Band(repeaterCompatible bool) (Band, error) {
 		},
 
 		UplinkChannels: []Channel{
-			{Frequency: 868100000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 868300000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 868500000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+			{Frequency: 868100000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 868300000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 868500000, MinDR: 0, MaxDR: 5, enabled: true},
 		},
 
 		DownlinkChannels: []Channel{
-			{Frequency: 868100000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 868300000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 868500000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+			{Frequency: 868100000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 868300000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 868500000, MinDR: 0, MaxDR: 5, enabled: true},
 		},
 
 		getRX1ChannelFunc: func(txChannel int) int {

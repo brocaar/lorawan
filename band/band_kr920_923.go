@@ -62,15 +62,15 @@ func newKR920Band() (Band, error) {
 		},
 
 		UplinkChannels: []Channel{
-			{Frequency: 922100000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 922300000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 922500000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+			{Frequency: 922100000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 922300000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 922500000, MinDR: 0, MaxDR: 5, enabled: true},
 		},
 
 		DownlinkChannels: []Channel{
-			{Frequency: 922100000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 922300000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 922500000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+			{Frequency: 922100000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 922300000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 922500000, MinDR: 0, MaxDR: 5, enabled: true},
 		},
 
 		getRX1ChannelFunc: func(txChannel int) int {

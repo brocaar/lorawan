@@ -88,15 +88,15 @@ func newIN865Band(repeaterCompatible bool) (Band, error) {
 		},
 
 		UplinkChannels: []Channel{
-			{Frequency: 865062500, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 865402500, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 865985000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+			{Frequency: 865062500, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 865402500, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 865985000, MinDR: 0, MaxDR: 5, enabled: true},
 		},
 
 		DownlinkChannels: []Channel{
-			{Frequency: 865062500, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 865402500, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 865985000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+			{Frequency: 865062500, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 865402500, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 865985000, MinDR: 0, MaxDR: 5, enabled: true},
 		},
 
 		getRX1ChannelFunc: func(txChannel int) int {

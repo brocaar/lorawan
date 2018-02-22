@@ -18,16 +18,18 @@ func TestCN470Band(t *testing.T) {
 			testTable := []struct {
 				Channel   int
 				Frequency int
-				DataRates []int
+				MinDR     int
+				MaxDR     int
 			}{
-				{Channel: 0, Frequency: 470300000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-				{Channel: 95, Frequency: 489300000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+				{Channel: 0, Frequency: 470300000, MinDR: 0, MaxDR: 5},
+				{Channel: 95, Frequency: 489300000, MinDR: 0, MaxDR: 5},
 			}
 
 			for _, test := range testTable {
-				Convey(fmt.Sprintf("Then channel %d must have frequency %d and data rates %v", test.Channel, test.Frequency, test.DataRates), func() {
+				Convey(fmt.Sprintf("Then channel %d must have frequency %d and min/max data-rates %d/%d", test.Channel, test.Frequency, test.MinDR, test.MaxDR), func() {
 					So(band.UplinkChannels[test.Channel].Frequency, ShouldEqual, test.Frequency)
-					So(band.UplinkChannels[test.Channel].DataRates, ShouldResemble, test.DataRates)
+					So(band.UplinkChannels[test.Channel].MinDR, ShouldResemble, test.MinDR)
+					So(band.UplinkChannels[test.Channel].MaxDR, ShouldResemble, test.MaxDR)
 				})
 			}
 		})

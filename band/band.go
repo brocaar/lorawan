@@ -52,10 +52,11 @@ type MaxPayloadSize struct {
 
 // Channel defines the channel structure
 type Channel struct {
-	Frequency      int   // frequency in Hz
-	DataRates      []int // each int mapping to an index in DataRateConfiguration
-	userConfigured bool  // user-configured channel
-	deactivated    bool  // used to deactivate on or multiple channels (e.g. for US ISM band)
+	Frequency int // frequency in Hz
+	MinDR     int
+	MaxDR     int
+	enabled   bool
+	custom    bool // this channel was configured by the user
 }
 
 // Band defines an region specific ISM band implementation for LoRa.
@@ -217,18 +218,18 @@ func (b *Band) GetDataRate(dr DataRate) (int, error) {
 }
 
 // AddChannel adds an extra (user-configured) channel to the channels.
-// The DataRates wil be set to DR 0-5.
 // Note: this is only allowed when the band supports a CFList.
-func (b *Band) AddChannel(freq int) error {
+func (b *Band) AddChannel(freq, minDR, maxDR int) error {
 	if !b.ImplementsCFlist {
 		return errors.New("lorawan/band: band does not implement CFList")
 	}
 
 	c := Channel{
-		Frequency:      freq,
-		DataRates:      []int{0, 1, 2, 3, 4, 5},
-		userConfigured: true,
-		deactivated:    freq == 0,
+		Frequency: freq,
+		MinDR:     minDR,
+		MaxDR:     maxDR,
+		custom:    true,
+		enabled:   freq != 0,
 	}
 
 	b.UplinkChannels = append(b.UplinkChannels, c)
@@ -248,7 +249,7 @@ func (b *Band) GetCFList() *lorawan.CFList {
 	var cFList lorawan.CFList
 	var i int
 	for _, c := range b.UplinkChannels {
-		if c.userConfigured && i < len(cFList) {
+		if c.custom && i < len(cFList) {
 			cFList[i] = uint32(c.Frequency)
 			i++
 		}
@@ -266,7 +267,7 @@ func (b *Band) DisableUplinkChannel(i int) error {
 		return ErrChannelDoesNotExist
 	}
 
-	b.UplinkChannels[i].deactivated = true
+	b.UplinkChannels[i].enabled = false
 	return nil
 }
 
@@ -276,7 +277,7 @@ func (b *Band) EnableUplinkChannel(i int) error {
 		return ErrChannelDoesNotExist
 	}
 
-	b.UplinkChannels[i].deactivated = false
+	b.UplinkChannels[i].enabled = true
 	return nil
 }
 
@@ -293,7 +294,7 @@ func (b *Band) GetUplinkChannels() []int {
 func (b *Band) GetEnabledUplinkChannels() []int {
 	var out []int
 	for i, c := range b.UplinkChannels {
-		if !c.deactivated {
+		if c.enabled {
 			out = append(out, i)
 		}
 	}
@@ -304,7 +305,18 @@ func (b *Band) GetEnabledUplinkChannels() []int {
 func (b *Band) GetDisabledUplinkChannels() []int {
 	var out []int
 	for i, c := range b.UplinkChannels {
-		if c.deactivated {
+		if !c.enabled {
+			out = append(out, i)
+		}
+	}
+	return out
+}
+
+// GetCustomUplinkChannels returns the custom uplink channels added by the user.
+func (b *Band) GetCustomUplinkChannels() []int {
+	var out []int
+	for i, c := range b.UplinkChannels {
+		if c.custom {
 			out = append(out, i)
 		}
 	}
@@ -322,7 +334,7 @@ func (b *Band) GetLinkADRReqPayloadsForEnabledChannels(nodeChannels []int) []lor
 	var filteredDiff []int
 
 	for _, c := range diff {
-		if channelIsActive(nodeChannels, c) || !b.UplinkChannels[c].userConfigured {
+		if channelIsActive(nodeChannels, c) || !b.UplinkChannels[c].custom {
 			filteredDiff = append(filteredDiff, c)
 		}
 	}
@@ -355,7 +367,7 @@ func (b *Band) GetLinkADRReqPayloadsForEnabledChannels(nodeChannels []int) []lor
 			// we have no knowledge if the nodes has been provisioned with
 			// these frequencies
 			for _, ec := range enabledChannels {
-				if (!b.UplinkChannels[ec].userConfigured || channelIsActive(nodeChannels, ec)) && ec >= chMaskCntl*16 && ec < (chMaskCntl+1)*16 {
+				if (!b.UplinkChannels[ec].custom || channelIsActive(nodeChannels, ec)) && ec >= chMaskCntl*16 && ec < (chMaskCntl+1)*16 {
 					pl.ChMask[ec%16] = true
 				}
 			}
@@ -377,7 +389,7 @@ func (b *Band) GetLinkADRReqPayloadsForEnabledChannels(nodeChannels []int) []lor
 	return payloads
 }
 
-// GetEnabledChannelsForLinkADRReqPaylaods returns the enabled after which the
+// GetEnabledChannelsForLinkADRReqPayloads returns the enabled after which the
 // given LinkADRReqPayloads have been applied to the given node channels.
 func (b *Band) GetEnabledChannelsForLinkADRReqPayloads(nodeChannels []int, pls []lorawan.LinkADRReqPayload) ([]int, error) {
 	// for some bands some the ChMaskCntl values have special meanings

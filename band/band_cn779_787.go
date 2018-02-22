@@ -83,15 +83,15 @@ func newCN779Band(repeaterCompatible bool) (Band, error) {
 		},
 
 		UplinkChannels: []Channel{
-			{Frequency: 779500000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 779700000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 779900000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+			{Frequency: 779500000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 779700000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 779900000, MinDR: 0, MaxDR: 5, enabled: true},
 		},
 
 		DownlinkChannels: []Channel{
-			{Frequency: 779500000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 779700000, DataRates: []int{0, 1, 2, 3, 4, 5}},
-			{Frequency: 779900000, DataRates: []int{0, 1, 2, 3, 4, 5}},
+			{Frequency: 779500000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 779700000, MinDR: 0, MaxDR: 5, enabled: true},
+			{Frequency: 779900000, MinDR: 0, MaxDR: 5, enabled: true},
 		},
 
 		getRX1ChannelFunc: func(txChannel int) int {
