@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 )
 
 // macPayloadMutex is used when registering proprietary MAC command payloads to
@@ -26,24 +27,33 @@ func (c CID) MarshalText() ([]byte, error) {
 // has the same value. Based on the fact if a message is uplink or downlink
 // you should use on or the other.
 const (
-	LinkCheckReq     CID = 0x02
-	LinkCheckAns     CID = 0x02
-	LinkADRReq       CID = 0x03
-	LinkADRAns       CID = 0x03
-	DutyCycleReq     CID = 0x04
-	DutyCycleAns     CID = 0x04
-	RXParamSetupReq  CID = 0x05
-	RXParamSetupAns  CID = 0x05
-	DevStatusReq     CID = 0x06
-	DevStatusAns     CID = 0x06
-	NewChannelReq    CID = 0x07
-	NewChannelAns    CID = 0x07
-	RXTimingSetupReq CID = 0x08
-	RXTimingSetupAns CID = 0x08
-	TXParamSetupReq  CID = 0x09
-	TXParamSetupAns  CID = 0x09
-	DLChannelReq     CID = 0x0A
-	DLChannelAns     CID = 0x0A
+	LinkCheckReq       CID = 0x02
+	LinkCheckAns       CID = 0x02
+	LinkADRReq         CID = 0x03
+	LinkADRAns         CID = 0x03
+	DutyCycleReq       CID = 0x04
+	DutyCycleAns       CID = 0x04
+	RXParamSetupReq    CID = 0x05
+	RXParamSetupAns    CID = 0x05
+	DevStatusReq       CID = 0x06
+	DevStatusAns       CID = 0x06
+	NewChannelReq      CID = 0x07
+	NewChannelAns      CID = 0x07
+	RXTimingSetupReq   CID = 0x08
+	RXTimingSetupAns   CID = 0x08
+	TXParamSetupReq    CID = 0x09
+	TXParamSetupAns    CID = 0x09
+	DLChannelReq       CID = 0x0A
+	DLChannelAns       CID = 0x0A
+	PingSlotInfoReq    CID = 0x10
+	PingSlotInfoAns    CID = 0x10
+	PingSlotChannelReq CID = 0x11
+	PingSlotChannelAns CID = 0x11
+	// 0x12 has been deprecated in 1.1
+	BeaconFreqReq CID = 0x13
+	BeaconFreqAns CID = 0x13
+	DeviceTimeReq CID = 0x0D
+	DeviceTimeAns CID = 0x0D
 	// 0x80 to 0xFF reserved for proprietary network command extensions
 )
 
@@ -59,21 +69,27 @@ type macPayloadInfo struct {
 // list.
 var macPayloadRegistry = map[bool]map[CID]macPayloadInfo{
 	false: map[CID]macPayloadInfo{
-		LinkCheckAns:     {2, func() MACCommandPayload { return &LinkCheckAnsPayload{} }},
-		LinkADRReq:       {4, func() MACCommandPayload { return &LinkADRReqPayload{} }},
-		DutyCycleReq:     {1, func() MACCommandPayload { return &DutyCycleReqPayload{} }},
-		RXParamSetupReq:  {4, func() MACCommandPayload { return &RXParamSetupReqPayload{} }},
-		NewChannelReq:    {5, func() MACCommandPayload { return &NewChannelReqPayload{} }},
-		RXTimingSetupReq: {1, func() MACCommandPayload { return &RXTimingSetupReqPayload{} }},
-		TXParamSetupReq:  {1, func() MACCommandPayload { return &TXParamSetupReqPayload{} }},
-		DLChannelReq:     {4, func() MACCommandPayload { return &DLChannelReqPayload{} }},
+		LinkCheckAns:       {2, func() MACCommandPayload { return &LinkCheckAnsPayload{} }},
+		LinkADRReq:         {4, func() MACCommandPayload { return &LinkADRReqPayload{} }},
+		DutyCycleReq:       {1, func() MACCommandPayload { return &DutyCycleReqPayload{} }},
+		RXParamSetupReq:    {4, func() MACCommandPayload { return &RXParamSetupReqPayload{} }},
+		NewChannelReq:      {5, func() MACCommandPayload { return &NewChannelReqPayload{} }},
+		RXTimingSetupReq:   {1, func() MACCommandPayload { return &RXTimingSetupReqPayload{} }},
+		TXParamSetupReq:    {1, func() MACCommandPayload { return &TXParamSetupReqPayload{} }},
+		DLChannelReq:       {4, func() MACCommandPayload { return &DLChannelReqPayload{} }},
+		BeaconFreqReq:      {3, func() MACCommandPayload { return &BeaconFreqReqPayload{} }},
+		PingSlotChannelReq: {4, func() MACCommandPayload { return &PingSlotChannelReqPayload{} }},
+		DeviceTimeAns:      {5, func() MACCommandPayload { return &DeviceTimeAnsPayload{} }},
 	},
 	true: map[CID]macPayloadInfo{
-		LinkADRAns:      {1, func() MACCommandPayload { return &LinkADRAnsPayload{} }},
-		RXParamSetupAns: {1, func() MACCommandPayload { return &RXParamSetupAnsPayload{} }},
-		DevStatusAns:    {2, func() MACCommandPayload { return &DevStatusAnsPayload{} }},
-		NewChannelAns:   {1, func() MACCommandPayload { return &NewChannelAnsPayload{} }},
-		DLChannelAns:    {1, func() MACCommandPayload { return &DLChannelAnsPayload{} }},
+		LinkADRAns:         {1, func() MACCommandPayload { return &LinkADRAnsPayload{} }},
+		RXParamSetupAns:    {1, func() MACCommandPayload { return &RXParamSetupAnsPayload{} }},
+		DevStatusAns:       {2, func() MACCommandPayload { return &DevStatusAnsPayload{} }},
+		NewChannelAns:      {1, func() MACCommandPayload { return &NewChannelAnsPayload{} }},
+		DLChannelAns:       {1, func() MACCommandPayload { return &DLChannelAnsPayload{} }},
+		PingSlotInfoReq:    {1, func() MACCommandPayload { return &PingSlotInfoReqPayload{} }},
+		BeaconFreqAns:      {1, func() MACCommandPayload { return &BeaconFreqAnsPayload{} }},
+		PingSlotChannelAns: {1, func() MACCommandPayload { return &PingSlotChannelAnsPayload{} }},
 	},
 }
 
@@ -103,7 +119,7 @@ func GetMACPayloadAndSize(uplink bool, c CID) (MACCommandPayload, int, error) {
 // that there is no need to call this when the size of the payload is > 0 bytes.
 func RegisterProprietaryMACCommand(uplink bool, cid CID, payloadSize int) error {
 	if !(cid >= 128 && cid <= 255) {
-		return fmt.Errorf("lorawan: invalid CID %x", cid)
+		return fmt.Errorf("lorawan: invalid CID %x", byte(cid))
 	}
 
 	if payloadSize == 0 {
@@ -137,11 +153,8 @@ type MACCommand struct {
 
 // MarshalBinary marshals the object in binary form.
 func (m MACCommand) MarshalBinary() ([]byte, error) {
-	if !(m.CID >= 2 && m.CID <= 8) && !(m.CID >= 128) {
-		return nil, fmt.Errorf("lorawan: invalid CID %x", m.CID)
-	}
-
 	b := []byte{byte(m.CID)}
+
 	if m.Payload != nil {
 		p, err := m.Payload.MarshalBinary()
 		if err != nil {
@@ -159,9 +172,6 @@ func (m *MACCommand) UnmarshalBinary(uplink bool, data []byte) error {
 	}
 
 	m.CID = CID(data[0])
-	if !(m.CID >= 2 && m.CID <= 8) && !(m.CID >= 128) {
-		return fmt.Errorf("lorawan: invalid CID %x", int(m.CID))
-	}
 
 	if len(data) > 1 {
 		p, _, err := GetMACPayloadAndSize(uplink, m.CID)
@@ -317,10 +327,7 @@ func (p *LinkADRReqPayload) UnmarshalBinary(data []byte) error {
 	if err := p.ChMask.UnmarshalBinary(data[1:3]); err != nil {
 		return err
 	}
-	if err := p.Redundancy.UnmarshalBinary(data[3:4]); err != nil {
-		return err
-	}
-	return nil
+	return p.Redundancy.UnmarshalBinary(data[3:4])
 }
 
 // LinkADRAnsPayload represents the LinkADRAns payload.
@@ -758,5 +765,198 @@ func (p *DLChannelAnsPayload) UnmarshalBinary(data []byte) error {
 
 	p.ChannelFrequencyOK = data[0]&1 > 0
 	p.UplinkFrequencyExists = data[0]&(1<<1) > 0
+	return nil
+}
+
+// PingSlotInfoReqPayload represents the PingSlotInfoReq payload.
+type PingSlotInfoReqPayload struct {
+	Periodicity uint8 `json:"periodicity"`
+}
+
+// MarshalBinary encodes the object into bytes.
+func (p PingSlotInfoReqPayload) MarshalBinary() ([]byte, error) {
+	if p.Periodicity > 7 {
+		return nil, errors.New("lorawan: max value of Periodicity is 7")
+	}
+
+	return []byte{byte(p.Periodicity)}, nil
+}
+
+// UnmarshalBinary decodes the object from bytes.
+func (p *PingSlotInfoReqPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+
+	// first 3 bits
+	p.Periodicity = data[0] & ((1 << 2) | (1 << 1) | (1 << 0))
+
+	return nil
+}
+
+// BeaconFreqReqPayload represents the BeaconFreqReq payload.
+type BeaconFreqReqPayload struct {
+	Frequency uint32 `json:"frequency"`
+}
+
+// MarshalBinary encodes the object into bytes.
+func (p BeaconFreqReqPayload) MarshalBinary() ([]byte, error) {
+	if p.Frequency/100 >= 16777216 { // 2^24
+		return nil, errors.New("lorawan: max value of Frequency is 2^24 - 1")
+	}
+	if p.Frequency%100 != 0 {
+		return nil, errors.New("lorawan: Frequency must be a multiple of 100")
+	}
+
+	// we need 4 bytes for PutUint32
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, p.Frequency/100)
+
+	// only return the first 3 bytes
+	return b[0:3], nil
+}
+
+// UnmarshalBinary decodes the object from bytes.
+func (p *BeaconFreqReqPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 3 {
+		return errors.New("lorawan: 3 bytes of data are expected")
+	}
+
+	// we need 4 bytes for Uint32
+	b := make([]byte, 4)
+	copy(b, data)
+	p.Frequency = binary.LittleEndian.Uint32(b) * 100
+
+	return nil
+}
+
+// BeaconFreqAnsPayload represents the BeaconFreqAns payload.
+type BeaconFreqAnsPayload struct {
+	BeaconFrequencyOK bool `json:"beaconFrequencyOK"`
+}
+
+// MarshalBinary encodes the object into bytes.
+func (p BeaconFreqAnsPayload) MarshalBinary() ([]byte, error) {
+	var b byte
+	if p.BeaconFrequencyOK {
+		b = (1 << 0)
+	}
+
+	return []byte{b}, nil
+}
+
+// UnmarshalBinary decodes the object from bytes.
+func (p *BeaconFreqAnsPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+
+	p.BeaconFrequencyOK = data[0]&(1<<0) != 0
+
+	return nil
+}
+
+// PingSlotChannelReqPayload represents the PingSlotChannelReq payload.
+type PingSlotChannelReqPayload struct {
+	Frequency uint32 `json:"frequency"`
+	DR        uint8  `json:"dr"`
+}
+
+// MarshalBinary encodes the object into bytes.
+func (p PingSlotChannelReqPayload) MarshalBinary() ([]byte, error) {
+	if p.Frequency/100 >= 16777216 { // 2^24
+		return nil, errors.New("lorawan: max value of Frequency is 2^24 - 1")
+	}
+	if p.Frequency%100 != 0 {
+		return nil, errors.New("lorawan: Frequency must be a multiple of 100")
+	}
+	if p.DR >= 16 { // 2^4
+		return nil, errors.New("lorawan: max value of DR is 15")
+	}
+
+	// allocate one extra byte for PutUint32
+	b := make([]byte, 4)
+
+	binary.LittleEndian.PutUint32(b, p.Frequency/100)
+	b[3] = byte(p.DR)
+
+	return b, nil
+}
+
+// UnmarshalBinary decodes the object from bytes.
+func (p *PingSlotChannelReqPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 4 {
+		return errors.New("lorawan: 4 bytes of data are expected")
+	}
+
+	b := make([]byte, 4)
+	copy(b, data)
+	b[3] = 0
+
+	p.Frequency = binary.LittleEndian.Uint32(b) * 100
+	p.DR = data[3] & ((1 << 3) | (1 << 2) | (1 << 1) | (1 << 0))
+
+	return nil
+}
+
+// PingSlotChannelAnsPayload represents the PingSlotChannelAns payload.
+type PingSlotChannelAnsPayload struct {
+	DataRateOK         bool `json:"dataRateOK"`
+	ChannelFrequencyOK bool `json:"channelFrequencyOK"`
+}
+
+// MarshalBinary encodes the object into bytes.
+func (p PingSlotChannelAnsPayload) MarshalBinary() ([]byte, error) {
+	var b byte
+	if p.ChannelFrequencyOK {
+		b = (1 << 0)
+	}
+	if p.DataRateOK {
+		b = b | (1 << 1)
+	}
+
+	return []byte{b}, nil
+}
+
+// UnmarshalBinary decodes the object from bytes.
+func (p *PingSlotChannelAnsPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+
+	p.ChannelFrequencyOK = data[0]&(1<<0) != 0
+	p.DataRateOK = data[0]&(1<<1) != 0
+
+	return nil
+}
+
+// DeviceTimeAnsPayload represents the DeviceTimeAns payload.
+type DeviceTimeAnsPayload struct {
+	TimeSinceGPSEpoch time.Duration `json:"timeSinceGPSEpoch"`
+}
+
+// MarshalBinary encodes the object into bytes.
+func (p DeviceTimeAnsPayload) MarshalBinary() ([]byte, error) {
+	b := make([]byte, 5)
+
+	seconds := uint32(p.TimeSinceGPSEpoch / time.Second)
+	binary.LittleEndian.PutUint32(b, seconds)
+
+	// time.Second / 256 = 3906250ns
+	b[4] = uint8((p.TimeSinceGPSEpoch - (time.Duration(seconds) * time.Second)) / 3906250)
+
+	return b, nil
+}
+
+// UnmarshalBinary decodes the object from bytes.
+func (p *DeviceTimeAnsPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 5 {
+		return errors.New("lorawan: 5 bytes of data is expected")
+	}
+
+	seconds := binary.LittleEndian.Uint32(data[0:4])
+	p.TimeSinceGPSEpoch = time.Second * time.Duration(seconds)
+	p.TimeSinceGPSEpoch += time.Duration(data[4]) * 3906250
+
 	return nil
 }

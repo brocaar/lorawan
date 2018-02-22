@@ -2,7 +2,7 @@
 
 package lorawan
 
-import "fmt"
+import "strconv"
 
 const _Major_name = "LoRaWANR1"
 
@@ -10,7 +10,7 @@ var _Major_index = [...]uint8{0, 9}
 
 func (i Major) String() string {
 	if i >= Major(len(_Major_index)-1) {
-		return fmt.Sprintf("Major(%d)", i)
+		return "Major(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 	return _Major_name[_Major_index[i]:_Major_index[i+1]]
 }

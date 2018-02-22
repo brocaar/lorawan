@@ -76,11 +76,15 @@ func (a *DevAddr) Scan(src interface{}) error {
 }
 
 // FCtrl represents the FCtrl (frame control) field.
+// Please note that the FPending and ClassB are mapped to the same bit. This
+// means that when unmarshaling from a byte-slice, both fields will contain
+// the same value (either true or false).
 type FCtrl struct {
 	ADR       bool  `json:"adr"`
 	ADRACKReq bool  `json:"adrAckReq"`
 	ACK       bool  `json:"ack"`
 	FPending  bool  `json:"fPending"` // only used for downlink messages
+	ClassB    bool  `json:"classB"`   // only used for uplink messages
 	fOptsLen  uint8 // will be set automatically by the FHDR when serialized to []byte
 }
 
@@ -90,7 +94,7 @@ func (c FCtrl) MarshalBinary() ([]byte, error) {
 		return []byte{}, errors.New("lorawan: max value of FOptsLen is 15")
 	}
 	b := byte(c.fOptsLen)
-	if c.FPending {
+	if c.FPending || c.ClassB {
 		b = b ^ (1 << 4)
 	}
 	if c.ACK {
@@ -111,10 +115,11 @@ func (c *FCtrl) UnmarshalBinary(data []byte) error {
 		return errors.New("lorawan: 1 byte of data is expected")
 	}
 	c.fOptsLen = data[0] & ((1 << 3) ^ (1 << 2) ^ (1 << 1) ^ (1 << 0))
-	c.FPending = data[0]&(1<<4) > 0
-	c.ACK = data[0]&(1<<5) > 0
-	c.ADRACKReq = data[0]&(1<<6) > 0
-	c.ADR = data[0]&(1<<7) > 0
+	c.FPending = data[0]&(1<<4) != 0
+	c.ClassB = data[0]&(1<<4) != 0
+	c.ACK = data[0]&(1<<5) != 0
+	c.ADRACKReq = data[0]&(1<<6) != 0
+	c.ADR = data[0]&(1<<7) != 0
 	return nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -62,19 +63,6 @@ func TestGetMACPayloadAndSize(t *testing.T) {
 func TestMACCommand(t *testing.T) {
 	Convey("Given an empty MACCommand", t, func() {
 		var m MACCommand
-
-		Convey("Then the CID must be between 2 - 8 or 128 - 255", func() {
-			for i := 0; i <= 255; i++ {
-				m.CID = CID(i)
-
-				_, err := m.MarshalBinary()
-				if (i >= 2 && i <= 8) || (i >= 128 && i <= 255) {
-					So(err, ShouldBeNil)
-				} else {
-					So(err, ShouldNotBeNil)
-				}
-			}
-		})
 
 		Convey("Given CID=LinkCheckAns, Payload=LinkCheckAnsPayload(Margin=10, GwCnt=15)", func() {
 			m.CID = LinkCheckAns
@@ -860,4 +848,152 @@ func TestDLChannelAnsPayload(t *testing.T) {
 			})
 		}
 	})
+}
+
+type macPayloadTest struct {
+	Payload       MACCommandPayload
+	ExpectedBytes []byte
+	ExpectedError error
+}
+
+// TestMACPayloads tests the mac-command payloads
+// TODO: refactor above tests in this new framework
+func TestMACPayloads(t *testing.T) {
+	Convey("Testing PingSlotInfoReqPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload:       &PingSlotInfoReqPayload{Periodicity: 3},
+				ExpectedBytes: []byte{3},
+			},
+			{
+				Payload:       &PingSlotInfoReqPayload{Periodicity: 8},
+				ExpectedError: errors.New("lorawan: max value of Periodicity is 7"),
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &PingSlotInfoReqPayload{} }, tests)
+	})
+
+	Convey("Testing BeaconFreqReqPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload:       &BeaconFreqReqPayload{Frequency: 101},
+				ExpectedError: errors.New("lorawan: Frequency must be a multiple of 100"),
+			},
+			{
+				Payload:       &BeaconFreqReqPayload{Frequency: 1677721600},
+				ExpectedError: errors.New("lorawan: max value of Frequency is 2^24 - 1"),
+			},
+			{
+				Payload:       &BeaconFreqReqPayload{Frequency: 868100000},
+				ExpectedBytes: []byte{40, 118, 132},
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &BeaconFreqReqPayload{} }, tests)
+	})
+
+	Convey("Testing BeaconFreqAnsPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload:       &BeaconFreqAnsPayload{BeaconFrequencyOK: true},
+				ExpectedBytes: []byte{1},
+			},
+			{
+				Payload:       &BeaconFreqAnsPayload{BeaconFrequencyOK: false},
+				ExpectedBytes: []byte{0},
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &BeaconFreqAnsPayload{} }, tests)
+	})
+
+	Convey("Testing PingSlotChannelReqPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload:       &PingSlotChannelReqPayload{Frequency: 101},
+				ExpectedError: errors.New("lorawan: Frequency must be a multiple of 100"),
+			},
+			{
+				Payload:       &PingSlotChannelReqPayload{Frequency: 1677721600},
+				ExpectedError: errors.New("lorawan: max value of Frequency is 2^24 - 1"),
+			},
+			{
+				Payload:       &PingSlotChannelReqPayload{Frequency: 868100000, DR: 16},
+				ExpectedError: errors.New("lorawan: max value of DR is 15"),
+			},
+			{
+				Payload:       &PingSlotChannelReqPayload{Frequency: 868100000, DR: 5},
+				ExpectedBytes: []byte{40, 118, 132, 5},
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &PingSlotChannelReqPayload{} }, tests)
+	})
+
+	Convey("Testing PingSlotChannelAnsPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload:       &PingSlotChannelAnsPayload{DataRateOK: true},
+				ExpectedBytes: []byte{2},
+			},
+			{
+				Payload:       &PingSlotChannelAnsPayload{ChannelFrequencyOK: true},
+				ExpectedBytes: []byte{1},
+			},
+			{
+				Payload:       &PingSlotChannelAnsPayload{DataRateOK: true, ChannelFrequencyOK: true},
+				ExpectedBytes: []byte{3},
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &PingSlotChannelAnsPayload{} }, tests)
+	})
+
+	Convey("Testing DeviceTimeAnsPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload:       &DeviceTimeAnsPayload{TimeSinceGPSEpoch: time.Second},
+				ExpectedBytes: []byte{1, 0, 0, 0, 0},
+			},
+			{
+				Payload:       &DeviceTimeAnsPayload{TimeSinceGPSEpoch: time.Second + (2 * 3906250)},
+				ExpectedBytes: []byte{1, 0, 0, 0, 2},
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &DeviceTimeAnsPayload{} }, tests)
+	})
+}
+
+func testMACPayloads(newPLFunc func() MACCommandPayload, tests []macPayloadTest) {
+	for i, t := range tests {
+		Convey(fmt.Sprintf("Testing: %+v [%d]", t.Payload, i), func() {
+			b, err := t.Payload.MarshalBinary()
+			if t.ExpectedError != nil {
+				Convey("Then the expected error is returned", func() {
+					So(err, ShouldNotBeNil)
+					So(err, ShouldResemble, t.ExpectedError)
+				})
+				return
+			}
+			So(err, ShouldBeNil)
+			So(b, ShouldResemble, t.ExpectedBytes)
+
+			Convey("Then unmarshal with a different byteslice size returns an error", func() {
+				pl := newPLFunc()
+				So(pl.UnmarshalBinary(b[0:len(b)-1]), ShouldBeError)
+
+				b2 := make([]byte, len(b)+1)
+				copy(b2, b)
+				So(pl.UnmarshalBinary(b2), ShouldBeError)
+			})
+
+			Convey("Then unmarshal results in the same payload", func() {
+				pl := newPLFunc()
+				So(pl.UnmarshalBinary(b), ShouldBeNil)
+				So(pl, ShouldResemble, t.Payload)
+			})
+		})
+	}
 }

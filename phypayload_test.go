@@ -514,7 +514,7 @@ func ExamplePHYPayload_encode() {
 	// Output:
 	// gAQDAgEAAAAK4mTU97VqDnU=
 	// [128 4 3 2 1 0 0 0 10 226 100 212 247 181 106 14 117]
-	// {"mhdr":{"mType":"ConfirmedDataUp","major":"LoRaWANR1"},"macPayload":{"fhdr":{"devAddr":"01020304","fCtrl":{"adr":false,"adrAckReq":false,"ack":false,"fPending":false},"fCnt":0,"fOpts":[]},"fPort":10,"frmPayload":[{"bytes":"4mTU9w=="}]},"mic":"b56a0e75"}
+	// {"mhdr":{"mType":"ConfirmedDataUp","major":"LoRaWANR1"},"macPayload":{"fhdr":{"devAddr":"01020304","fCtrl":{"adr":false,"adrAckReq":false,"ack":false,"fPending":false,"classB":false},"fCnt":0,"fOpts":[]},"fPort":10,"frmPayload":[{"bytes":"4mTU9w=="}]},"mic":"b56a0e75"}
 }
 
 func ExamplePHYPayload_decode() {
@@ -557,7 +557,7 @@ func ExamplePHYPayload_decode() {
 	fmt.Println(pl.Bytes)
 
 	// Output:
-	// {"mhdr":{"mType":"ConfirmedDataUp","major":"LoRaWANR1"},"macPayload":{"fhdr":{"devAddr":"01020304","fCtrl":{"adr":false,"adrAckReq":false,"ack":false,"fPending":false},"fCnt":0,"fOpts":null},"fPort":10,"frmPayload":[{"bytes":"4mTU9w=="}]},"mic":"b56a0e75"}
+	// {"mhdr":{"mType":"ConfirmedDataUp","major":"LoRaWANR1"},"macPayload":{"fhdr":{"devAddr":"01020304","fCtrl":{"adr":false,"adrAckReq":false,"ack":false,"fPending":false,"classB":false},"fCnt":0,"fOpts":null},"fPort":10,"frmPayload":[{"bytes":"4mTU9w=="}]},"mic":"b56a0e75"}
 	// [1 2 3 4]
 }
 

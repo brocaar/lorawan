@@ -169,7 +169,7 @@ func TestMACPayload(t *testing.T) {
 				})
 				Convey("Then FRMPayload=[]Payload{MACCommand{CID: DevStatusAns, Payload: DevStatusAnsPayload(Battery=10, Margin=20)}}", func() {
 
-					So(p.FRMPayload, ShouldHaveLength, 1)
+					So(p.FRMPayload, ShouldHaveLength, 3)
 					mac, ok := p.FRMPayload[0].(*MACCommand)
 					So(ok, ShouldBeTrue)
 					So(mac.CID, ShouldEqual, DevStatusAns)
@@ -178,9 +178,10 @@ func TestMACPayload(t *testing.T) {
 					So(ok, ShouldBeTrue)
 					So(pl.Battery, ShouldEqual, 10)
 					So(pl.Margin, ShouldEqual, 20)
-				})
-				Convey("Then a warning was printed", func() {
-					So(logBytes.String(), ShouldEndWith, "warning: unmarshal mac-command error (skipping remaining mac-command bytes): lorawan: invalid CID 4e\n")
+
+					// unparsable mac-data
+					So(p.FRMPayload[1].(*MACCommand).CID, ShouldEqual, 78)
+					So(p.FRMPayload[2].(*MACCommand).CID, ShouldEqual, 79)
 				})
 			})
 		})

@@ -70,57 +70,65 @@ func TestDevAddr(t *testing.T) {
 }
 
 func TestFCtrl(t *testing.T) {
-	Convey("Given an empty FCtrl", t, func() {
-		var c FCtrl
-		Convey("Then MarshalBinary returns []byte{0}", func() {
-			b, err := c.MarshalBinary()
-			So(err, ShouldBeNil)
-			So(b, ShouldResemble, []byte{0})
-		})
-
-		Convey("Given FOptsLen > 15", func() {
-			c.fOptsLen = 16
-			Convey("Then MarshalBinary returns an error", func() {
-				_, err := c.MarshalBinary()
-				So(err, ShouldNotBeNil)
-			})
-		})
-
+	Convey("Given a set of tests", t, func() {
 		testTable := []struct {
-			ADR       bool
-			ADRACKReq bool
-			ACK       bool
-			FPending  bool
-			FOptsLen  uint8
-			Bytes     []byte
+			FCtrl         FCtrl
+			ExpectedBytes []byte
+			ExpectedError error
 		}{
-			{true, false, false, false, 2, []byte{130}},
-			{false, true, false, false, 3, []byte{67}},
-			{false, false, true, false, 4, []byte{36}},
-			{false, false, false, true, 5, []byte{21}},
-			{true, true, true, true, 6, []byte{246}},
+			{
+				FCtrl:         FCtrl{fOptsLen: 16},
+				ExpectedError: errors.New("lorawan: max value of FOptsLen is 15"),
+			},
+			{
+				FCtrl:         FCtrl{ADR: true, ADRACKReq: false, ACK: false, FPending: false, fOptsLen: 2},
+				ExpectedBytes: []byte{130},
+			},
+			{
+				FCtrl:         FCtrl{ADR: false, ADRACKReq: true, ACK: false, FPending: false, fOptsLen: 3},
+				ExpectedBytes: []byte{67},
+			},
+			{
+				FCtrl:         FCtrl{ADR: false, ADRACKReq: false, ACK: true, FPending: false, fOptsLen: 4},
+				ExpectedBytes: []byte{36},
+			},
+			{
+				FCtrl:         FCtrl{ADR: false, ADRACKReq: false, ACK: false, FPending: true, fOptsLen: 5},
+				ExpectedBytes: []byte{21},
+			},
+			{
+				FCtrl:         FCtrl{ADR: false, ADRACKReq: false, ACK: false, ClassB: true, fOptsLen: 5},
+				ExpectedBytes: []byte{21},
+			},
+			{
+				FCtrl:         FCtrl{ADR: true, ADRACKReq: true, ACK: true, FPending: true, fOptsLen: 6},
+				ExpectedBytes: []byte{246},
+			},
+			{
+				FCtrl:         FCtrl{ADR: true, ADRACKReq: true, ACK: true, ClassB: true, fOptsLen: 6},
+				ExpectedBytes: []byte{246},
+			},
 		}
 
-		for _, test := range testTable {
-			Convey(fmt.Sprintf("Given ADR=%v, ADRACKReq=%v, ACK=%v, FPending=%v, fOptsLen=%d", test.ADR, test.ADRACKReq, test.ACK, test.FPending, test.FOptsLen), func() {
-				c.ADR = test.ADR
-				c.ADRACKReq = test.ADRACKReq
-				c.ACK = test.ACK
-				c.FPending = test.FPending
-				c.fOptsLen = test.FOptsLen
-				Convey(fmt.Sprintf("Then MarshalBinary returns %v", test.Bytes), func() {
-					b, err := c.MarshalBinary()
-					So(err, ShouldBeNil)
-					So(b, ShouldResemble, test.Bytes)
-				})
-			})
+		for i, test := range testTable {
+			Convey(fmt.Sprintf("Testing: %+v [%d]", test.FCtrl, i), func() {
+				b, err := test.FCtrl.MarshalBinary()
+				if test.ExpectedError != nil {
+					Convey("Then the expected error is returned", func() {
+						So(err, ShouldNotBeNil)
+						So(err, ShouldResemble, test.ExpectedError)
+					})
+					return
+				}
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, test.ExpectedBytes)
 
-			Convey(fmt.Sprintf("Given the slice %v", test.Bytes), func() {
-				b := test.Bytes
-				Convey(fmt.Sprintf("Then UnmarshalBinary returns a FCtrl with ADR=%v, ADRACKReq=%v, ACK=%v, FPending=%v, fOptsLen=%d", test.ADR, test.ADRACKReq, test.ACK, test.FPending, test.FOptsLen), func() {
-					err := c.UnmarshalBinary(b)
+				Convey("Then unmarshal and marshal results in the same byteslice", func() {
+					var fCtrl FCtrl
+					So(fCtrl.UnmarshalBinary(b), ShouldBeNil)
+					b2, err := fCtrl.MarshalBinary()
 					So(err, ShouldBeNil)
-					So(c, ShouldResemble, FCtrl{ADR: test.ADR, ADRACKReq: test.ADRACKReq, ACK: test.ACK, FPending: test.FPending, fOptsLen: test.FOptsLen})
+					So(b2, ShouldResemble, b)
 				})
 			})
 		}
@@ -191,7 +199,7 @@ func TestFHDR(t *testing.T) {
 				})
 
 				Convey("Then FCtrl=FCtrl(ADR=true, ADRACKReq=false, ACK=true, FPending=true, fOptsLen=3)", func() {
-					So(h.FCtrl, ShouldResemble, FCtrl{ADR: true, ADRACKReq: false, ACK: true, FPending: true, fOptsLen: 3})
+					So(h.FCtrl, ShouldResemble, FCtrl{ADR: true, ADRACKReq: false, ACK: true, FPending: true, ClassB: true, fOptsLen: 3})
 				})
 
 				Convey("Then len(FOpts)=1", func() {
@@ -224,25 +232,26 @@ func TestFHDR(t *testing.T) {
 				})
 
 				Convey("Then FCtrl=FCtrl(ADR=true, ADRACKReq=false, ACK=true, FPending=true, fOptsLen=5)", func() {
-					So(h.FCtrl, ShouldResemble, FCtrl{ADR: true, ADRACKReq: false, ACK: true, FPending: true, fOptsLen: 5})
+					So(h.FCtrl, ShouldResemble, FCtrl{ADR: true, ADRACKReq: false, ACK: true, FPending: true, ClassB: true, fOptsLen: 5})
 				})
 
-				Convey("Then len(FOpts)=1", func() {
-					So(h.FOpts, ShouldHaveLength, 1)
+				Convey("Then len(FOpts)=3", func() {
+					So(h.FOpts, ShouldHaveLength, 3)
 					Convey("Then CID=LinkCheckAns", func() {
 						So(h.FOpts[0].CID, ShouldEqual, LinkCheckAns)
 					})
 
 				})
 
+				Convey("Then the remaining mac data is still available", func() {
+					So(h.FOpts[1].CID, ShouldEqual, 78)
+					So(h.FOpts[2].CID, ShouldEqual, 79)
+				})
+
 				Convey("Then Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9)", func() {
 					p, ok := h.FOpts[0].Payload.(*LinkCheckAnsPayload)
 					So(ok, ShouldBeTrue)
 					So(p, ShouldResemble, &LinkCheckAnsPayload{Margin: 7, GwCnt: 9})
-				})
-
-				Convey("Then a warning was printed", func() {
-					So(logBytes.String(), ShouldEndWith, "warning: unmarshal mac-command error (skipping remaining mac-command bytes): lorawan: invalid CID 4e\n")
 				})
 			})
 		})
