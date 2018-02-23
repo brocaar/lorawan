@@ -292,6 +292,18 @@ func (b *Band) GetUplinkChannels() []int {
 	return out
 }
 
+// GetStandardUplinkChannels returns all standard available uplink channels.
+// E.g. this is excluding extra channels configured by the user.
+func (b *Band) GetStandardUplinkChannels() []int {
+	var out []int
+	for i, c := range b.UplinkChannels {
+		if !c.custom {
+			out = append(out, i)
+		}
+	}
+	return out
+}
+
 // GetEnabledUplinkChannels returns the enabled uplink channels.
 func (b *Band) GetEnabledUplinkChannels() []int {
 	var out []int
