@@ -240,7 +240,9 @@ func (b *Band) AddChannel(freq, minDR, maxDR int) error {
 
 // GetCFList returns the CFList used for OTAA activation, or returns nil if
 // the band does not implement the CFList or when there are no extra channels.
-// Note that this only returns the first 5 extra channels.
+// Note that this only returns the first 5 extra channels with min dr: 0 and
+// max dr: 5.
+// Other extra channels must be configured through mac-commands.
 func (b *Band) GetCFList() *lorawan.CFList {
 	if !b.ImplementsCFlist {
 		return nil
@@ -249,7 +251,7 @@ func (b *Band) GetCFList() *lorawan.CFList {
 	var cFList lorawan.CFList
 	var i int
 	for _, c := range b.UplinkChannels {
-		if c.custom && i < len(cFList) {
+		if c.custom && i < len(cFList) && c.MinDR == 0 && c.MaxDR == 5 {
 			cFList[i] = uint32(c.Frequency)
 			i++
 		}
