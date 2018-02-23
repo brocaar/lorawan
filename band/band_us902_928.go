@@ -127,7 +127,7 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 		},
 
 		getRX1FrequencyFunc: func(b *Band, txFrequency int) (int, error) {
-			uplinkChan, err := b.GetUplinkChannelNumber(txFrequency)
+			uplinkChan, err := b.GetUplinkChannelNumber(txFrequency, true)
 			if err != nil {
 				return 0, err
 			}

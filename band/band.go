@@ -197,9 +197,12 @@ func (b *Band) GetRX1DataRate(uplinkDR, rx1DROffset int) (int, error) {
 }
 
 // GetUplinkChannelNumber returns the channel number given a frequency.
-func (b *Band) GetUplinkChannelNumber(frequency int) (int, error) {
+// As it is possible that the same frequency occurs twice (eg. one time as
+// a default LoRaWAN channel and one time as a custom channel using a 250 kHz
+// data-rate), a bool must be given indicating this is a default channel.
+func (b *Band) GetUplinkChannelNumber(frequency int, defaultChannel bool) (int, error) {
 	for chanNum, channel := range b.UplinkChannels {
-		if frequency == channel.Frequency {
+		if frequency == channel.Frequency && channel.custom != defaultChannel {
 			return chanNum, nil
 		}
 	}

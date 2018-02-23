@@ -49,7 +49,7 @@ func TestUS902Band(t *testing.T) {
 
 			for _, test := range testTable {
 				Convey(fmt.Sprintf("Then frequency: %d must return frequency: %d", test.Frequency, test.ExpFrequency), func() {
-					txChan, err := band.GetUplinkChannelNumber(test.Frequency)
+					txChan, err := band.GetUplinkChannelNumber(test.Frequency, true)
 					So(err, ShouldBeNil)
 					So(txChan, ShouldEqual, test.Channel)
 

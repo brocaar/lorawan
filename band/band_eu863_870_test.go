@@ -123,7 +123,11 @@ func TestEU863Band(t *testing.T) {
 				}
 
 				for expChannel, expFreq := range tests {
-					channel, err := band.GetUplinkChannelNumber(expFreq)
+					var defaultChannel bool
+					if expChannel < 3 {
+						defaultChannel = true
+					}
+					channel, err := band.GetUplinkChannelNumber(expFreq, defaultChannel)
 					So(err, ShouldBeNil)
 					So(channel, ShouldEqual, expChannel)
 				}
