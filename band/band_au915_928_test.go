@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/brocaar/lorawan"
 	. "github.com/smartystreets/goconvey/convey"
@@ -200,6 +201,28 @@ func TestAU915Band(t *testing.T) {
 					So(err, ShouldBeNil)
 					So(chans, ShouldResemble, test.ExpectedUplinkChannels)
 				})
+			}
+		})
+
+		Convey("When testing GetPingSlotFrequency", func() {
+			tests := []struct {
+				DevAddr           lorawan.DevAddr
+				BeaconTime        string
+				ExpectedFrequency int
+			}{
+				{
+					DevAddr:           lorawan.DevAddr{3, 20, 207, 54},
+					BeaconTime:        "334382h51m44s",
+					ExpectedFrequency: 925700000,
+				},
+			}
+
+			for _, test := range tests {
+				bt, err := time.ParseDuration(test.BeaconTime)
+				So(err, ShouldBeNil)
+				freq, err := band.GetPingSlotFrequency(test.DevAddr, bt)
+				So(err, ShouldBeNil)
+				So(freq, ShouldEqual, test.ExpectedFrequency)
 			}
 		})
 	})

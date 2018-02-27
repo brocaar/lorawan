@@ -1,6 +1,7 @@
 package band
 
 import (
+	"encoding/binary"
 	"sort"
 	"time"
 
@@ -68,8 +69,8 @@ func newAU915Band(repeaterCompatible bool) (Band, error) {
 
 		DataRates: []DataRate{
 			{Modulation: LoRaModulation, SpreadFactor: 12, Bandwidth: 125}, //0
-			{Modulation: LoRaModulation, SpreadFactor: 11, Bandwidth: 125},  //1
-			{Modulation: LoRaModulation, SpreadFactor: 10, Bandwidth: 125},  //2
+			{Modulation: LoRaModulation, SpreadFactor: 11, Bandwidth: 125}, //1
+			{Modulation: LoRaModulation, SpreadFactor: 10, Bandwidth: 125}, //2
 			{Modulation: LoRaModulation, SpreadFactor: 9, Bandwidth: 125},  //3
 			{Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 125},  //4
 			{Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 125},  //5
@@ -126,6 +127,11 @@ func newAU915Band(repeaterCompatible bool) (Band, error) {
 
 			rx1Chan := b.GetRX1Channel(uplinkChan)
 			return b.DownlinkChannels[rx1Chan].Frequency, nil
+		},
+
+		getPingSlotFrequencyFunc: func(b *Band, devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
+			downlinkChannel := (int(binary.BigEndian.Uint32(devAddr[:])) + int(beaconTime/(128*time.Second))) % 8
+			return b.DownlinkChannels[downlinkChannel].Frequency, nil
 		},
 
 		getLinkADRReqPayloadsForEnabledChannelsFunc: func(b *Band, nodeChannels []int) []lorawan.LinkADRReqPayload {

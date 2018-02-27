@@ -1,8 +1,12 @@
 package band
 
-import "github.com/brocaar/lorawan"
-import "sort"
-import "time"
+import (
+	"encoding/binary"
+	"sort"
+	"time"
+
+	"github.com/brocaar/lorawan"
+)
 
 func newUS902Band(repeaterCompatible bool) (Band, error) {
 	var maxPayloadSize []MaxPayloadSize
@@ -130,6 +134,11 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 
 			rx1Chan := b.GetRX1Channel(uplinkChan)
 			return b.DownlinkChannels[rx1Chan].Frequency, nil
+		},
+
+		getPingSlotFrequencyFunc: func(b *Band, devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
+			downlinkChannel := (int(binary.BigEndian.Uint32(devAddr[:])) + int(beaconTime/(128*time.Second))) % 8
+			return b.DownlinkChannels[downlinkChannel].Frequency, nil
 		},
 
 		getLinkADRReqPayloadsForEnabledChannelsFunc: func(b *Band, nodeChannels []int) []lorawan.LinkADRReqPayload {

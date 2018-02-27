@@ -1,6 +1,11 @@
 package band
 
-import "time"
+import (
+	"encoding/binary"
+	"time"
+
+	"github.com/brocaar/lorawan"
+)
 
 func newCN470Band() (Band, error) {
 	band := Band{
@@ -92,6 +97,11 @@ func newCN470Band() (Band, error) {
 
 			rx1Chan := b.GetRX1Channel(uplinkChan)
 			return b.DownlinkChannels[rx1Chan].Frequency, nil
+		},
+
+		getPingSlotFrequencyFunc: func(b *Band, devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
+			downlinkChannel := (int(binary.BigEndian.Uint32(devAddr[:])) + int(beaconTime/(128*time.Second))) % 8
+			return b.DownlinkChannels[downlinkChannel].Frequency, nil
 		},
 	}
 

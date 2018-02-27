@@ -1,6 +1,10 @@
 package band
 
-import "time"
+import (
+	"time"
+
+	"github.com/brocaar/lorawan"
+)
 
 func newEU863Band(repeaterCompatible bool) (Band, error) {
 	var maxPayloadSize []MaxPayloadSize
@@ -98,6 +102,10 @@ func newEU863Band(repeaterCompatible bool) (Band, error) {
 
 		getRX1FrequencyFunc: func(b *Band, txFrequency int) (int, error) {
 			return txFrequency, nil
+		},
+
+		getPingSlotFrequencyFunc: func(b *Band, devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
+			return 869525000, nil
 		},
 	}, nil
 }

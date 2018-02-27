@@ -133,6 +133,10 @@ type Band struct {
 	// given the uplink frequency.
 	getRX1FrequencyFunc func(band *Band, txFrequency int) (int, error)
 
+	// getPingSlotFrequencyFunc implements a function which returns the Class-B
+	// ping-slot frequency.
+	getPingSlotFrequencyFunc func(band *Band, devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error)
+
 	// getRX1DataRateFunc implements a function which returns the RX1 data-rate
 	// given the uplink data-rate and data-rate offset.
 	getRX1DataRateFunc func(band *Band, uplinkDR, rx1DROffset int) (int, error)
@@ -161,7 +165,18 @@ func (b *Band) GetRX1Channel(txChannel int) int {
 // GetRX1Frequency returns the frequency to use for RX1 given the uplink
 // frequency.
 func (b *Band) GetRX1Frequency(txFrequency int) (int, error) {
+	if b.getRX1FrequencyFunc == nil {
+		return 0, errors.New("lorawan/band: getRX1FrequencyFunc not implemented")
+	}
 	return b.getRX1FrequencyFunc(b, txFrequency)
+}
+
+// GetPingSlotFrequency returns the frequency to use for the ClassB ping-slot.
+func (b *Band) GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
+	if b.getPingSlotFrequencyFunc == nil {
+		return 0, errors.New("lorawan/band: getPingSlotFrequencyFunc not implemented")
+	}
+	return b.getPingSlotFrequencyFunc(b, devAddr, beaconTime)
 }
 
 // GetRX1DataRate returns the RX1 data-rate given the uplink data-rate and

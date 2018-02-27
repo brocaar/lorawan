@@ -147,5 +147,9 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 		getRX1FrequencyFunc: func(b *Band, txFrequency int) (int, error) {
 			return txFrequency, nil
 		},
+
+		getPingSlotFrequencyFunc: func(b *Band, devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
+			return 923400000, nil
+		},
 	}, nil
 }
