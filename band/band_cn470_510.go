@@ -7,107 +7,94 @@ import (
 	"github.com/brocaar/lorawan"
 )
 
-func newCN470Band() (Band, error) {
-	band := Band{
-		DefaultTXPower:   14,
-		ImplementsCFlist: false,
+type cn470Band struct {
+	band
+}
+
+func (b *cn470Band) GetDefaults() Defaults {
+	return Defaults{
 		RX2Frequency:     505300000,
 		RX2DataRate:      0,
-
 		MaxFCntGap:       16384,
-		ADRACKLimit:      64,
-		ADRACKDelay:      32,
 		ReceiveDelay1:    time.Second,
 		ReceiveDelay2:    time.Second * 2,
 		JoinAcceptDelay1: time.Second * 5,
 		JoinAcceptDelay2: time.Second * 6,
-		ACKTimeoutMin:    time.Second,
-		ACKTimeoutMax:    time.Second * 3,
+	}
+}
 
-		DataRates: []DataRate{
-			{Modulation: LoRaModulation, SpreadFactor: 12, Bandwidth: 125},
-			{Modulation: LoRaModulation, SpreadFactor: 11, Bandwidth: 125},
-			{Modulation: LoRaModulation, SpreadFactor: 10, Bandwidth: 125},
-			{Modulation: LoRaModulation, SpreadFactor: 9, Bandwidth: 125},
-			{Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 125},
-			{Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 125},
-			{}, // RFU
-			{}, // RFU
-			{}, // RFU
-			{}, // RFU
-			{}, // RFU
-			{}, // RFU
-			{}, // RFU
-			{}, // RFU
-			{}, // RFU
-			{}, // RFU
-		},
+func (b *cn470Band) GetDownlinkTXPower(freq int) int {
+	return 14
+}
 
-		MaxPayloadSize: []MaxPayloadSize{
-			{M: 59, N: 51},
-			{M: 59, N: 51},
-			{M: 59, N: 51},
-			{M: 123, N: 115},
-			{M: 230, N: 222},
-			{M: 230, N: 222},
-			{}, // not defined
-			{}, // not defined
-			{}, // not defined
-			{}, // not defined
-			{}, // not defined
-			{}, // not defined
-			{}, // not defined
-			{}, // not defined
-			{}, // not defined
-			{}, // not defined
-		},
+func (b *cn470Band) GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
+	downlinkChannel := (int(binary.BigEndian.Uint32(devAddr[:])) + int(beaconTime/(128*time.Second))) % 8
+	return b.downlinkChannels[downlinkChannel].Frequency, nil
+}
 
-		rx1DataRate: [][]int{
-			{0, 0, 0, 0, 0, 0},
-			{1, 0, 0, 0, 0, 0},
-			{2, 1, 0, 0, 0, 0},
-			{3, 2, 1, 0, 0, 0},
-			{4, 3, 2, 1, 0, 0},
-			{5, 4, 3, 2, 1, 0},
-		},
+func (b *cn470Band) GetRX1ChannelIndexForUplinkChannelIndex(uplinkChannel int) (int, error) {
+	return uplinkChannel % 48, nil
+}
 
-		TXPowerOffset: []int{
-			0,
-			-2,
-			-4,
-			-6,
-			-8,
-			-10,
-			-12,
-			-14,
-		},
+func (b *cn470Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int, error) {
+	uplinkChan, err := b.GetUplinkChannelIndex(uplinkFrequency, true)
+	if err != nil {
+		return 0, err
+	}
 
-		UplinkChannels:   make([]Channel, 96),
-		DownlinkChannels: make([]Channel, 48),
+	rx1Chan, err := b.GetRX1ChannelIndexForUplinkChannelIndex(uplinkChan)
+	if err != nil {
+		return 0, err
+	}
 
-		getRX1ChannelFunc: func(txChannel int) int {
-			return txChannel % 48
-		},
+	return b.downlinkChannels[rx1Chan].Frequency, nil
+}
 
-		getRX1FrequencyFunc: func(b *Band, txFrequency int) (int, error) {
-			uplinkChan, err := b.GetUplinkChannelNumber(txFrequency, true)
-			if err != nil {
-				return 0, err
-			}
-
-			rx1Chan := b.GetRX1Channel(uplinkChan)
-			return b.DownlinkChannels[rx1Chan].Frequency, nil
-		},
-
-		getPingSlotFrequencyFunc: func(b *Band, devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
-			downlinkChannel := (int(binary.BigEndian.Uint32(devAddr[:])) + int(beaconTime/(128*time.Second))) % 8
-			return b.DownlinkChannels[downlinkChannel].Frequency, nil
+func newCN470Band() (Band, error) {
+	b := cn470Band{
+		band: band{
+			dataRates: map[int]DataRate{
+				0: {Modulation: LoRaModulation, SpreadFactor: 12, Bandwidth: 125, uplink: true, downlink: true},
+				1: {Modulation: LoRaModulation, SpreadFactor: 11, Bandwidth: 125, uplink: true, downlink: true},
+				2: {Modulation: LoRaModulation, SpreadFactor: 10, Bandwidth: 125, uplink: true, downlink: true},
+				3: {Modulation: LoRaModulation, SpreadFactor: 9, Bandwidth: 125, uplink: true, downlink: true},
+				4: {Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 125, uplink: true, downlink: true},
+				5: {Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 125, uplink: true, downlink: true},
+			},
+			rx1DataRateTable: map[int][]int{
+				0: {0, 0, 0, 0, 0, 0},
+				1: {1, 0, 0, 0, 0, 0},
+				2: {2, 1, 0, 0, 0, 0},
+				3: {3, 2, 1, 0, 0, 0},
+				4: {4, 3, 2, 1, 0, 0},
+				5: {5, 4, 3, 2, 1, 0},
+			},
+			txPowerOffsets: []int{
+				0,
+				-2,
+				-4,
+				-6,
+				-8,
+				-10,
+				-12,
+				-14,
+			},
+			maxPayloadSizePerDR: map[int]MaxPayloadSize{
+				0: {M: 59, N: 51},
+				1: {M: 59, N: 51},
+				2: {M: 59, N: 51},
+				3: {M: 123, N: 115},
+				4: {M: 230, N: 222},
+				5: {M: 230, N: 222},
+			},
+			uplinkChannels:   make([]Channel, 96),
+			downlinkChannels: make([]Channel, 48),
 		},
 	}
 
 	// initialize uplink channels
 	for i := 0; i < 96; i++ {
-		band.UplinkChannels[i] = Channel{
+		b.uplinkChannels[i] = Channel{
 			Frequency: 470300000 + (i * 200000),
 			MinDR:     0,
 			MaxDR:     5,
@@ -117,7 +104,7 @@ func newCN470Band() (Band, error) {
 
 	// initialize downlink channels
 	for i := 0; i < 48; i++ {
-		band.DownlinkChannels[i] = Channel{
+		b.downlinkChannels[i] = Channel{
 			Frequency: 500300000 + (i * 200000),
 			MinDR:     0,
 			MaxDR:     5,
@@ -125,5 +112,5 @@ func newCN470Band() (Band, error) {
 		}
 	}
 
-	return band, nil
+	return &b, nil
 }

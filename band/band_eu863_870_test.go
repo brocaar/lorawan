@@ -3,6 +3,7 @@ package band
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/brocaar/lorawan"
 	. "github.com/smartystreets/goconvey/convey"
@@ -13,19 +14,38 @@ func TestEU863Band(t *testing.T) {
 		band, err := GetConfig(EU_863_870, true, lorawan.DwellTimeNoLimit)
 		So(err, ShouldBeNil)
 
-		Convey("Then GetRX1Channel returns the uplink channel", func() {
-			for i := 0; i < 3; i++ {
-				rx1Chan := band.GetRX1Channel(i)
-				So(rx1Chan, ShouldEqual, i)
-			}
+		Convey("Then GetDefaults returns the expected value", func() {
+			So(band.GetDefaults(), ShouldResemble, Defaults{
+				RX2Frequency:     869525000,
+				RX2DataRate:      0,
+				MaxFCntGap:       16384,
+				ReceiveDelay1:    time.Second,
+				ReceiveDelay2:    time.Second * 2,
+				JoinAcceptDelay1: time.Second * 5,
+				JoinAcceptDelay2: time.Second * 6,
+			})
 		})
 
-		Convey("Then GetRX1Frequency returns the uplink frequency", func() {
-			for _, f := range []int{868100000, 868200000, 868300000} {
-				freq, err := band.GetRX1Frequency(f)
-				So(err, ShouldBeNil)
-				So(freq, ShouldEqual, f)
-			}
+		Convey("Then GetDownlinkTXPower returns the expected value", func() {
+			So(band.GetDownlinkTXPower(0), ShouldEqual, 14)
+		})
+
+		Convey("Then GetPingSlotFrequency returns the expected value", func() {
+			f, err := band.GetPingSlotFrequency(lorawan.DevAddr{}, 0)
+			So(err, ShouldBeNil)
+			So(f, ShouldEqual, 869525000)
+		})
+
+		Convey("Then GetRX1ChannelIndexForUplinkChannelIndex returns the expected value", func() {
+			c, err := band.GetRX1ChannelIndexForUplinkChannelIndex(3)
+			So(err, ShouldBeNil)
+			So(c, ShouldEqual, 3)
+		})
+
+		Convey("Then GetRX1FrequencyForUplinkFrequency returns the expected value", func() {
+			f, err := band.GetRX1FrequencyForUplinkFrequency(868500000)
+			So(err, ShouldBeNil)
+			So(f, ShouldEqual, 868500000)
 		})
 
 		Convey("Given five extra channels", func() {
@@ -41,7 +61,11 @@ func TestEU863Band(t *testing.T) {
 				band.AddChannel(c, 0, 5)
 			}
 
-			Convey("When testing GetLinkADRReqPayloadsForEnabledChannels", func() {
+			Convey("Then these are returned as custom channels", func() {
+				So(band.GetCustomUplinkChannelIndices(), ShouldResemble, []int{3, 4, 5, 6, 7})
+			})
+
+			Convey("When testing the LinkADRReqPayload functions", func() {
 				tests := []struct {
 					Name                       string
 					NodeChannels               []int
@@ -97,12 +121,12 @@ func TestEU863Band(t *testing.T) {
 				for i, test := range tests {
 					Convey(fmt.Sprintf("testing %s [%d]", test.Name, i), func() {
 						for _, c := range test.DisabledChannels {
-							So(band.DisableUplinkChannel(c), ShouldBeNil)
+							So(band.DisableUplinkChannelIndex(c), ShouldBeNil)
 						}
-						pls := band.GetLinkADRReqPayloadsForEnabledChannels(test.NodeChannels)
+						pls := band.GetLinkADRReqPayloadsForEnabledUplinkChannelIndices(test.NodeChannels)
 						So(pls, ShouldResemble, test.ExpectedLinkADRReqPayloads)
 
-						chans, err := band.GetEnabledChannelsForLinkADRReqPayloads(test.NodeChannels, pls)
+						chans, err := band.GetEnabledUplinkChannelIndicesForLinkADRReqPayloads(test.NodeChannels, pls)
 						So(err, ShouldBeNil)
 						So(chans, ShouldResemble, test.ExpectedUplinkChannels)
 					})
@@ -110,7 +134,7 @@ func TestEU863Band(t *testing.T) {
 
 			})
 
-			Convey("Then GetChannel takes the extra channels into consideration", func() {
+			Convey("Then GetUplinkChannelFrequency takes the extra channels into consideration", func() {
 				tests := []int{
 					868100000,
 					868300000,
@@ -127,7 +151,7 @@ func TestEU863Band(t *testing.T) {
 					if expChannel < 3 {
 						defaultChannel = true
 					}
-					channel, err := band.GetUplinkChannelNumber(expFreq, defaultChannel)
+					channel, err := band.GetUplinkChannelIndex(expFreq, defaultChannel)
 					So(err, ShouldBeNil)
 					So(channel, ShouldEqual, expChannel)
 				}

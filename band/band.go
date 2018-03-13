@@ -1,5 +1,5 @@
 // Package band provides band specific defaults and configuration for
-// downlink communication with end-nodes.
+// downlink communication with end-devices.
 package band
 
 import (
@@ -13,6 +13,20 @@ import (
 
 // Name defines the band-name type.
 type Name string
+
+// Available protocol versions.
+const (
+	LoRaWAN_1_0_1 = "1.0.1"
+	LoRaWAN_1_0_2 = "1.0.2"
+	LoRaWAN_1_1_0 = "1.1.0"
+)
+
+// Regional parameters revisions.
+const (
+	RegParamRevA = "A"
+	RegParamRevB = "B"
+	RegParamRevC = "C"
+)
 
 // Available ISM bands.
 const (
@@ -38,6 +52,8 @@ const (
 
 // DataRate defines a data rate
 type DataRate struct {
+	uplink       bool       // data-rate can be used for uplink
+	downlink     bool       // data-rate can be used for downlink
 	Modulation   Modulation `json:"modulation"`
 	SpreadFactor int        `json:"spreadFactor,omitempty"` // used for LoRa
 	Bandwidth    int        `json:"bandwidth,omitempty"`    // in kHz, used for LoRa
@@ -59,23 +75,8 @@ type Channel struct {
 	custom    bool // this channel was configured by the user
 }
 
-// Band defines an region specific ISM band implementation for LoRa.
-type Band struct {
-	// dwellTime defines if dwell time limitation should be taken into account
-	dwellTime lorawan.DwellTime
-
-	// rx1DataRate defines the RX1 data-rate given the uplink data-rate
-	// and a RX1DROffset value. These values are retrievable by using
-	// the GetRX1DataRate method.
-	rx1DataRate [][]int
-
-	// DefaultTXPower defines the default radiated transmit output power
-	DefaultTXPower int
-
-	// ImplementsCFlist defines if the band implements the optional channel
-	// frequency list.
-	ImplementsCFlist bool
-
+// Defaults defines the default values defined by a band.
+type Defaults struct {
 	// RX2Frequency defines the fixed frequency for the RX2 receive window
 	RX2Frequency int
 
@@ -84,12 +85,6 @@ type Band struct {
 
 	// MaxFcntGap defines the MAC_FCNT_GAP default value.
 	MaxFCntGap uint32
-
-	// ADRACKLimit defines the ADR_ACK_LIMIT default value.
-	ADRACKLimit int
-
-	// ADRACKDelay defines the ADR_ACK_DELAY default value.
-	ADRACKDelay int
 
 	// ReceiveDelay1 defines the RECEIVE_DELAY1 default value.
 	ReceiveDelay1 time.Duration
@@ -102,158 +97,290 @@ type Band struct {
 
 	// JoinAcceptDelay2 defines the JOIN_ACCEPT_DELAY2 default value.
 	JoinAcceptDelay2 time.Duration
+}
 
-	// ACKTimeoutMin defines the ACK_TIMEOUT min. default value.
-	ACKTimeoutMin time.Duration
+// Band defines the interface of a LoRaWAN band object.
+type Band interface {
+	// GetDataRateIndex returns the index for the given data-rate parameters.
+	GetDataRateIndex(uplink bool, dataRate DataRate) (int, error)
 
-	// ACKTimeoutMax defines the ACK_TIMEOUT max. default value.
-	ACKTimeoutMax time.Duration
+	// GetDataRate returns the data-rate for the given index.
+	GetDataRate(dr int) (DataRate, error)
 
-	// DataRates defines the available data rates.
-	DataRates []DataRate
+	// GetMaxPayloadSizeForDataRateIndex returns the max-payload size for the
+	// given data-rate index, protocol version and regional-parameters revision.
+	// The protocol-version and regional-parameters revision must be given
+	// to make sure the maximum payload size is not exceeded when communicating
+	// with a device implementing a less recent revision (which could cause
+	// the device to reject the payload).
+	// When the version or revision is unknown, it will return the most recent
+	// implemented revision values.
+	GetMaxPayloadSizeForDataRateIndex(protocolVersion, regParamRevision string, dr int) (MaxPayloadSize, error)
 
-	// MaxPayloadSize defines the maximum payload size, per data-rate.
-	MaxPayloadSize []MaxPayloadSize
+	// GetRX1DataRateIndex returns the RX1 data-rate given the uplink data-rate
+	// and RX1 data-rate offset.
+	GetRX1DataRateIndex(uplinkDR, rx1DROffset int) (int, error)
 
-	// TXPowerOffset defines the TX power offset, relative to the maximum
-	// power (index 0) the node is able or allowed to used for transmission.
-	TXPowerOffset []int
+	// GetTXPowerOffset returns the TX Power offset for the given offset
+	// index.
+	GetTXPowerOffset(txPower int) (int, error)
 
-	// UplinkChannels defines the list of (default) configured uplink channels.
-	UplinkChannels []Channel
+	// AddChannel adds an extra (user-configured) uplink / downlink channel.
+	// Note: this is not supported by every region.
+	AddChannel(frequency, minDR, maxDR int) error
 
-	// DownlinkChannels defines the list of (default) configured downlink
-	// channels.
-	DownlinkChannels []Channel
+	// GetUplinkChannel returns the uplink channel for the given index.
+	GetUplinkChannel(channel int) (Channel, error)
 
-	// getRX1ChannelFunc implements a function which returns the RX1 channel
-	// based on the uplink / TX channel.
-	getRX1ChannelFunc func(txChannel int) int
+	// GetUplinkChannelIndex returns the uplink channel index given a frequency.
+	// As it is possible that the same frequency occurs twice (eg. one time as
+	// a default LoRaWAN channel and one time as a custom channel using a 250 kHz
+	// data-rate), a bool must be given indicating this is a default channel.
+	GetUplinkChannelIndex(frequency int, defaultChannel bool) (int, error)
 
-	// getRX1FrequencyFunc implements a function which returns the RX1 frequency
+	// GetDownlinkChannel returns the downlink channel for the given index.
+	GetDownlinkChannel(channel int) (Channel, error)
+
+	// DisableUplinkChannelIndex disables the given uplink channel index.
+	DisableUplinkChannelIndex(channel int) error
+
+	// EnableUplinkChannelIndex enables the given uplink channel index.
+	EnableUplinkChannelIndex(channel int) error
+
+	// GetUplinkChannelIndices returns all available uplink channel indices.
+	GetUplinkChannelIndices() []int
+
+	// GetStandardUplinkChannelIndices returns all standard available uplink
+	// channel indices.
+	GetStandardUplinkChannelIndices() []int
+
+	// GetCustomUplinkChannelIndices returns all custom uplink channels.
+	GetCustomUplinkChannelIndices() []int
+
+	// GetEnabledUplinkChannelIndices returns the enabled uplink channel indices.
+	GetEnabledUplinkChannelIndices() []int
+
+	// GetDisabledUplinkChannelIndices returns the disabled uplink channel indices.
+	GetDisabledUplinkChannelIndices() []int
+
+	// GetRX1ChannelIndexForUplinkChannelIndex returns the channel to use for RX1
+	// given the uplink channel index.
+	GetRX1ChannelIndexForUplinkChannelIndex(uplinkChannel int) (int, error)
+
+	// GetRX1FrequencyForUplinkFrequency returns the frequency to use for RX1
 	// given the uplink frequency.
-	getRX1FrequencyFunc func(band *Band, txFrequency int) (int, error)
+	GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int, error)
 
-	// getPingSlotFrequencyFunc implements a function which returns the Class-B
-	// ping-slot frequency.
-	getPingSlotFrequencyFunc func(band *Band, devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error)
+	// GetPingSlotFrequency returns the frequency to use for the Class-B ping-slot.
+	GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error)
 
-	// getRX1DataRateFunc implements a function which returns the RX1 data-rate
-	// given the uplink data-rate and data-rate offset.
-	getRX1DataRateFunc func(band *Band, uplinkDR, rx1DROffset int) (int, error)
+	// GetCFList returns the CFList used for OTAA activation, or returns nil if
+	// the band does not implement the CFList or when there are no extra channels.
+	// Note that this only returns the first 5 extra channels with min dr: 0 and
+	// max dr: 5.
+	// Other extra channels must be configured through mac-commands.
+	GetCFList() *lorawan.CFList
 
-	// getLinkADRReqPayloadsForEnabledChannelsFunc implements a band-specific
-	// function which returns the LinkADRReqPayload items needed to activate
-	// the used channels on the node.
-	// In case this is set GetLinkADRReqPayloadsForEnabledChannels will
-	// use both the "naive" algorithm and the algorithm used in this function.
-	// The smallest result is then returned.
-	// In case this function is left blank, only the "naive" algorithm is used.
-	getLinkADRReqPayloadsForEnabledChannelsFunc func(band *Band, nodeChannels []int) []lorawan.LinkADRReqPayload
+	// GetLinkADRReqPayloadsForEnabledUplinkChannelIndices returns the LinkADRReqPayloads to
+	// reconfigure the device to the current enabled channels. Note that in case of
+	// activation, user-defined channels (e.g. CFList) will be ignored as it
+	// is unknown if the device is aware of these extra frequencies.
+	GetLinkADRReqPayloadsForEnabledUplinkChannelIndices(deviceEnabledChannels []int) []lorawan.LinkADRReqPayload
 
-	// getEnabledChannelsForLinkADRReqPayloadsFunc implements a band-specific
-	// function (taking ChMaskCntl values with band-specific meaning into
-	// account).
-	getEnabledChannelsForLinkADRReqPayloadsFunc func(band *Band, nodeChannels []int, pls []lorawan.LinkADRReqPayload) ([]int, error)
+	// GetEnabledUplinkChannelIndicesForLinkADRReqPayloads returns the enabled uplink channel
+	// indices after applying the given LinkADRReqPayloads to the given enabled device
+	// channels.
+	GetEnabledUplinkChannelIndicesForLinkADRReqPayloads(deviceEnabledChannels []int, pls []lorawan.LinkADRReqPayload) ([]int, error)
+
+	// GetDownlinkTXPower returns the TX power for downlink transmissions
+	// using the given frequency. Depending the band, it could return different
+	// values for different frequencies.
+	GetDownlinkTXPower(frequency int) int
+
+	// GetDefaults returns the band defaults.
+	GetDefaults() Defaults
 }
 
-// GetRX1Channel returns the channel to use for RX1 given the channel used
-// for uplink.
-func (b *Band) GetRX1Channel(txChannel int) int {
-	return b.getRX1ChannelFunc(txChannel)
+type band struct {
+	supportsExtraChannels bool
+	dataRates             map[int]DataRate
+	maxPayloadSizePerDR   map[int]MaxPayloadSize
+	rx1DataRateTable      map[int][]int
+	uplinkChannels        []Channel
+	downlinkChannels      []Channel
+	txPowerOffsets        []int
 }
 
-// GetRX1Frequency returns the frequency to use for RX1 given the uplink
-// frequency.
-func (b *Band) GetRX1Frequency(txFrequency int) (int, error) {
-	if b.getRX1FrequencyFunc == nil {
-		return 0, errors.New("lorawan/band: getRX1FrequencyFunc not implemented")
-	}
-	return b.getRX1FrequencyFunc(b, txFrequency)
-}
-
-// GetPingSlotFrequency returns the frequency to use for the ClassB ping-slot.
-func (b *Band) GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
-	if b.getPingSlotFrequencyFunc == nil {
-		return 0, errors.New("lorawan/band: getPingSlotFrequencyFunc not implemented")
-	}
-	return b.getPingSlotFrequencyFunc(b, devAddr, beaconTime)
-}
-
-// GetRX1DataRate returns the RX1 data-rate given the uplink data-rate and
-// RX1 data-rate offset.
-func (b *Band) GetRX1DataRate(uplinkDR, rx1DROffset int) (int, error) {
-	// use the lookup table when no function has been defined
-	if b.getRX1DataRateFunc == nil {
-		if uplinkDR > len(b.rx1DataRate)-1 {
-			return 0, errors.New("lorawan/band: invalid data-rate")
+func (b *band) GetDataRateIndex(uplink bool, dataRate DataRate) (int, error) {
+	for i, d := range b.dataRates {
+		// some bands implement different data-rates with the same parameters
+		// for uplink and downlink
+		if uplink {
+			if d.uplink == true && d.Modulation == dataRate.Modulation && d.Bandwidth == dataRate.Bandwidth && d.BitRate == dataRate.BitRate && d.SpreadFactor == dataRate.SpreadFactor {
+				return i, nil
+			}
 		}
-		if rx1DROffset > len(b.rx1DataRate[uplinkDR])-1 {
-			return 0, errors.New("lorawan/band: invalid data-rate offset")
+		if !uplink {
+			if d.downlink == true && d.Modulation == dataRate.Modulation && d.Bandwidth == dataRate.Bandwidth && d.BitRate == dataRate.BitRate && d.SpreadFactor == dataRate.SpreadFactor {
+				return i, nil
+			}
 		}
-		return b.rx1DataRate[uplinkDR][rx1DROffset], nil
 	}
-	return b.getRX1DataRateFunc(b, uplinkDR, rx1DROffset)
+	return 0, errors.New("lorawan/band: data-rate not found")
 }
 
-// GetUplinkChannelNumber returns the channel number given a frequency.
-// As it is possible that the same frequency occurs twice (eg. one time as
-// a default LoRaWAN channel and one time as a custom channel using a 250 kHz
-// data-rate), a bool must be given indicating this is a default channel.
-func (b *Band) GetUplinkChannelNumber(frequency int, defaultChannel bool) (int, error) {
-	for chanNum, channel := range b.UplinkChannels {
+func (b *band) GetDataRate(dr int) (DataRate, error) {
+	d, ok := b.dataRates[dr]
+	if !ok {
+		return DataRate{}, errors.New("lorawan/band: invalid data-rate")
+	}
+
+	return d, nil
+}
+
+func (b *band) GetMaxPayloadSizeForDataRateIndex(protocolVersion, regParamRevision string, dr int) (MaxPayloadSize, error) {
+	ps, ok := b.maxPayloadSizePerDR[dr]
+	if !ok {
+		return MaxPayloadSize{}, errors.New("lorawan/band: invalid data-rate")
+	}
+	return ps, nil
+}
+
+func (b *band) GetRX1DataRateIndex(uplinkDR, rx1DROffset int) (int, error) {
+	offsetSlice, ok := b.rx1DataRateTable[uplinkDR]
+	if !ok {
+		return 0, errors.New("lorawan/band: invalid data-rate")
+	}
+
+	if rx1DROffset > len(offsetSlice)-1 {
+		return 0, errors.New("lorawan/band: invalid RX1 data-rate offset")
+	}
+
+	return offsetSlice[rx1DROffset], nil
+}
+
+func (b *band) GetTXPowerOffset(txPower int) (int, error) {
+	if txPower > len(b.txPowerOffsets)-1 {
+		return 0, errors.New("lorawan/band: invalid tx-power")
+	}
+	return b.txPowerOffsets[txPower], nil
+}
+
+func (b *band) AddChannel(frequency, minDR, maxDR int) error {
+	if !b.supportsExtraChannels {
+		return errors.New("lorawan/band: band does not support extra channels")
+	}
+
+	c := Channel{
+		Frequency: frequency,
+		MinDR:     minDR,
+		MaxDR:     maxDR,
+		custom:    true,
+		enabled:   frequency != 0,
+	}
+
+	b.uplinkChannels = append(b.uplinkChannels, c)
+	b.downlinkChannels = append(b.downlinkChannels, c)
+	return nil
+}
+
+func (b *band) GetUplinkChannel(channel int) (Channel, error) {
+	if channel > len(b.uplinkChannels)-1 {
+		return Channel{}, errors.New("lorawan/band: invalid channel")
+	}
+
+	return b.uplinkChannels[channel], nil
+}
+
+func (b *band) GetUplinkChannelIndex(frequency int, defaultChannel bool) (int, error) {
+	for i, channel := range b.uplinkChannels {
 		if frequency == channel.Frequency && channel.custom != defaultChannel {
-			return chanNum, nil
+			return i, nil
 		}
 	}
 
 	return 0, fmt.Errorf("lorawan/band: unknown channel for frequency: %d", frequency)
 }
 
-// GetDataRate returns the index of the given DataRate.
-func (b *Band) GetDataRate(dr DataRate) (int, error) {
-	for i, d := range b.DataRates {
-		if d == dr {
-			return i, nil
-		}
+func (b *band) GetDownlinkChannel(channel int) (Channel, error) {
+	if channel > len(b.downlinkChannels)-1 {
+		return Channel{}, errors.New("lorawan/band: invalid channel")
 	}
-	return 0, errors.New("lorawan/band: the given data-rate does not exist")
+	return b.downlinkChannels[channel], nil
 }
 
-// AddChannel adds an extra (user-configured) channel to the channels.
-// Note: this is only allowed when the band supports a CFList.
-func (b *Band) AddChannel(freq, minDR, maxDR int) error {
-	if !b.ImplementsCFlist {
-		return errors.New("lorawan/band: band does not implement CFList")
+func (b *band) DisableUplinkChannelIndex(channel int) error {
+	if channel > len(b.uplinkChannels)-1 {
+		return errors.New("lorawan/band: channel does not exist")
 	}
-
-	c := Channel{
-		Frequency: freq,
-		MinDR:     minDR,
-		MaxDR:     maxDR,
-		custom:    true,
-		enabled:   freq != 0,
-	}
-
-	b.UplinkChannels = append(b.UplinkChannels, c)
-	b.DownlinkChannels = append(b.DownlinkChannels, c)
-
+	b.uplinkChannels[channel].enabled = false
 	return nil
 }
 
-// GetCFList returns the CFList used for OTAA activation, or returns nil if
-// the band does not implement the CFList or when there are no extra channels.
-// Note that this only returns the first 5 extra channels with min dr: 0 and
-// max dr: 5.
-// Other extra channels must be configured through mac-commands.
-func (b *Band) GetCFList() *lorawan.CFList {
-	if !b.ImplementsCFlist {
+func (b *band) EnableUplinkChannelIndex(channel int) error {
+	if channel > len(b.uplinkChannels)-1 {
+		return errors.New("lorawan/band: channel does not exist")
+	}
+	b.uplinkChannels[channel].enabled = true
+	return nil
+}
+
+func (b *band) GetUplinkChannelIndices() []int {
+	var out []int
+	for i := range b.uplinkChannels {
+		out = append(out, i)
+	}
+	return out
+}
+
+func (b *band) GetStandardUplinkChannelIndices() []int {
+	var out []int
+	for i, c := range b.uplinkChannels {
+		if !c.custom {
+			out = append(out, i)
+		}
+	}
+	return out
+}
+
+func (b *band) GetCustomUplinkChannelIndices() []int {
+	var out []int
+	for i, c := range b.uplinkChannels {
+		if c.custom {
+			out = append(out, i)
+		}
+	}
+	return out
+}
+
+func (b *band) GetEnabledUplinkChannelIndices() []int {
+	var out []int
+	for i, c := range b.uplinkChannels {
+		if c.enabled {
+			out = append(out, i)
+		}
+	}
+	return out
+}
+
+func (b *band) GetDisabledUplinkChannelIndices() []int {
+	var out []int
+	for i, c := range b.uplinkChannels {
+		if !c.enabled {
+			out = append(out, i)
+		}
+	}
+	return out
+}
+
+func (b *band) GetCFList() *lorawan.CFList {
+	if !b.supportsExtraChannels {
 		return nil
 	}
 
 	var cFList lorawan.CFList
 	var i int
-	for _, c := range b.UplinkChannels {
+	for _, c := range b.uplinkChannels {
 		if c.custom && i < len(cFList) && c.MinDR == 0 && c.MaxDR == 5 {
 			cFList[i] = uint32(c.Frequency)
 			i++
@@ -266,92 +393,14 @@ func (b *Band) GetCFList() *lorawan.CFList {
 	return &cFList
 }
 
-// DisableUplinkChannel disables the given uplink channel.
-func (b *Band) DisableUplinkChannel(i int) error {
-	if i > len(b.UplinkChannels)-1 {
-		return ErrChannelDoesNotExist
-	}
+func (b *band) GetLinkADRReqPayloadsForEnabledUplinkChannelIndices(deviceEnabledChannels []int) []lorawan.LinkADRReqPayload {
+	enabledChannels := b.GetEnabledUplinkChannelIndices()
 
-	b.UplinkChannels[i].enabled = false
-	return nil
-}
-
-// EnableUplinkChannel enables the given uplink channel.
-func (b *Band) EnableUplinkChannel(i int) error {
-	if i > len(b.UplinkChannels)-1 {
-		return ErrChannelDoesNotExist
-	}
-
-	b.UplinkChannels[i].enabled = true
-	return nil
-}
-
-// GetUplinkChannels returns all available uplink channels.
-func (b *Band) GetUplinkChannels() []int {
-	var out []int
-	for i := range b.UplinkChannels {
-		out = append(out, i)
-	}
-	return out
-}
-
-// GetStandardUplinkChannels returns all standard available uplink channels.
-// E.g. this is excluding extra channels configured by the user.
-func (b *Band) GetStandardUplinkChannels() []int {
-	var out []int
-	for i, c := range b.UplinkChannels {
-		if !c.custom {
-			out = append(out, i)
-		}
-	}
-	return out
-}
-
-// GetEnabledUplinkChannels returns the enabled uplink channels.
-func (b *Band) GetEnabledUplinkChannels() []int {
-	var out []int
-	for i, c := range b.UplinkChannels {
-		if c.enabled {
-			out = append(out, i)
-		}
-	}
-	return out
-}
-
-// GetDisabledUplinkChannels returns the disabled uplink channels.
-func (b *Band) GetDisabledUplinkChannels() []int {
-	var out []int
-	for i, c := range b.UplinkChannels {
-		if !c.enabled {
-			out = append(out, i)
-		}
-	}
-	return out
-}
-
-// GetCustomUplinkChannels returns the custom uplink channels added by the user.
-func (b *Band) GetCustomUplinkChannels() []int {
-	var out []int
-	for i, c := range b.UplinkChannels {
-		if c.custom {
-			out = append(out, i)
-		}
-	}
-	return out
-}
-
-// GetLinkADRReqPayloadsForEnabledChannels returns the LinkADRReqPayloads to
-// reconfigure the node to the current active channels. Note that in case of
-// activation, user-defined channels (e.g. CFList) will be ignored as it
-// is unknown if the node is aware about these extra frequencies.
-func (b *Band) GetLinkADRReqPayloadsForEnabledChannels(nodeChannels []int) []lorawan.LinkADRReqPayload {
-	enabledChannels := b.GetEnabledUplinkChannels()
-
-	diff := intSliceDiff(nodeChannels, enabledChannels)
+	diff := intSliceDiff(deviceEnabledChannels, enabledChannels)
 	var filteredDiff []int
 
 	for _, c := range diff {
-		if channelIsActive(nodeChannels, c) || !b.UplinkChannels[c].custom {
+		if channelIsActive(deviceEnabledChannels, c) || !b.uplinkChannels[c].custom {
 			filteredDiff = append(filteredDiff, c)
 		}
 	}
@@ -384,7 +433,7 @@ func (b *Band) GetLinkADRReqPayloadsForEnabledChannels(nodeChannels []int) []lor
 			// we have no knowledge if the nodes has been provisioned with
 			// these frequencies
 			for _, ec := range enabledChannels {
-				if (!b.UplinkChannels[ec].custom || channelIsActive(nodeChannels, ec)) && ec >= chMaskCntl*16 && ec < (chMaskCntl+1)*16 {
+				if (!b.uplinkChannels[ec].custom || channelIsActive(deviceEnabledChannels, ec)) && ec >= chMaskCntl*16 && ec < (chMaskCntl+1)*16 {
 					pl.ChMask[ec%16] = true
 				}
 			}
@@ -393,29 +442,12 @@ func (b *Band) GetLinkADRReqPayloadsForEnabledChannels(nodeChannels []int) []lor
 		}
 	}
 
-	// some bands contain band specific logic regarding turning on / off
-	// channels that might require less commands (using band specific
-	// ChMaskCntl values)
-	if b.getLinkADRReqPayloadsForEnabledChannelsFunc != nil {
-		payloadsB := b.getLinkADRReqPayloadsForEnabledChannelsFunc(b, nodeChannels)
-		if len(payloadsB) < len(payloads) {
-			return payloadsB
-		}
-	}
-
 	return payloads
 }
 
-// GetEnabledChannelsForLinkADRReqPayloads returns the enabled after which the
-// given LinkADRReqPayloads have been applied to the given node channels.
-func (b *Band) GetEnabledChannelsForLinkADRReqPayloads(nodeChannels []int, pls []lorawan.LinkADRReqPayload) ([]int, error) {
-	// for some bands some the ChMaskCntl values have special meanings
-	if b.getEnabledChannelsForLinkADRReqPayloadsFunc != nil {
-		return b.getEnabledChannelsForLinkADRReqPayloadsFunc(b, nodeChannels, pls)
-	}
-
-	chMask := make([]bool, len(b.UplinkChannels))
-	for _, c := range nodeChannels {
+func (b *band) GetEnabledUplinkChannelIndicesForLinkADRReqPayloads(deviceEnabledChannels []int, pls []lorawan.LinkADRReqPayload) ([]int, error) {
+	chMask := make([]bool, len(b.uplinkChannels))
+	for _, c := range deviceEnabledChannels {
 		// make sure that we don't exceed the chMask length. in case we exceed
 		// we ignore the channel as it might have been removed from the network
 		if c < len(chMask) {
@@ -448,7 +480,6 @@ func (b *Band) GetEnabledChannelsForLinkADRReqPayloads(nodeChannels []int, pls [
 	return out, nil
 }
 
-// intSliceDiff returns all items of x that are not in y and all items of
 // y that are not in x.
 func intSliceDiff(x, y []int) []int {
 	var out []int
@@ -515,6 +546,6 @@ func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, 
 	case US_902_928:
 		return newUS902Band(repeaterCompatible)
 	default:
-		return Band{}, fmt.Errorf("lorawan/band: band %s is undefined", name)
+		return nil, fmt.Errorf("lorawan/band: band %s is undefined", name)
 	}
 }

@@ -2,6 +2,7 @@ package band
 
 import (
 	"testing"
+	"time"
 
 	"github.com/brocaar/lorawan"
 	. "github.com/smartystreets/goconvey/convey"
@@ -12,23 +13,44 @@ func TestCN779Band(t *testing.T) {
 		band, err := GetConfig(CN_779_787, true, lorawan.DwellTimeNoLimit)
 		So(err, ShouldBeNil)
 
-		Convey("Then GetRX1Channel returns the uplink channel", func() {
-			for i := 0; i < 3; i++ {
-				rx1Chan := band.GetRX1Channel(i)
-				So(rx1Chan, ShouldEqual, i)
-			}
+		Convey("Then GetDefaults returns the expected value", func() {
+			So(band.GetDefaults(), ShouldResemble, Defaults{
+				RX2Frequency:     786000000,
+				RX2DataRate:      0,
+				MaxFCntGap:       16384,
+				ReceiveDelay1:    time.Second,
+				ReceiveDelay2:    time.Second * 2,
+				JoinAcceptDelay1: time.Second * 5,
+				JoinAcceptDelay2: time.Second * 6,
+			})
 		})
 
-		Convey("Then GetRX1Frequency returns the uplink frequency", func() {
-			for _, c := range band.DownlinkChannels {
-				freq, err := band.GetRX1Frequency(c.Frequency)
-				So(err, ShouldBeNil)
-				So(freq, ShouldEqual, c.Frequency)
-			}
+		Convey("Then GetDownlinkTXPower returns the expected value", func() {
+			So(band.GetDownlinkTXPower(0), ShouldEqual, 10)
+		})
+
+		Convey("Then GetPingSlotFrequency returns the expected value", func() {
+			f, err := band.GetPingSlotFrequency(lorawan.DevAddr{}, 0)
+			So(err, ShouldBeNil)
+			So(f, ShouldEqual, 785000000)
+		})
+
+		Convey("Then GetRX1ChannelIndexForUplinkChannelIndex returns the expected value", func() {
+			c, err := band.GetRX1ChannelIndexForUplinkChannelIndex(3)
+			So(err, ShouldBeNil)
+			So(c, ShouldEqual, 3)
+		})
+
+		Convey("Then GetRX1FrequencyForUplinkFrequency returns the expected value", func() {
+			f, err := band.GetRX1FrequencyForUplinkFrequency(779500000)
+			So(err, ShouldBeNil)
+			So(f, ShouldEqual, 779500000)
 		})
 
 		Convey("Then the max payload size (N) is 222 for DR4", func() {
-			So(band.MaxPayloadSize[4].N, ShouldEqual, 222)
+			s, err := band.GetMaxPayloadSizeForDataRateIndex(LoRaWAN_1_0_2, RegParamRevB, 4)
+			So(err, ShouldBeNil)
+			So(s.N, ShouldEqual, 222)
 		})
 	})
 
@@ -37,7 +59,9 @@ func TestCN779Band(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		Convey("Then the max payload size (N) is 242 for DR4", func() {
-			So(band.MaxPayloadSize[4].N, ShouldEqual, 242)
+			s, err := band.GetMaxPayloadSizeForDataRateIndex(LoRaWAN_1_0_2, RegParamRevB, 4)
+			So(err, ShouldBeNil)
+			So(s.N, ShouldEqual, 242)
 		})
 	})
 }
