@@ -85,26 +85,34 @@ func newEU433Band(repeaterCompatible bool) (Band, error) {
 	}
 
 	if repeaterCompatible {
-		b.band.maxPayloadSizePerDR = map[int]MaxPayloadSize{
-			0: {M: 59, N: 51},
-			1: {M: 59, N: 51},
-			2: {M: 59, N: 51},
-			3: {M: 123, N: 115},
-			4: {M: 230, N: 222},
-			5: {M: 230, N: 222},
-			6: {M: 230, N: 222},
-			7: {M: 230, N: 222},
+		b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
+			latest: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.0, 1.0.1, 1.0.2B
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+					6: {M: 230, N: 222},
+					7: {M: 230, N: 222},
+				},
+			},
 		}
 	} else {
-		b.band.maxPayloadSizePerDR = map[int]MaxPayloadSize{
-			0: {M: 59, N: 51},
-			1: {M: 59, N: 51},
-			2: {M: 59, N: 51},
-			3: {M: 123, N: 115},
-			4: {M: 250, N: 242},
-			5: {M: 250, N: 242},
-			6: {M: 250, N: 242},
-			7: {M: 250, N: 242},
+		b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
+			latest: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.0, 1.0.1, 1.0.2B
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 250, N: 242},
+					5: {M: 250, N: 242},
+					6: {M: 250, N: 242},
+					7: {M: 250, N: 242},
+				},
+			},
 		}
 	}
 

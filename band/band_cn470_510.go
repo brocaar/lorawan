@@ -50,7 +50,7 @@ func (b *cn470Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int,
 	return b.downlinkChannels[rx1Chan].Frequency, nil
 }
 
-func newCN470Band() (Band, error) {
+func newCN470Band(repeaterCompatible bool) (Band, error) {
 	b := cn470Band{
 		band: band{
 			dataRates: map[int]DataRate{
@@ -79,17 +79,47 @@ func newCN470Band() (Band, error) {
 				-12,
 				-14,
 			},
-			maxPayloadSizePerDR: map[int]MaxPayloadSize{
-				0: {M: 59, N: 51},
-				1: {M: 59, N: 51},
-				2: {M: 59, N: 51},
-				3: {M: 123, N: 115},
-				4: {M: 230, N: 222},
-				5: {M: 230, N: 222},
-			},
 			uplinkChannels:   make([]Channel, 96),
 			downlinkChannels: make([]Channel, 48),
 		},
+	}
+
+	if repeaterCompatible {
+		b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
+			latest: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.1, 1.0.2B
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+				},
+			},
+		}
+	} else {
+		b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
+			LoRaWAN_1_0_1: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.1
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+				},
+			},
+			latest: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 250, N: 242},
+					5: {M: 250, N: 242},
+				},
+			},
+		}
 	}
 
 	// initialize uplink channels

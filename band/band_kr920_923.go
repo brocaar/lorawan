@@ -38,7 +38,7 @@ func (b *kr920Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int,
 	return uplinkFrequency, nil
 }
 
-func newKR920Band() (Band, error) {
+func newKR920Band(repeaterCompatible bool) (Band, error) {
 	b := kr920Band{
 		band: band{
 			supportsExtraChannels: true,
@@ -68,14 +68,6 @@ func newKR920Band() (Band, error) {
 				-12,
 				-14,
 			},
-			maxPayloadSizePerDR: map[int]MaxPayloadSize{
-				0: {M: 73, N: 65},
-				1: {M: 159, N: 151},
-				2: {M: 250, N: 242},
-				3: {M: 250, N: 242},
-				4: {M: 250, N: 242},
-				5: {M: 250, N: 242},
-			},
 			uplinkChannels: []Channel{
 				{Frequency: 922100000, MinDR: 0, MaxDR: 5, enabled: true},
 				{Frequency: 922300000, MinDR: 0, MaxDR: 5, enabled: true},
@@ -88,6 +80,34 @@ func newKR920Band() (Band, error) {
 				{Frequency: 922500000, MinDR: 0, MaxDR: 5, enabled: true},
 			},
 		},
+	}
+
+	if repeaterCompatible {
+		b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
+			latest: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+				},
+			},
+		}
+	} else {
+		b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
+			latest: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 250, N: 242},
+					5: {M: 250, N: 242},
+				},
+			},
+		}
 	}
 
 	return &b, nil

@@ -11,11 +11,14 @@ import (
 	"github.com/brocaar/lorawan"
 )
 
+const latest = "latest"
+
 // Name defines the band-name type.
 type Name string
 
 // Available protocol versions.
 const (
+	LoRaWAN_1_0_0 = "1.0.0"
 	LoRaWAN_1_0_1 = "1.0.1"
 	LoRaWAN_1_0_2 = "1.0.2"
 	LoRaWAN_1_1_0 = "1.1.0"
@@ -204,7 +207,7 @@ type Band interface {
 type band struct {
 	supportsExtraChannels bool
 	dataRates             map[int]DataRate
-	maxPayloadSizePerDR   map[int]MaxPayloadSize
+	maxPayloadSizePerDR   map[string]map[string]map[int]MaxPayloadSize // LoRaWAN mac-version / Regional Parameters Revision / data-rate
 	rx1DataRateTable      map[int][]int
 	uplinkChannels        []Channel
 	downlinkChannels      []Channel
@@ -239,7 +242,23 @@ func (b *band) GetDataRate(dr int) (DataRate, error) {
 }
 
 func (b *band) GetMaxPayloadSizeForDataRateIndex(protocolVersion, regParamRevision string, dr int) (MaxPayloadSize, error) {
-	ps, ok := b.maxPayloadSizePerDR[dr]
+	regParamMap, ok := b.maxPayloadSizePerDR[protocolVersion]
+	if !ok {
+		regParamMap, ok = b.maxPayloadSizePerDR[latest]
+		if !ok {
+			return MaxPayloadSize{}, fmt.Errorf("no max payload-size for %s or latest", protocolVersion)
+		}
+	}
+
+	drMap, ok := regParamMap[regParamRevision]
+	if !ok {
+		drMap, ok = regParamMap[latest]
+		if !ok {
+			return MaxPayloadSize{}, fmt.Errorf("no max-payload size for regional parameters revision %s or latest", regParamRevision)
+		}
+	}
+
+	ps, ok := drMap[dr]
 	if !ok {
 		return MaxPayloadSize{}, errors.New("lorawan/band: invalid data-rate")
 	}
@@ -532,7 +551,7 @@ func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, 
 	case AU_915_928:
 		return newAU915Band(repeaterCompatible)
 	case CN_470_510:
-		return newCN470Band()
+		return newCN470Band(repeaterCompatible)
 	case CN_779_787:
 		return newCN779Band(repeaterCompatible)
 	case EU_433:
@@ -542,7 +561,7 @@ func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, 
 	case IN_865_867:
 		return newIN865Band(repeaterCompatible)
 	case KR_920_923:
-		return newKR920Band()
+		return newKR920Band(repeaterCompatible)
 	case US_902_928:
 		return newUS902Band(repeaterCompatible)
 	default:
