@@ -42,6 +42,7 @@ const (
 	IN_865_867 Name = "IN_865_867"
 	KR_920_923 Name = "KR_920_923"
 	US_902_928 Name = "US_902_928"
+	RU_864_870 Name = "RU_864_870"
 )
 
 // Modulation defines the modulation type.
@@ -564,6 +565,8 @@ func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, 
 		return newKR920Band(repeaterCompatible)
 	case US_902_928:
 		return newUS902Band(repeaterCompatible)
+	case RU_864_870:
+		return newRU864Band(repeaterCompatible)
 	default:
 		return nil, fmt.Errorf("lorawan/band: band %s is undefined", name)
 	}
