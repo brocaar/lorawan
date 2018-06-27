@@ -41,6 +41,8 @@ type MessageType string
 const (
 	JoinReq     MessageType = "JoinReq"
 	JoinAns     MessageType = "JoinAns"
+	RejoinReq   MessageType = "RejoinReq"
+	RejoinAns   MessageType = "RejoinAns"
 	AppSKeyReq  MessageType = "AppSKeyReq"
 	AppSKeyAns  MessageType = "AppSKeyAns"
 	PRStartReq  MessageType = "PRStartReq"
@@ -271,8 +273,7 @@ type JoinReqPayload struct {
 	DevAddr    lorawan.DevAddr    `json:"DevAddr"`
 	DLSettings lorawan.DLSettings `json:"DLSettings"`
 	RxDelay    int                `json:"RxDelay"`
-	CFList     *lorawan.CFList    `json:"CFList,omitempty"`     // Optional
-	CFListType *int               `json:"CFListType,omitempty"` // Optional
+	CFList     HEXBytes           `json:"CFList,omitempty"` // Optional
 }
 
 // JoinAnsPayload defines the JoinAns message payload.
@@ -298,8 +299,7 @@ type RejoinReqPayload struct {
 	DevAddr    lorawan.DevAddr    `json:"DevAddr"`
 	DLSettings lorawan.DLSettings `json:"DLSettings"`
 	RxDelay    int                `json:"RxDelay"`
-	CFList     *lorawan.CFList    `json:"CFList,omitempty"`     // Optional
-	CFListType *int               `json:"CFListType,omitempty"` // Optional
+	CFList     HEXBytes           `json:"CFList,omitempty"` // Optional
 }
 
 // RejoinAnsPayload defines the RejoinAns message payload.
@@ -374,8 +374,7 @@ type HRStartReqPayload struct {
 	ULMetaData             ULMetaData         `json:"ULMetaData"`
 	DLSettings             lorawan.DLSettings `json:"DLSettings"`
 	RxDelay                int                `json:"RxDelay"`
-	CFList                 *lorawan.CFList    `json:"CFList,omitempty"`       // Optional
-	CFListType             *int               `json:"CFListType,omitempty"`   // Optional
+	CFList                 HEXBytes           `json:"CFList,omitempty"`       // Optional
 	DeviceProfileTimestamp ISO8601Time        `json:"DeviceProfileTimestamp"` // Timestamp of last DeviceProfile change
 }
 

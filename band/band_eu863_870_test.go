@@ -158,14 +158,19 @@ func TestEU863Band(t *testing.T) {
 			})
 
 			Convey("Then GetCFList returns the expected CFList", func() {
-				cFList := band.GetCFList()
+				cFList := band.GetCFList(LoRaWAN_1_0_2)
 				So(cFList, ShouldNotBeNil)
-				So(*cFList, ShouldEqual, lorawan.CFList{
-					867100000,
-					867300000,
-					867500000,
-					867700000,
-					867900000,
+				So(cFList, ShouldResemble, &lorawan.CFList{
+					CFListType: lorawan.CFListChannel,
+					Payload: &lorawan.CFListChannelPayload{
+						Channels: [5]uint32{
+							867100000,
+							867300000,
+							867500000,
+							867700000,
+							867900000,
+						},
+					},
 				})
 			})
 		})

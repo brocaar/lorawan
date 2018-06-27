@@ -5,15 +5,125 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
 )
 
 // DevAddr represents the device address.
 type DevAddr [4]byte
 
+// NetIDType returns the NetID type of the DevAddr.
+func (a DevAddr) NetIDType() int {
+	for i := 0; i < 8; i++ {
+		if a[0]&(0xff<<(byte(7-i))) == 0xff&(0xff<<(byte(8-i))) {
+			return i
+		}
+	}
+	panic("NetIDType bug!")
+}
+
 // NwkID returns the NwkID bits of the DevAddr.
-func (a DevAddr) NwkID() byte {
-	return a[0] >> 1 // 7 msb
+func (a DevAddr) NwkID() []byte {
+	switch a.NetIDType() {
+	case 0:
+		return a.getNwkID(1, 6)
+	case 1:
+		return a.getNwkID(2, 6)
+	case 2:
+		return a.getNwkID(3, 9)
+	case 3:
+		return a.getNwkID(4, 10)
+	case 4:
+		return a.getNwkID(5, 11)
+	case 5:
+		return a.getNwkID(6, 13)
+	case 6:
+		return a.getNwkID(7, 15)
+	case 7:
+		return a.getNwkID(8, 17)
+	default:
+		return nil
+	}
+}
+
+// SetAddrPrefix sets the NetID based AddrPrefix.
+func (a *DevAddr) SetAddrPrefix(netID NetID) {
+	switch netID.Type() {
+	case 0:
+		a.setAddrPrefix(1, 6, netID)
+	case 1:
+		a.setAddrPrefix(2, 6, netID)
+	case 2:
+		a.setAddrPrefix(3, 9, netID)
+	case 3:
+		a.setAddrPrefix(4, 10, netID)
+	case 4:
+		a.setAddrPrefix(5, 11, netID)
+	case 5:
+		a.setAddrPrefix(6, 13, netID)
+	case 6:
+		a.setAddrPrefix(7, 15, netID)
+	case 7:
+		a.setAddrPrefix(8, 17, netID)
+	}
+}
+
+// IsNetID returns a bool indicating if the NwkID matches the given NetID.
+func (a DevAddr) IsNetID(netID NetID) bool {
+	tempDevAddr := a
+	tempDevAddr.SetAddrPrefix(netID)
+
+	if a == tempDevAddr {
+		return true
+	}
+
+	return false
+}
+
+func (a *DevAddr) setAddrPrefix(prefixLength, nwkIDBits int, netID NetID) {
+	// convert DevAddr to uint32
+	devAddr := binary.BigEndian.Uint32(a[:])
+
+	// clear the bits for the prefix and NwkID
+	var mask uint32
+	mask-- // sets all uint32 bits to 1
+	devAddr &^= mask << uint32(32-prefixLength-nwkIDBits)
+
+	// set the type prefix
+	prefix := uint32(254) << uint32(32-prefixLength)
+	devAddr |= prefix
+
+	// set the nwkID
+	nwkIDBytes := make([]byte, 4)
+	id := netID.ID()
+	copy(nwkIDBytes[len(nwkIDBytes)-len(id):], id)
+
+	nwkID := binary.BigEndian.Uint32(nwkIDBytes)
+	nwkID = nwkID << uint32(32-nwkIDBits) // truncate the MSB of the NetID ID field
+	nwkID = nwkID >> uint32(prefixLength) // shift back for the prefix MSB
+	devAddr |= nwkID
+
+	binary.BigEndian.PutUint32(a[:], devAddr)
+}
+
+func (a DevAddr) getNwkID(prefixLength, nwkIDBits int) []byte {
+	// convert DevAddr to uint32
+	temp := binary.BigEndian.Uint32(a[:])
+
+	// clear prefix
+	temp = temp << uint32(prefixLength)
+
+	// shift to starting of NwkID
+	temp = temp >> (32 - uint32(nwkIDBits))
+
+	// back to bytes
+	out := make([]byte, 4)
+	binary.BigEndian.PutUint32(out, temp)
+
+	bLen := nwkIDBits / 8
+	if nwkIDBits%8 != 0 {
+		bLen++
+	}
+
+	return out[len(out)-bLen:]
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -125,10 +235,10 @@ func (c *FCtrl) UnmarshalBinary(data []byte) error {
 
 // FHDR represents the frame header.
 type FHDR struct {
-	DevAddr DevAddr      `json:"devAddr"`
-	FCtrl   FCtrl        `json:"fCtrl"`
-	FCnt    uint32       `json:"fCnt"`  // only the least-significant 16 bits will be marshalled
-	FOpts   []MACCommand `json:"fOpts"` // max. number of allowed bytes is 15
+	DevAddr DevAddr   `json:"devAddr"`
+	FCtrl   FCtrl     `json:"fCtrl"`
+	FCnt    uint32    `json:"fCnt"`  // only the least-significant 16 bits will be marshalled
+	FOpts   []Payload `json:"fOpts"` // max. number of allowed bytes is 15
 }
 
 // MarshalBinary marshals the object in binary form.
@@ -186,28 +296,8 @@ func (h *FHDR) UnmarshalBinary(uplink bool, data []byte) error {
 	h.FCnt = binary.LittleEndian.Uint32(fCntBytes)
 
 	if len(data) > 7 {
-		var pLen int
-		for i := 0; i < len(data[7:]); i++ {
-			if _, s, err := GetMACPayloadAndSize(uplink, CID(data[7+i])); err != nil {
-				pLen = 0
-			} else {
-				pLen = s
-			}
-
-			// check if the remaining bytes are >= CID byte + payload size
-			if len(data[7+i:]) < pLen+1 {
-				return errors.New("lorawan: not enough remaining bytes")
-			}
-
-			mc := MACCommand{}
-			if err := mc.UnmarshalBinary(uplink, data[7+i:7+i+1+pLen]); err != nil {
-				log.Printf("warning: unmarshal mac-command error (skipping remaining mac-command bytes): %s", err)
-				break
-			}
-			h.FOpts = append(h.FOpts, mc)
-
-			// go to the next command (skip the payload bytes of the current command)
-			i = i + pLen
+		h.FOpts = []Payload{
+			&DataPayload{Bytes: data[7:]},
 		}
 	}
 

@@ -141,6 +141,44 @@ func TestUS902Band(t *testing.T) {
 				}
 				So(inactive, ShouldResemble, expected)
 			})
+
+			Convey("Then GetCFList for LoRaWAN 1.0.x returns nil", func() {
+				So(band.GetCFList(LoRaWAN_1_0_2), ShouldBeNil)
+			})
+
+			Convey("Then GetCFList for LoRaWAN 1.1+ returns the channel-mask", func() {
+				cFList := band.GetCFList(LoRaWAN_1_1_0)
+				So(cFList, ShouldNotBeNil)
+				So(cFList, ShouldResemble, &lorawan.CFList{
+					CFListType: lorawan.CFListChannelMask,
+					Payload: &lorawan.CFListChannelMaskPayload{
+						ChannelMasks: []lorawan.ChMask{
+							{
+								false,
+								false,
+								false,
+								false,
+								false,
+								false,
+								false,
+								false,
+								true,
+								true,
+								true,
+								true,
+								true,
+								true,
+								true,
+								true,
+							},
+							{}, // all false
+							{}, // all false
+							{}, // all false
+							{}, // all false
+						},
+					},
+				})
+			})
 		})
 
 		Convey("Then GetDataRateIndex returns the expected data-rate index", func() {

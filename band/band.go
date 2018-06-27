@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/brocaar/lorawan"
@@ -178,12 +179,13 @@ type Band interface {
 	// GetPingSlotFrequency returns the frequency to use for the Class-B ping-slot.
 	GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error)
 
-	// GetCFList returns the CFList used for OTAA activation, or returns nil if
-	// the band does not implement the CFList or when there are no extra channels.
-	// Note that this only returns the first 5 extra channels with min dr: 0 and
-	// max dr: 5.
-	// Other extra channels must be configured through mac-commands.
-	GetCFList() *lorawan.CFList
+	// GetCFList returns the CFList used for OTAA activation.
+	// The CFList contains the extra channels (e.g. for the EU band) or the
+	// channel-mask for LoRaWAN 1.1+ devices (e.g. for the US band).
+	// In case of extra channels, only the first 5 extra channels with DR 0-5
+	// are returned. Other channels must be set using mac-commands. When there
+	// are no extra channels, this method returns nil.
+	GetCFList(protocolVersion string) *lorawan.CFList
 
 	// GetLinkADRReqPayloadsForEnabledUplinkChannelIndices returns the LinkADRReqPayloads to
 	// reconfigure the device to the current enabled channels. Note that in case of
@@ -393,24 +395,55 @@ func (b *band) GetDisabledUplinkChannelIndices() []int {
 	return out
 }
 
-func (b *band) GetCFList() *lorawan.CFList {
-	if !b.supportsExtraChannels {
+func (b *band) GetCFList(protocolVersion string) *lorawan.CFList {
+	if !b.supportsExtraChannels && strings.HasPrefix(protocolVersion, "1.0") {
 		return nil
 	}
 
-	var cFList lorawan.CFList
+	if b.supportsExtraChannels {
+		return b.getCFListChannels()
+	}
+	return b.getCFListChannelMask()
+}
+
+func (b *band) getCFListChannelMask() *lorawan.CFList {
+	var pl lorawan.CFListChannelMaskPayload
+	var chMask lorawan.ChMask
+
+	for i, c := range b.uplinkChannels {
+		if i != 0 && i%len(chMask) == 0 {
+			pl.ChannelMasks = append(pl.ChannelMasks, chMask)
+			chMask = lorawan.ChMask{}
+		}
+		chMask[i%len(chMask)] = c.enabled
+	}
+	pl.ChannelMasks = append(pl.ChannelMasks, chMask)
+
+	return &lorawan.CFList{
+		CFListType: lorawan.CFListChannelMask,
+		Payload:    &pl,
+	}
+}
+
+func (b *band) getCFListChannels() *lorawan.CFList {
+	var pl lorawan.CFListChannelPayload
+
 	var i int
 	for _, c := range b.uplinkChannels {
-		if c.custom && i < len(cFList) && c.MinDR == 0 && c.MaxDR == 5 {
-			cFList[i] = uint32(c.Frequency)
+		if c.custom && i < len(pl.Channels) && c.MinDR == 0 && c.MaxDR == 5 {
+			pl.Channels[i] = uint32(c.Frequency)
 			i++
 		}
 	}
 
-	if cFList[0] == 0 {
+	if pl.Channels[0] == 0 {
 		return nil
 	}
-	return &cFList
+
+	return &lorawan.CFList{
+		CFListType: lorawan.CFListChannel,
+		Payload:    &pl,
+	}
 }
 
 func (b *band) GetLinkADRReqPayloadsForEnabledUplinkChannelIndices(deviceEnabledChannels []int) []lorawan.LinkADRReqPayload {

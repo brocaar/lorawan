@@ -4,9 +4,9 @@ package lorawan
 
 import "strconv"
 
-const _MType_name = "JoinRequestJoinAcceptUnconfirmedDataUpUnconfirmedDataDownConfirmedDataUpConfirmedDataDownRFUProprietary"
+const _MType_name = "JoinRequestJoinAcceptUnconfirmedDataUpUnconfirmedDataDownConfirmedDataUpConfirmedDataDownRejoinRequestProprietary"
 
-var _MType_index = [...]uint8{0, 11, 21, 38, 57, 72, 89, 92, 103}
+var _MType_index = [...]uint8{0, 11, 21, 38, 57, 72, 89, 102, 113}
 
 func (i MType) String() string {
 	if i >= MType(len(_MType_index)-1) {

@@ -2,8 +2,6 @@ package lorawan
 
 import (
 	"errors"
-	"fmt"
-	"log"
 )
 
 // MACPayload represents the MAC payload. Use NewMACPayload for creating a new
@@ -33,48 +31,6 @@ func (p MACPayload) marshalPayload() ([]byte, error) {
 		out = append(out, b...)
 	}
 	return out, nil
-}
-
-func (p *MACPayload) decodeFRMPayloadToMACCommands(uplink bool) error {
-	if p.FPort == nil || *p.FPort != 0 {
-		return fmt.Errorf("lorawan: FPort must be 0 when calling decodeFRMPayloadToMACCommands")
-	}
-
-	if len(p.FRMPayload) != 1 {
-		return fmt.Errorf("lorawan: exactly 1 Payload was expected in FRMPayload")
-	}
-
-	dataPL, ok := p.FRMPayload[0].(*DataPayload)
-	if !ok {
-		return fmt.Errorf("lorawan: expected *DataPayload, got %T", p.FRMPayload[0])
-	}
-
-	var pLen int
-	p.FRMPayload = make([]Payload, 0)
-	for i := 0; i < len(dataPL.Bytes); i++ {
-		if _, s, err := GetMACPayloadAndSize(uplink, CID(dataPL.Bytes[i])); err != nil {
-			pLen = 0
-		} else {
-			pLen = s
-		}
-
-		// check if the remaining bytes are >= CID byte + payload size
-		if len(dataPL.Bytes[i:]) < pLen+1 {
-			return errors.New("lorawan: not enough remaining bytes")
-		}
-
-		mc := &MACCommand{}
-		if err := mc.UnmarshalBinary(uplink, dataPL.Bytes[i:i+1+pLen]); err != nil {
-			log.Printf("warning: unmarshal mac-command error (skipping remaining mac-command bytes): %s", err)
-			break
-		}
-		p.FRMPayload = append(p.FRMPayload, mc)
-
-		// go to the next command (skip the payload bytes of the current command)
-		i = i + pLen
-	}
-
-	return nil
 }
 
 // MarshalBinary marshals the object in binary form.

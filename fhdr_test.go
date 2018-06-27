@@ -11,61 +11,173 @@ import (
 )
 
 func TestDevAddr(t *testing.T) {
-	Convey("Given an empty DevAddr", t, func() {
-		var a DevAddr
-		Convey("Then MarshalBinary returns ", func() {
-			b, err := a.MarshalBinary()
-			So(err, ShouldBeNil)
-			So(b, ShouldResemble, []byte{0, 0, 0, 0})
-		})
+	Convey("Given a set of tests", t, func() {
+		tests := []struct {
+			Name      string
+			DevAddr   DevAddr
+			NetIDType int
+			NwkID     []byte
+			Bytes     []byte
+			String    string
+		}{
+			{
+				Name:      "NetID type 0",
+				DevAddr:   DevAddr{91, 255, 255, 255},
+				NetIDType: 0,
+				NwkID:     []byte{45},
+				Bytes:     []byte{255, 255, 255, 91},
+				String:    "5bffffff",
+			},
+			{
+				Name:      "NetID type 1",
+				DevAddr:   DevAddr{173, 255, 255, 255},
+				NetIDType: 1,
+				NwkID:     []byte{45},
+				Bytes:     []byte{255, 255, 255, 173},
+				String:    "adffffff",
+			},
+			{
+				Name:      "NetID type 2",
+				DevAddr:   DevAddr{214, 223, 255, 255},
+				NetIDType: 2,
+				NwkID:     []byte{1, 109},
+				Bytes:     []byte{255, 255, 223, 214},
+				String:    "d6dfffff",
+			},
+			{
+				Name:      "NetID type 3",
+				DevAddr:   DevAddr{235, 111, 255, 255},
+				NetIDType: 3,
+				NwkID:     []byte{2, 219},
+				Bytes:     []byte{255, 255, 111, 235},
+				String:    "eb6fffff",
+			},
+			{
+				Name:      "NetID type 4",
+				DevAddr:   DevAddr{245, 182, 255, 255},
+				NetIDType: 4,
+				NwkID:     []byte{5, 182},
+				Bytes:     []byte{255, 255, 182, 245},
+				String:    "f5b6ffff",
+			},
+			{
+				Name:      "NetID type 5",
+				DevAddr:   DevAddr{250, 219, 127, 255},
+				NetIDType: 5,
+				NwkID:     []byte{22, 219},
+				Bytes:     []byte{255, 127, 219, 250},
+				String:    "fadb7fff",
+			},
+			{
+				Name:      "NetID type 6",
+				DevAddr:   DevAddr{253, 109, 183, 255},
+				NetIDType: 6,
+				NwkID:     []byte{91, 109},
+				Bytes:     []byte{255, 183, 109, 253},
+				String:    "fd6db7ff",
+			},
+			{
+				Name:      "NetID type 7",
+				DevAddr:   DevAddr{254, 182, 219, 127},
+				NetIDType: 7,
+				NwkID:     []byte{1, 109, 182},
+				Bytes:     []byte{127, 219, 182, 254},
+				String:    "feb6db7f",
+			},
+		}
 
-		Convey("Given the DevAddr{255, 1, 1, 1}", func() {
-			a = DevAddr{255, 1, 1, 1}
-			Convey("Then NwkID returns byte(127)", func() {
-				So(a.NwkID(), ShouldEqual, byte(127))
-			})
-		})
+		for i, test := range tests {
+			Convey(fmt.Sprintf("Testing: %s [%d]", test.Name, i), func() {
+				So(test.DevAddr.NetIDType(), ShouldEqual, test.NetIDType)
+				So(test.DevAddr.NwkID(), ShouldResemble, test.NwkID)
 
-		Convey("Given the DevAddr{1, 2, 3, 4}", func() {
-			a = DevAddr{1, 2, 3, 4}
-			Convey("Then MarshalBinary returns []byte{4, 3, 2, 1}", func() {
-				b, err := a.MarshalBinary()
+				b, err := test.DevAddr.MarshalBinary()
 				So(err, ShouldBeNil)
-				So(b, ShouldResemble, []byte{4, 3, 2, 1})
-			})
+				So(b, ShouldResemble, test.Bytes)
 
-			Convey("Then MarshalText returns 01020304", func() {
-				b, err := a.MarshalText()
+				var devAddr DevAddr
+				So(devAddr.UnmarshalBinary(test.Bytes), ShouldBeNil)
+				So(devAddr, ShouldResemble, test.DevAddr)
+
+				b, err = test.DevAddr.MarshalText()
 				So(err, ShouldBeNil)
-				So(string(b), ShouldEqual, "01020304")
-			})
-		})
+				So(string(b), ShouldEqual, test.String)
 
-		Convey("Given the slice []byte{4, 3, 2, 1}", func() {
-			b := []byte{4, 3, 2, 1}
-			Convey("Then UnmarshalBinary returns DevAddr{1, 2, 3, 4}", func() {
-				err := a.UnmarshalBinary(b)
-				So(err, ShouldBeNil)
-				So(a, ShouldResemble, DevAddr{1, 2, 3, 4})
+				So(devAddr.UnmarshalText([]byte(test.String)), ShouldBeNil)
+				So(devAddr, ShouldEqual, test.DevAddr)
 			})
-		})
+		}
+	})
+}
 
-		Convey("Given the string 01020304", func() {
-			str := "01020304"
-			Convey("Then UnmarshalText returns DevAddr{1, 2, 3, 4}", func() {
-				err := a.UnmarshalText([]byte(str))
-				So(err, ShouldBeNil)
-				So(a, ShouldResemble, DevAddr{1, 2, 3, 4})
-			})
-		})
+func TestDevAddrSetAddrPrefix(t *testing.T) {
+	Convey("Given a set of tests", t, func() {
+		tests := []struct {
+			Name            string
+			BeforeDevAddr   DevAddr
+			NetID           []NetID
+			ExpectedDevAddr []DevAddr
+		}{
+			{
+				Name:            "Set type 0 prefix",
+				BeforeDevAddr:   DevAddr{255, 255, 255, 255},
+				NetID:           []NetID{{0, 0, 0}, {0, 0, 63}},
+				ExpectedDevAddr: []DevAddr{{1, 255, 255, 255}, {127, 255, 255, 255}},
+			},
+			{
+				Name:            "Set type 1 prefix",
+				BeforeDevAddr:   DevAddr{255, 255, 255, 255},
+				NetID:           []NetID{{32, 0, 0}, {32, 0, 63}},
+				ExpectedDevAddr: []DevAddr{{128, 255, 255, 255}, {191, 255, 255, 255}},
+			},
+			{
+				Name:            "Set type 2 prefix",
+				BeforeDevAddr:   DevAddr{255, 255, 255, 255},
+				NetID:           []NetID{{64, 0, 0}, {64, 1, 255}},
+				ExpectedDevAddr: []DevAddr{{192, 15, 255, 255}, {223, 255, 255, 255}},
+			},
+			{
+				Name:            "Set type 3 prefix",
+				BeforeDevAddr:   DevAddr{255, 255, 255, 255},
+				NetID:           []NetID{{96, 0, 0}, {111, 255, 255}},
+				ExpectedDevAddr: []DevAddr{{224, 3, 255, 255}, {239, 255, 255, 255}},
+			},
+			{
+				Name:            "Set type 4 prefix",
+				BeforeDevAddr:   DevAddr{255, 255, 255, 255},
+				NetID:           []NetID{{128, 0, 0}, {159, 255, 255}},
+				ExpectedDevAddr: []DevAddr{{240, 0, 255, 255}, {247, 255, 255, 255}},
+			},
+			{
+				Name:            "Set type 5 prefix",
+				BeforeDevAddr:   DevAddr{255, 255, 255, 255},
+				NetID:           []NetID{{160, 0, 0}, {191, 255, 255}},
+				ExpectedDevAddr: []DevAddr{{248, 0, 31, 255}, {251, 255, 255, 255}},
+			},
+			{
+				Name:            "Set type 6 prefix",
+				BeforeDevAddr:   DevAddr{255, 255, 255, 255},
+				NetID:           []NetID{{192, 0, 0}, {223, 255, 255}},
+				ExpectedDevAddr: []DevAddr{{252, 0, 3, 255}, {253, 255, 255, 255}},
+			},
+			{
+				Name:            "Set type 7 prefix",
+				BeforeDevAddr:   DevAddr{255, 255, 255, 255},
+				NetID:           []NetID{{224, 0, 0}, {255, 255, 255}},
+				ExpectedDevAddr: []DevAddr{{254, 0, 0, 127}, {254, 255, 255, 255}},
+			},
+		}
 
-		Convey("Given []byte{1, 2, 3, 4}", func() {
-			b := []byte{1, 2, 3, 4}
-			Convey("Then Scan scans the value correctly", func() {
-				So(a.Scan(b), ShouldBeNil)
-				So(a[:], ShouldResemble, b)
+		for i, test := range tests {
+			Convey(fmt.Sprintf("Testing: %s [%d]", test.Name, i), func() {
+				for i := range test.NetID {
+					So(test.BeforeDevAddr.IsNetID(test.NetID[i]), ShouldBeFalse)
+					test.BeforeDevAddr.SetAddrPrefix(test.NetID[i])
+					So(test.BeforeDevAddr, ShouldEqual, test.ExpectedDevAddr[i])
+					So(test.BeforeDevAddr.IsNetID(test.NetID[i]), ShouldBeTrue)
+				}
 			})
-		})
+		}
 	})
 }
 
@@ -158,8 +270,8 @@ func TestFHDR(t *testing.T) {
 			h.DevAddr = DevAddr([4]byte{1, 2, 3, 4})
 			h.FCtrl = FCtrl{ADR: true, ADRACKReq: false, ACK: true, FPending: true}
 			h.FCnt = 5
-			h.FOpts = []MACCommand{
-				{CID: LinkCheckAns, Payload: &LinkCheckAnsPayload{Margin: 7, GwCnt: 9}},
+			h.FOpts = []Payload{
+				&MACCommand{CID: LinkCheckAns, Payload: &LinkCheckAnsPayload{Margin: 7, GwCnt: 9}},
 			}
 			Convey("Then MarshalBinary returns []byte{4, 3, 2, 1, 179, 5, 0, 2, 7, 9}", func() {
 				b, err := h.MarshalBinary()
@@ -170,7 +282,7 @@ func TestFHDR(t *testing.T) {
 
 		Convey("Given FOpts contains 5 times MACCommand{(CID=LinkCheckAns, Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9))}", func() {
 			for i := 0; i < 5; i++ {
-				h.FOpts = append(h.FOpts, MACCommand{CID: LinkCheckAns, Payload: &LinkCheckAnsPayload{Margin: 7, GwCnt: 9}})
+				h.FOpts = append(h.FOpts, &MACCommand{CID: LinkCheckAns, Payload: &LinkCheckAnsPayload{Margin: 7, GwCnt: 9}})
 			}
 			Convey("Then MarshalBinary does not return an error", func() {
 				_, err := h.MarshalBinary()
@@ -180,7 +292,7 @@ func TestFHDR(t *testing.T) {
 
 		Convey("Given FOpts contains 6 times MACCommand{(CID=LinkCheckAns, Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9))}", func() {
 			for i := 0; i < 6; i++ {
-				h.FOpts = append(h.FOpts, MACCommand{CID: LinkCheckAns, Payload: &LinkCheckAnsPayload{Margin: 7, GwCnt: 9}})
+				h.FOpts = append(h.FOpts, &MACCommand{CID: LinkCheckAns, Payload: &LinkCheckAnsPayload{Margin: 7, GwCnt: 9}})
 			}
 			Convey("Then MarshalBinary does return an error", func() {
 				_, err := h.MarshalBinary()
@@ -192,6 +304,8 @@ func TestFHDR(t *testing.T) {
 			b := []byte{4, 3, 2, 1, 179, 5, 0, 2, 7, 9}
 			Convey("Then UnmarshalBinary does not return an error", func() {
 				err := h.UnmarshalBinary(false, b)
+				So(err, ShouldBeNil)
+				h.FOpts, err = decodeDataPayloadToMACCommands(false, h.FOpts)
 				So(err, ShouldBeNil)
 
 				Convey("Then DevAddr=[4]{1, 2, 3, 4}", func() {
@@ -205,13 +319,12 @@ func TestFHDR(t *testing.T) {
 				Convey("Then len(FOpts)=1", func() {
 					So(h.FOpts, ShouldHaveLength, 1)
 					Convey("Then CID=LinkCheckAns", func() {
-						So(h.FOpts[0].CID, ShouldEqual, LinkCheckAns)
+						So(h.FOpts[0].(*MACCommand).CID, ShouldEqual, LinkCheckAns)
 					})
-
 				})
 
 				Convey("Then Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9)", func() {
-					p, ok := h.FOpts[0].Payload.(*LinkCheckAnsPayload)
+					p, ok := h.FOpts[0].(*MACCommand).Payload.(*LinkCheckAnsPayload)
 					So(ok, ShouldBeTrue)
 					So(p, ShouldResemble, &LinkCheckAnsPayload{Margin: 7, GwCnt: 9})
 				})
@@ -226,6 +339,8 @@ func TestFHDR(t *testing.T) {
 			Convey("Then UnmarshalBinary does not return an error", func() {
 				err := h.UnmarshalBinary(false, b)
 				So(err, ShouldBeNil)
+				h.FOpts, err = decodeDataPayloadToMACCommands(false, h.FOpts)
+				So(err, ShouldBeNil)
 
 				Convey("Then DevAddr=[4]{1, 2, 3, 4}", func() {
 					So(h.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))
@@ -238,18 +353,18 @@ func TestFHDR(t *testing.T) {
 				Convey("Then len(FOpts)=3", func() {
 					So(h.FOpts, ShouldHaveLength, 3)
 					Convey("Then CID=LinkCheckAns", func() {
-						So(h.FOpts[0].CID, ShouldEqual, LinkCheckAns)
+						So(h.FOpts[0].(*MACCommand).CID, ShouldEqual, LinkCheckAns)
 					})
 
 				})
 
 				Convey("Then the remaining mac data is still available", func() {
-					So(h.FOpts[1].CID, ShouldEqual, 78)
-					So(h.FOpts[2].CID, ShouldEqual, 79)
+					So(h.FOpts[1].(*MACCommand).CID, ShouldEqual, 78)
+					So(h.FOpts[2].(*MACCommand).CID, ShouldEqual, 79)
 				})
 
 				Convey("Then Payload=LinkCheckAnsPayload(Margin=7, GwCnt=9)", func() {
-					p, ok := h.FOpts[0].Payload.(*LinkCheckAnsPayload)
+					p, ok := h.FOpts[0].(*MACCommand).Payload.(*LinkCheckAnsPayload)
 					So(ok, ShouldBeTrue)
 					So(p, ShouldResemble, &LinkCheckAnsPayload{Margin: 7, GwCnt: 9})
 				})
@@ -260,6 +375,8 @@ func TestFHDR(t *testing.T) {
 			b := []byte{1, 2, 3, 4, 179, 5, 0, 2, 7}
 			Convey("Then UnmarshalBinary returns an error", func() {
 				err := h.UnmarshalBinary(false, b)
+				So(err, ShouldBeNil)
+				h.FOpts, err = decodeDataPayloadToMACCommands(false, h.FOpts)
 				So(err, ShouldResemble, errors.New("lorawan: not enough remaining bytes"))
 			})
 		})
@@ -274,14 +391,16 @@ func TestFHDR(t *testing.T) {
 					MinDR:   1,
 				},
 			}
-			h.FOpts = []MACCommand{m}
+			h.FOpts = []Payload{&m}
 			Convey("When it is transformed into binary", func() {
 				b, err := h.MarshalBinary()
 				So(err, ShouldBeNil)
 				Convey("Then it can be converted back to the original payload", func() {
 					actual := FHDR{}
 					So(actual.UnmarshalBinary(false, b), ShouldBeNil)
-					So(actual.FOpts, ShouldResemble, []MACCommand{m})
+					actual.FOpts, err = decodeDataPayloadToMACCommands(false, actual.FOpts)
+					So(err, ShouldBeNil)
+					So(actual.FOpts, ShouldResemble, []Payload{&m})
 				})
 			})
 		})

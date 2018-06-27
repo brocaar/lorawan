@@ -397,40 +397,42 @@ func TestDLSettings(t *testing.T) {
 			})
 		})
 
-		Convey("Given RX2DataRate=15 and RX1DROffset=7", func() {
+		Convey("Given RX2DataRate=15, RX1DROffset=7 and OptNeg=true", func() {
 			s.RX2DataRate = 15
 			s.RX1DROffset = 7
+			s.OptNeg = true
 			Convey("Then MarshalBinary returns []byte{127}", func() {
 				b, err := s.MarshalBinary()
 				So(err, ShouldBeNil)
-				So(b, ShouldResemble, []byte{127})
+				So(b, ShouldResemble, []byte{255})
 			})
 
-			Convey("Then MarshalText returns 7f", func() {
+			Convey("Then MarshalText returns ff", func() {
 				b, err := s.MarshalText()
 				So(err, ShouldBeNil)
-				So(string(b), ShouldEqual, "7f")
+				So(string(b), ShouldEqual, "ff")
 			})
 		})
 
-		Convey("Given the hex string 7f", func() {
-			h := "7f"
+		Convey("Given the hex string ff", func() {
+			h := "ff"
 
-			Convey("Then UnmarshalText returns a DLSettings with RX2DataRate=15 and RX1DROffset=7", func() {
+			Convey("Then UnmarshalText returns a DLSettings with RX2DataRate=15, RX1DROffset=7 and OptNeg=true", func() {
 				So(s.UnmarshalText([]byte(h)), ShouldBeNil)
 				So(s, ShouldResemble, DLSettings{
 					RX2DataRate: 15,
 					RX1DROffset: 7,
+					OptNeg:      true,
 				})
 			})
 		})
 
-		Convey("Given a slice []byte{127}", func() {
-			b := []byte{127}
-			Convey("Then UnmarshalBinary returns a DLSettings with RX2DataRate=15 and RX1DROffset=7", func() {
+		Convey("Given a slice []byte{255}", func() {
+			b := []byte{255}
+			Convey("Then UnmarshalBinary returns a DLSettings with RX2DataRate=15, RX1DROffset=7 and OptNeg=true", func() {
 				err := s.UnmarshalBinary(b)
 				So(err, ShouldBeNil)
-				So(s, ShouldResemble, DLSettings{RX2DataRate: 15, RX1DROffset: 7})
+				So(s, ShouldResemble, DLSettings{RX2DataRate: 15, RX1DROffset: 7, OptNeg: true})
 			})
 		})
 	})
@@ -963,6 +965,185 @@ func TestMACPayloads(t *testing.T) {
 		}
 
 		testMACPayloads(func() MACCommandPayload { return &DeviceTimeAnsPayload{} }, tests)
+	})
+
+	Convey("Testing ResetIndPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload:       &ResetIndPayload{DevLoRaWANVersion: Version{Minor: 1}},
+				ExpectedBytes: []byte{1},
+			},
+			{
+				Payload:       &ResetIndPayload{DevLoRaWANVersion: Version{Minor: 8}},
+				ExpectedError: errors.New("lorawan: max value of Minor is 7"),
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &ResetIndPayload{} }, tests)
+	})
+
+	Convey("Testing ResetConfPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload:       &ResetConfPayload{ServLoRaWANVersion: Version{Minor: 1}},
+				ExpectedBytes: []byte{1},
+			},
+			{
+				Payload:       &ResetConfPayload{ServLoRaWANVersion: Version{Minor: 8}},
+				ExpectedError: errors.New("lorawan: max value of Minor is 7"),
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &ResetConfPayload{} }, tests)
+	})
+
+	Convey("Testing RekeyIndPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload:       &RekeyIndPayload{DevLoRaWANVersion: Version{Minor: 1}},
+				ExpectedBytes: []byte{1},
+			},
+			{
+				Payload:       &RekeyIndPayload{DevLoRaWANVersion: Version{Minor: 8}},
+				ExpectedError: errors.New("lorawan: max value of Minor is 7"),
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &RekeyIndPayload{} }, tests)
+	})
+
+	Convey("Testing RekeyConfPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload:       &RekeyConfPayload{ServLoRaWANVersion: Version{Minor: 1}},
+				ExpectedBytes: []byte{1},
+			},
+			{
+				Payload:       &RekeyConfPayload{ServLoRaWANVersion: Version{Minor: 8}},
+				ExpectedError: errors.New("lorawan: max value of Minor is 7"),
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &RekeyConfPayload{} }, tests)
+	})
+
+	Convey("Testing ADRParamSetupReqPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload: &ADRParamSetupReqPayload{ADRParam: ADRParam{
+					LimitExp: 10,
+					DelayExp: 15,
+				}},
+				ExpectedBytes: []byte{175},
+			},
+			{
+				Payload: &ADRParamSetupReqPayload{ADRParam: ADRParam{
+					LimitExp: 16,
+				}},
+				ExpectedError: errors.New("lorawan: max value of LimitExp is 15"),
+			},
+			{
+				Payload: &ADRParamSetupReqPayload{ADRParam: ADRParam{
+					DelayExp: 16,
+				}},
+				ExpectedError: errors.New("lorawan: max value of DelayExp is 15"),
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &ADRParamSetupReqPayload{} }, tests)
+	})
+
+	Convey("Testing ForceRejoinReq", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload: &ForceRejoinReqPayload{
+					Period:     3,
+					MaxRetries: 4,
+					RejoinType: 2,
+					DR:         5,
+				},
+				ExpectedBytes: []byte{37, 28},
+			},
+			{
+				Payload: &ForceRejoinReqPayload{
+					Period:     8,
+					MaxRetries: 4,
+					RejoinType: 2,
+					DR:         5,
+				},
+				ExpectedError: errors.New("lorawan: max value of Period is 7"),
+			},
+			{
+				Payload: &ForceRejoinReqPayload{
+					Period:     3,
+					MaxRetries: 8,
+					RejoinType: 2,
+					DR:         5,
+				},
+				ExpectedError: errors.New("lorawan: max value of MaxRetries is 7"),
+			},
+			{
+				Payload: &ForceRejoinReqPayload{
+					Period:     3,
+					MaxRetries: 4,
+					RejoinType: 3,
+					DR:         5,
+				},
+				ExpectedError: errors.New("lorawan: RejoinType must be 0 or 2"),
+			},
+			{
+				Payload: &ForceRejoinReqPayload{
+					Period:     3,
+					MaxRetries: 4,
+					RejoinType: 2,
+					DR:         16,
+				},
+				ExpectedError: errors.New("lorawan: max value of DR is 15"),
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &ForceRejoinReqPayload{} }, tests)
+	})
+
+	Convey("Testing RejoinParamSetupReqPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload: &RejoinParamSetupReqPayload{
+					MaxTimeN:  14,
+					MaxCountN: 15,
+				},
+				ExpectedBytes: []byte{239},
+			},
+			{
+				Payload: &RejoinParamSetupReqPayload{
+					MaxTimeN:  16,
+					MaxCountN: 15,
+				},
+				ExpectedError: errors.New("lorawan: max value of MaxTimeN is 15"),
+			},
+			{
+				Payload: &RejoinParamSetupReqPayload{
+					MaxTimeN:  14,
+					MaxCountN: 16,
+				},
+				ExpectedError: errors.New("lorawan: max value of MaxCountN is 15"),
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &RejoinParamSetupReqPayload{} }, tests)
+	})
+
+	Convey("Testing RejoinParamSetupAnsPayload", t, func() {
+		tests := []macPayloadTest{
+			{
+				Payload: &RejoinParamSetupAnsPayload{
+					TimeOK: true,
+				},
+				ExpectedBytes: []byte{1},
+			},
+		}
+
+		testMACPayloads(func() MACCommandPayload { return &RejoinParamSetupAnsPayload{} }, tests)
 	})
 }
 

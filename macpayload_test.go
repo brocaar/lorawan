@@ -47,7 +47,7 @@ func TestMACPayload(t *testing.T) {
 			p.FPort = &fPort
 
 			Convey("Given FOpts are set", func() {
-				p.FHDR.FOpts = []MACCommand{{CID: LinkCheckReq}}
+				p.FHDR.FOpts = []Payload{&MACCommand{CID: LinkCheckReq}}
 				Convey("Then MarshalBinary returns an error that FPort must not be 0", func() {
 					_, err := p.MarshalBinary()
 					So(err, ShouldResemble, errors.New("lorawan: FPort must not be 0 when FOpts are set"))
@@ -112,7 +112,7 @@ func TestMACPayload(t *testing.T) {
 				So(err, ShouldBeNil)
 
 				// normally the mac commands are unmarshaled after decryption
-				err = p.decodeFRMPayloadToMACCommands(true)
+				_, err = decodeDataPayloadToMACCommands(true, p.FRMPayload)
 				So(err, ShouldResemble, errors.New("lorawan: not enough remaining bytes"))
 			})
 		})
@@ -133,7 +133,9 @@ func TestMACPayload(t *testing.T) {
 				})
 				Convey("Then FRMPayload=[]Payload{MACCommand{CID: DevStatusAns, Payload: DevStatusAnsPayload(Battery=10, Margin=20)}}", func() {
 					// mac commands are normally unmarshaled when decrypting
-					So(p.decodeFRMPayloadToMACCommands(true), ShouldBeNil)
+					var err error
+					p.FRMPayload, err = decodeDataPayloadToMACCommands(true, p.FRMPayload)
+					So(err, ShouldBeNil)
 
 					So(p.FRMPayload, ShouldHaveLength, 1)
 					mac, ok := p.FRMPayload[0].(*MACCommand)
@@ -158,7 +160,8 @@ func TestMACPayload(t *testing.T) {
 				So(err, ShouldBeNil)
 
 				// mac commands are normally unmarshaled when decrypting
-				So(p.decodeFRMPayloadToMACCommands(true), ShouldBeNil)
+				p.FRMPayload, err = decodeDataPayloadToMACCommands(true, p.FRMPayload)
+				So(err, ShouldBeNil)
 
 				Convey("Then FHDR(DevAddr=[4]byte{1, 2, 3, 4})", func() {
 					So(p.FHDR.DevAddr, ShouldEqual, DevAddr([4]byte{1, 2, 3, 4}))

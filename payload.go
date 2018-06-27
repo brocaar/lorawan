@@ -8,6 +8,17 @@ import (
 	"fmt"
 )
 
+// JoinType defines the join-request type.
+type JoinType uint8
+
+// Join-request types.
+const (
+	JoinRequestType    JoinType = 0xff
+	RejoinRequestType0 JoinType = 0x00
+	RejoinRequestType1 JoinType = 0x01
+	RejoinRequestType2 JoinType = 0x02
+)
+
 // EUI64 data type
 type EUI64 [8]byte
 
@@ -74,94 +85,51 @@ func (e EUI64) Value() (driver.Value, error) {
 	return e[:], nil
 }
 
-// DevNonce represents a 2 byte dev-nonce.
-type DevNonce [2]byte
+// DevNonce represents the dev-nonce.
+type DevNonce uint16
 
-// String implements fmt.Stringer.
-func (n DevNonce) String() string {
-	return hex.EncodeToString(n[:])
+// MarshalBinary implements encoding.BinaryMarshaler.
+func (n DevNonce) MarshalBinary() ([]byte, error) {
+	out := make([]byte, 2)
+	binary.LittleEndian.PutUint16(out, uint16(n))
+	return out, nil
 }
 
-// MarshalText implements encoding.TextMarshaler.
-func (n DevNonce) MarshalText() ([]byte, error) {
-	return []byte(n.String()), nil
-}
-
-// UnmarshalText implements encoding.TestUnmarshaler.
-func (n *DevNonce) UnmarshalText(text []byte) error {
-	b, err := hex.DecodeString(string(text))
-	if err != nil {
-		return err
+// UnmarshalBinary implements encoding.BinaryUnmarshaler.
+func (n *DevNonce) UnmarshalBinary(data []byte) error {
+	if len(data) != 2 {
+		return errors.New("lorawan: 2 bytes are expected")
 	}
-
-	if len(n) != len(b) {
-		return fmt.Errorf("lorawan: exactly %d bytes are expected", len(n))
-	}
-	copy(n[:], b)
+	*n = DevNonce(binary.LittleEndian.Uint16(data))
 	return nil
 }
 
-// Scan implements sql.Scanner.
-func (n *DevNonce) Scan(src interface{}) error {
-	b, ok := src.([]byte)
-	if !ok {
-		return errors.New("lorawan: []byte type expected")
+// JoinNonce represents the join-nonce.
+// Note that the max value is 2^24 - 1 = 16777215.
+type JoinNonce uint32
+
+// MarshalBinary implements encoding.BinaryMarshaler.
+func (n JoinNonce) MarshalBinary() ([]byte, error) {
+	if n >= (1 << 24) {
+		return nil, errors.New("lorawan: max value is 2^24 - 1 (16777215)")
 	}
-	if len(b) != len(n) {
-		return fmt.Errorf("lorawan: []byte must have length %d", len(n))
+
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, uint32(n))
+	return b[:3], nil
+}
+
+// UnmarshalBinary implements encoding.BinaryUnmarshaler.
+func (n *JoinNonce) UnmarshalBinary(data []byte) error {
+	if len(data) != 3 {
+		return errors.New("lorawan: 3 bytes are expected")
 	}
-	copy(n[:], b)
+
+	b := make([]byte, 4)
+	copy(b[:3], data)
+	*n = JoinNonce(binary.LittleEndian.Uint32(b))
+
 	return nil
-}
-
-// Value implements driver.Valuer.
-func (n DevNonce) Value() (driver.Value, error) {
-	return n[:], nil
-}
-
-// AppNonce represents a 3 byte app-nonce.
-type AppNonce [3]byte
-
-// String implements fmt.Stringer.
-func (n AppNonce) String() string {
-	return hex.EncodeToString(n[:])
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (n AppNonce) MarshalText() ([]byte, error) {
-	return []byte(n.String()), nil
-}
-
-// UnmarshalText implements encoding.TestUnmarshaler.
-func (n *AppNonce) UnmarshalText(text []byte) error {
-	b, err := hex.DecodeString(string(text))
-	if err != nil {
-		return err
-	}
-
-	if len(n) != len(b) {
-		return fmt.Errorf("lorawan: exactly %d bytes are expected", len(n))
-	}
-	copy(n[:], b)
-	return nil
-}
-
-// Scan implements sql.Scanner.
-func (n *AppNonce) Scan(src interface{}) error {
-	b, ok := src.([]byte)
-	if !ok {
-		return errors.New("lorawan: []byte type expected")
-	}
-	if len(b) != len(n) {
-		return fmt.Errorf("lorawan: []byte must have length %d", len(n))
-	}
-	copy(n[:], b)
-	return nil
-}
-
-// Value implements driver.Valuer.
-func (n AppNonce) Value() (driver.Value, error) {
-	return n[:], nil
 }
 
 // Payload is the interface that every payload needs to implement.
@@ -192,7 +160,7 @@ func (p *DataPayload) UnmarshalBinary(uplink bool, data []byte) error {
 
 // JoinRequestPayload represents the join-request message payload.
 type JoinRequestPayload struct {
-	AppEUI   EUI64    `json:"appEUI"`
+	JoinEUI  EUI64    `json:"joinEUI"`
 	DevEUI   EUI64    `json:"devEUI"`
 	DevNonce DevNonce `json:"devNonce"`
 }
@@ -200,7 +168,7 @@ type JoinRequestPayload struct {
 // MarshalBinary marshals the object in binary form.
 func (p JoinRequestPayload) MarshalBinary() ([]byte, error) {
 	out := make([]byte, 0, 18)
-	b, err := p.AppEUI.MarshalBinary()
+	b, err := p.JoinEUI.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
@@ -210,8 +178,13 @@ func (p JoinRequestPayload) MarshalBinary() ([]byte, error) {
 		return nil, err
 	}
 	out = append(out, b...)
-	// little endian
-	out = append(out, p.DevNonce[1], p.DevNonce[0])
+
+	b, err = p.DevNonce.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, b...)
+
 	return out, nil
 }
 
@@ -220,40 +193,46 @@ func (p *JoinRequestPayload) UnmarshalBinary(uplink bool, data []byte) error {
 	if len(data) != 18 {
 		return errors.New("lorawan: 18 bytes of data are expected")
 	}
-	if err := p.AppEUI.UnmarshalBinary(data[0:8]); err != nil {
+	if err := p.JoinEUI.UnmarshalBinary(data[0:8]); err != nil {
 		return err
 	}
 	if err := p.DevEUI.UnmarshalBinary(data[8:16]); err != nil {
 		return err
 	}
-	// little endian
-	p.DevNonce[1] = data[16]
-	p.DevNonce[0] = data[17]
+	if err := p.DevNonce.UnmarshalBinary(data[16:18]); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// CFList represents a list of channel frequencies. Each frequency is in Hz
-// and must be multiple of 100, (since the frequency will be divided by 100
-// on encoding), the max allowed value is 2^24-1 * 100.
-type CFList [5]uint32
+// CFListType defines the CFList payload type.
+type CFListType uint8
+
+// Possible CFList types.
+const (
+	CFListChannel     CFListType = 0
+	CFListChannelMask CFListType = 1
+)
+
+// CFList represents a list of channel frequencies or channel-masks.
+type CFList struct {
+	Payload    Payload    `json:"payload"`
+	CFListType CFListType `json:"cFListType"`
+}
 
 // MarshalBinary marshals the object in binary form.
 func (l CFList) MarshalBinary() ([]byte, error) {
-	out := make([]byte, 0, 16)
-	for _, f := range l {
-		if f%100 != 0 {
-			return nil, errors.New("lorawan: frequency must be a multiple of 100")
-		}
-		f = f / 100
-		if f > 16777215 { // 2^24 - 1
-			return nil, errors.New("lorawan: max value of frequency is 2^24-1")
-		}
-		b := make([]byte, 4, 4)
-		binary.LittleEndian.PutUint32(b, f)
-		out = append(out, b[:3]...)
+	out := make([]byte, 16)
+
+	b, err := l.Payload.MarshalBinary()
+	if err != nil {
+		return nil, err
 	}
-	// last byte is 0 / RFU
-	return append(out, 0), nil
+	copy(out, b)
+	out[15] = byte(l.CFListType)
+
+	return out, nil
 }
 
 // UnmarshalBinary decodes the object from binary form.
@@ -261,8 +240,63 @@ func (l *CFList) UnmarshalBinary(data []byte) error {
 	if len(data) != 16 {
 		return errors.New("lorawan: 16 bytes of data are expected")
 	}
-	for i := 0; i < 5; i++ {
-		l[i] = binary.LittleEndian.Uint32([]byte{
+
+	l.CFListType = CFListType(data[15])
+
+	switch l.CFListType {
+	case CFListChannelMask:
+		l.Payload = &CFListChannelMaskPayload{}
+	default:
+		l.Payload = &CFListChannelPayload{}
+	}
+
+	if err := l.Payload.UnmarshalBinary(false, data[:15]); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CFListChannelPayload holds a list of (up to 5) channel frequencies.
+// Each frequency is in Hz and must be a multiple of 100.
+type CFListChannelPayload struct {
+	Channels [5]uint32
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p CFListChannelPayload) MarshalBinary() ([]byte, error) {
+	out := make([]byte, 0)
+
+	for _, f := range p.Channels {
+		if f%100 != 0 {
+			return nil, errors.New("lorawan: frequency must be a multiple of 100")
+		}
+
+		f = f / 100
+		if f > (1<<24)-1 {
+			return nil, errors.New("lorawan: max value of frequency is 2^24-1")
+		}
+
+		b := make([]byte, 4)
+		binary.LittleEndian.PutUint32(b, f)
+		out = append(out, b[:3]...)
+	}
+
+	return out, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (p *CFListChannelPayload) UnmarshalBinary(uplink bool, data []byte) error {
+	if len(data) > 15 {
+		return errors.New("lorawan: max length is 15 bytes")
+	}
+
+	if len(data)%3 != 0 {
+		return errors.New("lorawan: length must be a multiple of 3")
+	}
+
+	for i := 0; i < len(data)/3; i++ {
+		p.Channels[i] = binary.LittleEndian.Uint32([]byte{
 			data[i*3],
 			data[i*3+1],
 			data[i*3+2],
@@ -273,10 +307,64 @@ func (l *CFList) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
+// CFListChannelMaskPayload holds a list of channel-masks.
+type CFListChannelMaskPayload struct {
+	ChannelMasks []ChMask
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p CFListChannelMaskPayload) MarshalBinary() ([]byte, error) {
+	if len(p.ChannelMasks) > 6 {
+		return nil, errors.New("lorawan: max number of channel-masks is 6")
+	}
+
+	var out []byte
+	for _, cm := range p.ChannelMasks {
+		b, err := cm.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, b...)
+	}
+	return out, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (p *CFListChannelMaskPayload) UnmarshalBinary(uplink bool, data []byte) error {
+	if len(data) > 15 {
+		return errors.New("lorawan: max 15 bytes are expected")
+	}
+
+	// make data a multiple of 2
+	if remainder := len(data) % 2; remainder != 0 {
+		data = data[:len(data)-remainder]
+	}
+
+	var chMaskNil ChMask
+	var pending []ChMask
+
+	for i := 0; i < len(data)/2; i++ {
+		var cm ChMask
+		if err := cm.UnmarshalBinary(data[i*2 : (i*2)+2]); err != nil {
+			return err
+		}
+		pending = append(pending, cm)
+
+		if cm != chMaskNil {
+			for i := range pending {
+				p.ChannelMasks = append(p.ChannelMasks, pending[i])
+			}
+			pending = []ChMask{}
+		}
+	}
+
+	return nil
+}
+
 // JoinAcceptPayload represents the join-accept message payload.
 type JoinAcceptPayload struct {
-	AppNonce   AppNonce   `json:"appNonce"`
-	NetID      NetID      `json:"netID"`
+	JoinNonce  JoinNonce  `json:"joinNonce"`
+	HomeNetID  NetID      `json:"homeNetID"`
 	DevAddr    DevAddr    `json:"devAddr"`
 	DLSettings DLSettings `json:"dlSettings"`
 	RXDelay    uint8      `json:"rxDelay"` // 0=1s, 1=1s, 2=2s, ... 15=15s
@@ -291,15 +379,19 @@ func (p JoinAcceptPayload) MarshalBinary() ([]byte, error) {
 
 	out := make([]byte, 0, 12)
 
-	// little endian
-	for i := len(p.AppNonce) - 1; i >= 0; i-- {
-		out = append(out, p.AppNonce[i])
+	b, err := p.JoinNonce.MarshalBinary()
+	if err != nil {
+		return nil, err
 	}
-	for i := len(p.NetID) - 1; i >= 0; i-- {
-		out = append(out, p.NetID[i])
-	}
+	out = append(out, b...)
 
-	b, err := p.DevAddr.MarshalBinary()
+	b, err = p.HomeNetID.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, b...)
+
+	b, err = p.DevAddr.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
@@ -330,12 +422,12 @@ func (p *JoinAcceptPayload) UnmarshalBinary(uplink bool, data []byte) error {
 		return errors.New("lorawan: 12 or 28 bytes of data are expected (28 bytes if CFList is present)")
 	}
 
-	// little endian
-	for i, v := range data[0:3] {
-		p.AppNonce[2-i] = v
+	if err := p.JoinNonce.UnmarshalBinary(data[0:3]); err != nil {
+		return err
 	}
-	for i, v := range data[3:6] {
-		p.NetID[2-i] = v
+
+	if err := p.HomeNetID.UnmarshalBinary(data[3:6]); err != nil {
+		return err
 	}
 
 	if err := p.DevAddr.UnmarshalBinary(data[6:10]); err != nil {
@@ -352,6 +444,122 @@ func (p *JoinAcceptPayload) UnmarshalBinary(uplink bool, data []byte) error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+// RejoinRequestType02Payload represents a rejoin-request of type 0 or 2.
+type RejoinRequestType02Payload struct {
+	RejoinType JoinType `json:"rejoinType"`
+	NetID      NetID    `json:"netID"`
+	DevEUI     EUI64    `json:"devEUI"`
+	RJCount0   uint16   `json:"rjCount0"`
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p RejoinRequestType02Payload) MarshalBinary() ([]byte, error) {
+	if p.RejoinType != 0 && p.RejoinType != 2 {
+		return nil, errors.New("lorawan: RejoinType must be 0 or 2")
+	}
+
+	out := make([]byte, 0, 14)
+
+	out = append(out, byte(p.RejoinType))
+
+	b, err := p.NetID.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, b...)
+
+	b, err = p.DevEUI.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, b...)
+
+	b = make([]byte, 2)
+	binary.LittleEndian.PutUint16(b, p.RJCount0)
+	out = append(out, b...)
+
+	return out, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (p *RejoinRequestType02Payload) UnmarshalBinary(uplink bool, data []byte) error {
+	if len(data) != 14 {
+		return errors.New("lorawan: 14 bytes of data are expected")
+	}
+
+	p.RejoinType = JoinType(data[0])
+
+	if err := p.NetID.UnmarshalBinary(data[1:4]); err != nil {
+		return err
+	}
+
+	if err := p.DevEUI.UnmarshalBinary(data[4:12]); err != nil {
+		return err
+	}
+
+	p.RJCount0 = binary.LittleEndian.Uint16(data[12:14])
+
+	return nil
+}
+
+// RejoinRequestType1Payload represents a rejoin-request of type 1.
+type RejoinRequestType1Payload struct {
+	RejoinType JoinType `json:"rejoinRequest"`
+	JoinEUI    EUI64    `json:"joinEUI"`
+	DevEUI     EUI64    `json:"devEUI"`
+	RJCount1   uint16   `json:"rjCount1"`
+}
+
+// MarshalBinary marshals the object in binary form.
+func (p RejoinRequestType1Payload) MarshalBinary() ([]byte, error) {
+	if p.RejoinType != 1 {
+		return nil, errors.New("lorawan: RejoinType must be 1")
+	}
+
+	out := make([]byte, 0, 19)
+
+	out = append(out, byte(p.RejoinType))
+
+	b, err := p.JoinEUI.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, b...)
+
+	b, err = p.DevEUI.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, b...)
+
+	b = make([]byte, 2)
+	binary.LittleEndian.PutUint16(b, p.RJCount1)
+	out = append(out, b...)
+
+	return out, nil
+}
+
+// UnmarshalBinary decodes the object from binary form.
+func (p *RejoinRequestType1Payload) UnmarshalBinary(uplink bool, data []byte) error {
+	if len(data) != 19 {
+		return errors.New("lorawan: 19 bytes of data are expected")
+	}
+
+	p.RejoinType = JoinType(data[0])
+
+	if err := p.JoinEUI.UnmarshalBinary(data[1:9]); err != nil {
+		return err
+	}
+
+	if err := p.DevEUI.UnmarshalBinary(data[9:17]); err != nil {
+		return err
+	}
+
+	p.RJCount1 = binary.LittleEndian.Uint16(data[17:19])
 
 	return nil
 }
