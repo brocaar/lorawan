@@ -583,7 +583,7 @@ func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, 
 	case AS_923:
 		return newAS923Band(repeaterCompatible, dt)
 	case AU_915_928:
-		return newAU915Band(repeaterCompatible)
+		return newAU915Band(repeaterCompatible, dt)
 	case CN_470_510:
 		return newCN470Band(repeaterCompatible)
 	case CN_779_787:

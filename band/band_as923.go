@@ -109,7 +109,7 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 		if repeaterCompatible {
 			// repeater compatible + dwell time
 			b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
-				latest: map[string]map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
+				latest: map[string]map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B, 1.1.0A, 1.1.0B
 					latest: map[int]MaxPayloadSize{
 						0: {M: 0, N: 0},
 						1: {M: 0, N: 0},
@@ -126,7 +126,7 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 			// not repeater compatible + dwell time
 			b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
 				latest: map[string]map[int]MaxPayloadSize{
-					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
+					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B, 1.1.0A, 1.1.0B
 						0: {M: 0, N: 0},
 						1: {M: 0, N: 0},
 						2: {M: 19, N: 11},
@@ -144,7 +144,7 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 			// repeater compatible + no dwell time
 			b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
 				latest: map[string]map[int]MaxPayloadSize{
-					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
+					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B, 1.1.0A, 1.1.0B
 						0: {M: 59, N: 51},
 						1: {M: 59, N: 51},
 						2: {M: 59, N: 51},
@@ -160,7 +160,7 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 			// not repeater compatible + no dwell time
 			b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
 				latest: map[string]map[int]MaxPayloadSize{
-					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
+					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B, 1.1.0A, 1.1.0B
 						0: {M: 59, N: 51},
 						1: {M: 59, N: 51},
 						2: {M: 59, N: 51},

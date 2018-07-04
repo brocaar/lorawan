@@ -85,7 +85,7 @@ func newKR920Band(repeaterCompatible bool) (Band, error) {
 	if repeaterCompatible {
 		b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
 			latest: map[string]map[int]MaxPayloadSize{
-				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B, 1.1.0A
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},
@@ -98,7 +98,7 @@ func newKR920Band(repeaterCompatible bool) (Band, error) {
 	} else {
 		b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
 			latest: map[string]map[int]MaxPayloadSize{
-				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B, 1.1.0A
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},
