@@ -206,8 +206,8 @@ type Result struct {
 
 // KeyEnvelope defines the key envelope object.
 type KeyEnvelope struct {
-	KEKLabel string            `json:"KEKLabel"`
-	AESKey   lorawan.AES128Key `json:"AESKey"`
+	KEKLabel string   `json:"KEKLabel"`
+	AESKey   HEXBytes `json:"AESKey"`
 }
 
 // VSExtension defines vendor specific data.
