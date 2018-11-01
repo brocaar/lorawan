@@ -28,6 +28,7 @@ func (c CID) MarshalText() ([]byte, error) {
 // has the same value. Based on the fact if a message is uplink or downlink
 // you should use on or the other.
 const (
+	// Class-A
 	ResetInd            CID = 0x01
 	ResetConf           CID = 0x01
 	LinkCheckReq        CID = 0x02
@@ -57,13 +58,19 @@ const (
 	ForceRejoinReq      CID = 0x0E
 	RejoinParamSetupReq CID = 0x0F
 	RejoinParamSetupAns CID = 0x0F
-	PingSlotInfoReq     CID = 0x10
-	PingSlotInfoAns     CID = 0x10
-	PingSlotChannelReq  CID = 0x11
-	PingSlotChannelAns  CID = 0x11
+
+	// Class-B
+	PingSlotInfoReq    CID = 0x10
+	PingSlotInfoAns    CID = 0x10
+	PingSlotChannelReq CID = 0x11
+	PingSlotChannelAns CID = 0x11
 	// 0x12 has been deprecated in 1.1
 	BeaconFreqReq CID = 0x13
 	BeaconFreqAns CID = 0x13
+
+	// Class-C
+	DeviceModeInd  CID = 0x20
+	DeviceModeConf CID = 0x20
 	// 0x80 to 0xFF reserved for proprietary network command extensions
 )
 
@@ -108,6 +115,7 @@ var macPayloadRegistry = map[bool]map[CID]macPayloadInfo{
 		PingSlotChannelAns:  {1, func() MACCommandPayload { return &PingSlotChannelAnsPayload{} }},
 		RekeyInd:            {1, func() MACCommandPayload { return &RekeyIndPayload{} }},
 		RejoinParamSetupAns: {1, func() MACCommandPayload { return &RejoinParamSetupAnsPayload{} }},
+		DeviceModeInd:       {1, func() MACCommandPayload { return &DeviceModeIndPayload{} }},
 	},
 }
 
@@ -1208,6 +1216,37 @@ func (p *RejoinParamSetupAnsPayload) UnmarshalBinary(data []byte) error {
 	}
 
 	p.TimeOK = data[0]&1 != 0
+	return nil
+}
+
+// DeviceModeIndClass defines the DeviceModeInd class.
+type DeviceModeIndClass byte
+
+// DeviceModeInd class options.
+const (
+	DeviceModeIndClassA DeviceModeIndClass = 0x00
+	DeviceModeIndRFU    DeviceModeIndClass = 0x01
+	DeviceModeIndClassC DeviceModeIndClass = 0x02
+)
+
+// DeviceModeIndPayload represents the DeviceModeInd payload.
+type DeviceModeIndPayload struct {
+	Class DeviceModeIndClass
+}
+
+// MarshalBinary encodes the object into bytes.
+func (p DeviceModeIndPayload) MarshalBinary() ([]byte, error) {
+	return []byte{byte(p.Class)}, nil
+}
+
+// UnmarshalBinary decodes the object from bytes.
+func (p *DeviceModeIndPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+
+	p.Class = DeviceModeIndClass(data[0])
+
 	return nil
 }
 
