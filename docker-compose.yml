@@ -1,0 +1,9 @@
+version: "2"
+services:
+  lorawan:
+    build:
+      context: .
+      dockerfile: Dockerfile-devel
+    volumes:
+      - ./:/go/src/github.com/brocaar/lorawan
+
