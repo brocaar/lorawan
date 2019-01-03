@@ -76,7 +76,13 @@ https://www.lora-alliance.org/For-Developers/LoRaWANDevelopers
 ## ISM band configuration
 
 The LoRaWAN specification defines various region specific defaults and
-configuration. These can be found in the ``band`` sub-package.
+configuration. These can be found in the `band` sub-package.
+
+## LoRaWAN Backend Interface
+
+Structs matching the LoRaWAN Backend Interface specification can be found
+in the `backend` sub-package. A `http.Handler` implementation of a LoRaWAN
+join-server can be found in the `backend/joinserver` sub-package.
 
 ## Documentation
 
