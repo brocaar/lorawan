@@ -682,7 +682,7 @@ func TestPHYPayloadRejoinRequest1(t *testing.T) {
 	})
 }
 
-func ExamplePHYPayload_lorawan10_encode() {
+func ExamplePHYPayload_lorawan10Encode() {
 	nwkSKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	appSKey := [16]byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
 	fPort := uint8(10)
@@ -749,7 +749,7 @@ func ExamplePHYPayload_lorawan10_encode() {
 	// {"mhdr":{"mType":"ConfirmedDataUp","major":"LoRaWANR1"},"macPayload":{"fhdr":{"devAddr":"01020304","fCtrl":{"adr":false,"adrAckReq":false,"ack":false,"fPending":false,"classB":false},"fCnt":0,"fOpts":[{"cid":"DevStatusReq","payload":{"battery":115,"margin":7}}]},"fPort":10,"frmPayload":[{"bytes":"4mTU9w=="}]},"mic":"e117d2c0"}
 }
 
-func ExamplePHYPayload_lorawan10_decode() {
+func ExamplePHYPayload_lorawan10Decode() {
 	nwkSKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	appSKey := [16]byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
 
@@ -797,7 +797,7 @@ func ExamplePHYPayload_lorawan10_decode() {
 	// [1 2 3 4]
 }
 
-func ExamplePHYPayload_lorawan11_encrypted_fopts_encode() {
+func ExamplePHYPayload_lorawan11EncryptedFoptsEncode() {
 	sNwkSIntKey := [16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	nwkSEncKey := [16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2}
 	appSKey := [16]byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
@@ -865,7 +865,7 @@ func ExamplePHYPayload_lorawan11_encrypted_fopts_encode() {
 	// {"mhdr":{"mType":"UnconfirmedDataDown","major":"LoRaWANR1"},"macPayload":{"fhdr":{"devAddr":"01020304","fCtrl":{"adr":false,"adrAckReq":false,"ack":false,"fPending":false,"classB":false},"fCnt":0,"fOpts":[{"bytes":"IqwK"}]},"fPort":1,"frmPayload":[{"bytes":"8LRo3Q=="}]},"mic":"aa5ed13a"}
 }
 
-func ExamplePHYPayload_lorawan11_encrypted_fopts_decode() {
+func ExamplePHYPayload_lorawan11EncryptedFoptsDecode() {
 	sNwkSIntKey := [16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	nwkSEncKey := [16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2}
 	appSKey := [16]byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
@@ -902,7 +902,7 @@ func ExamplePHYPayload_lorawan11_encrypted_fopts_decode() {
 	// {"mhdr":{"mType":"UnconfirmedDataDown","major":"LoRaWANR1"},"macPayload":{"fhdr":{"devAddr":"01020304","fCtrl":{"adr":false,"adrAckReq":false,"ack":false,"fPending":false,"classB":false},"fCnt":0,"fOpts":[{"cid":"LinkCheckReq","payload":{"margin":7,"gwCnt":1}}]},"fPort":1,"frmPayload":[{"bytes":"AQIDBA=="}]},"mic":"aa5ed13a"}
 }
 
-func ExamplePHYPayload_proprietary_encode() {
+func ExamplePHYPayload_proprietaryEncode() {
 	phy := PHYPayload{
 		MHDR: MHDR{
 			MType: Proprietary,
@@ -937,7 +937,7 @@ func ExamplePHYPayload_proprietary_encode() {
 	// {"mhdr":{"mType":"Proprietary","major":"LoRaWANR1"},"macPayload":{"bytes":"BQYHCAkK"},"mic":"01020304"}
 }
 
-func ExamplePHYPayload_proprietary_decode() {
+func ExamplePHYPayload_proprietaryDecode() {
 	var phy PHYPayload
 
 	if err := phy.UnmarshalText([]byte("4AUGBwgJCgECAwQ=")); err != nil {
@@ -1046,7 +1046,7 @@ func ExamplePHYPayload_joinAcceptSend() {
 	// [32 35 207 51 84 137 170 227 24 60 11 224 186 168 222 229 243]
 }
 
-func ExamplePHYPayload_lorawan11_joinAcceptSend() {
+func ExamplePHYPayload_lorawan11JoinAcceptSend() {
 	appKey := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	joinEUI := EUI64{8, 7, 6, 5, 4, 3, 2, 1}
 	devNonce := DevNonce(258)

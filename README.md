@@ -3,91 +3,82 @@
 [![Build Status](https://travis-ci.org/brocaar/lorawan.svg?branch=master)](https://travis-ci.org/brocaar/lorawan)
 [![GoDoc](https://godoc.org/github.com/brocaar/lorawan?status.svg)](https://godoc.org/github.com/brocaar/lorawan)
 
-Package lorawan provides structures and tools to read and write LoraWAN
-messages from and to a slice of bytes.
+Package lorawan provides structures and tools to read and write LoRaWAN
+1.0 and 1.1 frames from and to a slice of bytes.
 
 The following structures are implemented (+ fields):
 
-    * PHYPayload    (MHDR | MACPayload | MIC)
-    * MACPayload    (FHDR | FPort | FRMPayload)
-    * FHDR          (DevAddr | FCtrl | FCnt | FOpts)
+```
+PHYPayload    (MHDR | MACPayload | MIC)
+MACPayload    (FHDR | FPort | FRMPayload)
+FHDR          (DevAddr | FCtrl | FCnt | FOpts)
+```
 
 The Following message types (MType) are implemented:
 
-    * JoinRequest
-    * JoinAccept
-    * UnconfirmedDataUp
-    * UnconfirmedDataDown
-    * ConfirmedDataUp
-    * ConfirmedDataDown
-    * Proprietary (todo: add pluggable function for MIC calculation / validation)
+* JoinRequest
+* RejoinRequest
+* JoinAccept
+* UnconfirmedDataUp
+* UnconfirmedDataDown
+* ConfirmedDataUp
+* ConfirmedDataDown
+* Proprietary
 
 The following MAC commands (and their optional payloads) are implemented:
 
-    * LinkCheckReq
-    * LinkCheckAns
-    * LinkADRReq
-    * LinkADRAns
-    * DutyCycleReq
-    * DutyCycleAns
-    * RXParamSetupReq
-    * RXParamSetupAns
-    * DevStatusReq
-    * DevStatusAns
-    * NewChannelReq
-    * NewChannelAns
-    * RXTimingSetupReq
-    * RXTimingSetupAns
-    * Proprietary commands (0x80 - 0xFF) can be registered with RegisterProprietaryMACCommand
+* ResetInd
+* ResetConf
+* LinkCheckReq
+* LinkCheckAns
+* LinkADRReq
+* LinkADRAns
+* DutyCycleReq
+* DutyCycleAns
+* RXParamSetupReq
+* RXParamSetupAns
+* DevStatusReq
+* DevStatusAns
+* NewChannelReq
+* NewChannelAns
+* RXTimingSetupReq
+* RXTimingSetupAns
+* TXParamSetupReq
+* TXParamSetupAns
+* DLChannelReq
+* DLChannelAns
+* RekeyInd
+* RekeyConf
+* ADRParamSetupReq
+* ADRParamSetupAns
+* DeviceTimeReq
+* DeviceTimeAns
+* ForceRejoinReq
+* RejoinParamSetupReq
+* RejoinParamSetupAns
+* PingSlotInfoReq
+* PingSlotInfoAns
+* PingSlotChannelReq
+* PingSlotChannelAns
+* BeaconFreqReq
+* BeaconFreqAns
+* DeviceModeInd
+* DeviceModeConf
+* Proprietary commands (0x80 - 0xFF) can be registered with RegisterProprietaryMACCommand
 
-Support for calculating and setting the MIC is done by calling SetMIC():
 
-    err := phyPayload.SetMIC(key)
+## Sub-packages
 
-Validating the MIC is done by calling ValidateMIC():
-
-    valid, err := phyPayload.ValidateMIC(key)
-
-Encryption and decryption of the MACPayload (for join-accept) is done by
-calling EncryptJoinAcceptPayload() and DecryptJoinAcceptPayload(). Note that you need to
-call SetMIC BEFORE encryption.
-
-    err := phyPayload.EncryptJoinAcceptPayload(key)
-    err := phyPayload.DecryptJoinAcceptPayload(key)
-
-Encryption and decryption of the FRMPayload is done by calling
-EncryptFRMPayload() and DecryptFRMPayload(). After encryption (and thus
-before decryption), the bytes are stored in the DataPayload struct.
-
-    err := phyPayload.EncryptFRMPayload(key)
-    err := phyPayload.DecryptFRMPayload(key)
-
-All payloads implement the Payload interface. Based on the MIC value, you
-should be able to know to which type to cast the Payload value, so you will
-be able to access its fields.
-
-See the examples section of the documentation for more usage examples
-of this package.
-
-When using this package, knowledge about the LoRaWAN specification is needed.
-You can request the LoRaWAN specification here:
-https://www.lora-alliance.org/For-Developers/LoRaWANDevelopers
-
-## ISM band configuration
-
-The LoRaWAN specification defines various region specific defaults and
-configuration. These can be found in the `band` sub-package.
-
-## LoRaWAN Backend Interface
-
-Structs matching the LoRaWAN Backend Interface specification can be found
-in the `backend` sub-package. A `http.Handler` implementation of a LoRaWAN
-join-server can be found in the `backend/joinserver` sub-package.
+* `airtime` functions for calculating TX time-on-air
+* `band` ISM band configuration from the LoRaWAN Regional Parameters specification
+* `backend` Structs matching the LoRaWAN Backend Interface specification object
+* `backend/joinserver` LoRaWAN Backend Interface join-server interface implementation (`http.Handler`)
 
 ## Documentation
 
-See https://godoc.org/github.com/brocaar/lorawan. There is also an examples
-section with usage examples.
+See https://godoc.org/github.com/brocaar/lorawan. There is also an [examples](https://godoc.org/github.com/brocaar/lorawan#pkg-examples)
+section with usage examples. When using this package, knowledge about the LoRaWAN specification is needed.
+You can download the LoRaWAN specification here: https://lora-alliance.org/lorawan-for-developers
 
 ## Support
 
