@@ -73,6 +73,7 @@ The following MAC commands (and their optional payloads) are implemented:
 * `band` ISM band configuration from the LoRaWAN Regional Parameters specification
 * `backend` Structs matching the LoRaWAN Backend Interface specification object
 * `backend/joinserver` LoRaWAN Backend Interface join-server interface implementation (`http.Handler`)
+* `applayer/clocksync` Application Layer Clock Synchronization over LoRaWAN
 
 ## Documentation
 
