@@ -103,6 +103,30 @@ func (k AES128Key) Value() (driver.Value, error) {
 	return k[:], nil
 }
 
+// MarshalBinary encodes the key to a slice of bytes.
+func (k AES128Key) MarshalBinary() ([]byte, error) {
+	b := make([]byte, len(k))
+	for i, v := range k {
+		// little endian
+		b[len(k)-i-1] = v
+	}
+	return b, nil
+}
+
+// UnmarshalBinary decodes the key from a slice of bytes.
+func (k *AES128Key) UnmarshalBinary(data []byte) error {
+	if len(data) != len(k) {
+		return fmt.Errorf("lorawan: %d bytes of data are expected", len(k))
+	}
+
+	for i, v := range data {
+		// little endian
+		k[len(k)-i-1] = v
+	}
+
+	return nil
+}
+
 // MIC represents the message integrity code.
 type MIC [4]byte
 
