@@ -12,7 +12,7 @@ import (
 // CID defines the command identifier.
 type CID byte
 
-// DefaultPort defines the default fPort value for Remote Multicast Setup.
+// DefaultFPort defines the default fPort value for Remote Multicast Setup.
 const DefaultFPort uint8 = 200
 
 // Available command identifiers.

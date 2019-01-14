@@ -24,12 +24,6 @@ func TestClockSync(t *testing.T) {
 			Bytes: []byte{0x00},
 		},
 		{
-			Name:                   "PackageVersionReq invalid",
-			Uplink:                 false,
-			Bytes:                  []byte{0x00, 0x00},
-			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: payload unknown for uplink: false and CID=0"),
-		},
-		{
 			Name: "PackageVersionAns",
 			Command: Command{
 				CID: PackageVersionAns,
@@ -42,10 +36,10 @@ func TestClockSync(t *testing.T) {
 			Bytes:  []byte{0x00, 0x01, 0x01},
 		},
 		{
-			Name:                   "PackageVersionAns invalid",
+			Name:                   "PackageVersionAns invalid bytes",
 			Uplink:                 true,
-			Bytes:                  []byte{0x00, 0x01, 0x01, 0x01},
-			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: exactly 2 bytes are expected"),
+			Bytes:                  []byte{0x00, 0x01},
+			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: 2 bytes are expected"),
 		},
 		{
 			Name:   "AppTimeReq",
@@ -63,10 +57,10 @@ func TestClockSync(t *testing.T) {
 			Bytes: []byte{0x01, 0x01, 0x02, 0x04, 0x08, 0x15},
 		},
 		{
-			Name:                   "AppTimeReq invalid",
+			Name:                   "AppTimeReq invalid bytes",
 			Uplink:                 true,
-			Bytes:                  []byte{0x01, 0x01, 0x02, 0x04, 0x08, 0x15, 0x015},
-			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: exactly 5 bytes are expected"),
+			Bytes:                  []byte{0x01, 0x01, 0x02, 0x04, 0x08},
+			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: 5 bytes are expected"),
 		},
 		{
 			Name: "AppTimeAns",
@@ -82,9 +76,9 @@ func TestClockSync(t *testing.T) {
 			Bytes: []byte{0x01, 0xff, 0xfd, 0xfb, 0xf7, 0x05},
 		},
 		{
-			Name:                   "AppTimeAns invalid",
-			Bytes:                  []byte{0x01, 0x01, 0x02, 0x04, 0x08, 0x05, 0x05},
-			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: exactly 5 bytes are expected"),
+			Name:                   "AppTimeAns invalid bytes",
+			Bytes:                  []byte{0x01, 0x01, 0x02, 0x04, 0x08},
+			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: 5 bytes are expected"),
 		},
 		{
 			Name: "DeviceAppTimePeriodicityReq",
@@ -99,9 +93,9 @@ func TestClockSync(t *testing.T) {
 			Bytes: []byte{0x02, 0x05},
 		},
 		{
-			Name:                   "DeviceAppTimePeriodicityReq invalid",
-			Bytes:                  []byte{0x02, 0x05, 0x05},
-			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: exactly 1 byte is expected"),
+			Name:                   "DeviceAppTimePeriodicityReq invalid bytes",
+			Bytes:                  []byte{0x02},
+			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: 1 bytes are expected"),
 		},
 		{
 			Name:   "DeviceAppTimePeriodicityAns",
@@ -118,10 +112,10 @@ func TestClockSync(t *testing.T) {
 			Bytes: []byte{0x02, 0x01, 0x01, 0x02, 0x04, 0x08},
 		},
 		{
-			Name:                   "DeviceAppTimePeriodicityAns invalid",
+			Name:                   "DeviceAppTimePeriodicityAns invalid bytes",
 			Uplink:                 true,
-			Bytes:                  []byte{0x02, 0x01, 0x01, 0x02, 0x04, 0x08, 0x08},
-			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: exactly 5 bytes are expected"),
+			Bytes:                  []byte{0x02, 0x01, 0x01, 0x02, 0x04},
+			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: 5 bytes are expected"),
 		},
 		{
 			Name: "ForceDeviceResyncReq",
@@ -136,9 +130,9 @@ func TestClockSync(t *testing.T) {
 			Bytes: []byte{0x03, 0x05},
 		},
 		{
-			Name:                   "ForceDeviceResyncReq invalid",
-			Bytes:                  []byte{0x03, 0x05, 0x05},
-			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: exactly 1 byte is expected"),
+			Name:                   "ForceDeviceResyncReq invalid bytes",
+			Bytes:                  []byte{0x03},
+			ExpectedUnmarshalError: errors.New("lorawan/applayer/clocksync: 1 bytes are expected"),
 		},
 	}
 
@@ -154,13 +148,15 @@ func TestClockSync(t *testing.T) {
 				err := cmd.UnmarshalBinary(tst.Uplink, tst.Bytes)
 				assert.Equal(tst.ExpectedUnmarshalError, err)
 			} else {
-				b, err := tst.Command.MarshalBinary()
+				cmds := Commands{tst.Command}
+				b, err := cmds.MarshalBinary()
 				assert.NoError(err)
 				assert.Equal(tst.Bytes, b)
 
-				var cmd Command
-				assert.NoError(cmd.UnmarshalBinary(tst.Uplink, tst.Bytes))
-				assert.Equal(tst.Command, cmd)
+				cmds = Commands{}
+				assert.NoError(cmds.UnmarshalBinary(tst.Uplink, tst.Bytes))
+				assert.Len(cmds, 1)
+				assert.Equal(tst.Command, cmds[0])
 			}
 		})
 	}
