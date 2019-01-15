@@ -75,6 +75,7 @@ The following MAC commands (and their optional payloads) are implemented:
 * `backend/joinserver` LoRaWAN Backend Interface join-server interface implementation (`http.Handler`)
 * `applayer/clocksync` Application Layer Clock Synchronization over LoRaWAN
 * `applayer/multicastsetup` Application Layer Remote Multicast Setup over LoRaWAN
+* `applayer/fragmentation` Fragmented Data Block Transport over LoRaWAN
 
 ## Documentation
 
