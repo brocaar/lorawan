@@ -26,7 +26,7 @@ func (b *au915Band) GetDefaults() Defaults {
 }
 
 func (b *au915Band) GetDownlinkTXPower(freq int) int {
-	return 20
+	return 27
 }
 
 func (b *au915Band) GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
