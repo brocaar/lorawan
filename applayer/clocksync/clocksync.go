@@ -1,3 +1,5 @@
+//go:generate stringer -type=CID
+
 // Package clocksync implements the Application Layer Clock Synchronization v1.0.0 over LoRaWAN.
 package clocksync
 

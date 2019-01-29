@@ -7,6 +7,7 @@ import "strconv"
 const (
 	_CID_name_0 = "ResetIndLinkCheckReqLinkADRReqDutyCycleReqRXParamSetupReqDevStatusReqNewChannelReqRXTimingSetupReqTXParamSetupReqDLChannelReqRekeyIndADRParamSetupReqDeviceTimeReqForceRejoinReqRejoinParamSetupReqPingSlotInfoReqPingSlotChannelReq"
 	_CID_name_1 = "BeaconFreqReq"
+	_CID_name_2 = "DeviceModeInd"
 )
 
 var (
@@ -20,6 +21,8 @@ func (i CID) String() string {
 		return _CID_name_0[_CID_index_0[i]:_CID_index_0[i+1]]
 	case i == 19:
 		return _CID_name_1
+	case i == 32:
+		return _CID_name_2
 	default:
 		return "CID(" + strconv.FormatInt(int64(i), 10) + ")"
 	}

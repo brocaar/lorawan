@@ -1,3 +1,5 @@
+//go:generate stringer -type=CID
+
 // Package multicastsetup implements the Remote Multicast Setup v1.0.0 over LoRaWAN.
 package multicastsetup
 

@@ -1,3 +1,5 @@
+//go:generate stringer -type=CID
+
 // Package fragmentation implements the Fragmented Data Block Transport v1.0.0 over LoRaWAN.
 package fragmentation
 
