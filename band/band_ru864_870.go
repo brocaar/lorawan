@@ -10,6 +10,10 @@ type ru864Band struct {
 	band
 }
 
+func (b *ru864Band) Name() string {
+	return "RU864"
+}
+
 func (b *ru864Band) GetDefaults() Defaults {
 	return Defaults{
 		RX2Frequency:     869100000,

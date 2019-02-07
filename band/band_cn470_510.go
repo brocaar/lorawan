@@ -11,6 +11,10 @@ type cn470Band struct {
 	band
 }
 
+func (b *cn470Band) Name() string {
+	return "CN470"
+}
+
 func (b *cn470Band) GetDefaults() Defaults {
 	return Defaults{
 		RX2Frequency:     505300000,

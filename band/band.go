@@ -106,6 +106,9 @@ type Defaults struct {
 
 // Band defines the interface of a LoRaWAN band object.
 type Band interface {
+	// Name returns the name of the band.
+	Name() string
+
 	// GetDataRateIndex returns the index for the given data-rate parameters.
 	GetDataRateIndex(uplink bool, dataRate DataRate) (int, error)
 

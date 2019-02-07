@@ -13,6 +13,10 @@ type au915Band struct {
 	dwellTime lorawan.DwellTime
 }
 
+func (b *au915Band) Name() string {
+	return "AU915"
+}
+
 func (b *au915Band) GetDefaults() Defaults {
 	return Defaults{
 		RX2Frequency:     923300000,

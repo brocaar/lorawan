@@ -10,6 +10,10 @@ type kr920Band struct {
 	band
 }
 
+func (b *kr920Band) Name() string {
+	return "KR920"
+}
+
 func (b *kr920Band) GetDefaults() Defaults {
 	return Defaults{
 		RX2Frequency:     921900000,

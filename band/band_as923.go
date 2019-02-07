@@ -12,6 +12,10 @@ type as923Band struct {
 	dwellTime lorawan.DwellTime
 }
 
+func (b *as923Band) Name() string {
+	return "AS923"
+}
+
 func (b *as923Band) GetDefaults() Defaults {
 	return Defaults{
 		RX2Frequency:     923200000,
