@@ -73,7 +73,7 @@ func TestFragmentation(t *testing.T) {
 			Command: Command{
 				CID: FragSessionSetupAns,
 				Payload: &FragSessionSetupAnsPayload{
-					StatusBitMaks: FragSessionSetupAnsPayloadStatusBitMask{
+					StatusBitMask: FragSessionSetupAnsPayloadStatusBitMask{
 						FragIndex:                    3,
 						WrongDescriptor:              true,
 						FragSessionIndexNotSupported: true,

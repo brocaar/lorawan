@@ -272,7 +272,7 @@ func (p *FragSessionSetupReqPayload) UnmarshalBinary(data []byte) error {
 
 // FragSessionSetupAnsPayload implements the FragSessionSetupAns payload.
 type FragSessionSetupAnsPayload struct {
-	StatusBitMaks FragSessionSetupAnsPayloadStatusBitMask
+	StatusBitMask FragSessionSetupAnsPayloadStatusBitMask
 }
 
 // FragSessionSetupAnsPayloadStatusBitMask implements the FragSessionSetupAns payload StatusBitMask field.
@@ -293,23 +293,23 @@ func (p FragSessionSetupAnsPayload) Size() int {
 func (p FragSessionSetupAnsPayload) MarshalBinary() ([]byte, error) {
 	b := make([]byte, p.Size())
 
-	if p.StatusBitMaks.EncodingUnsupported {
+	if p.StatusBitMask.EncodingUnsupported {
 		b[0] |= 0x01
 	}
 
-	if p.StatusBitMaks.NotEngoughMemory {
+	if p.StatusBitMask.NotEngoughMemory {
 		b[0] |= 0x02
 	}
 
-	if p.StatusBitMaks.FragSessionIndexNotSupported {
+	if p.StatusBitMask.FragSessionIndexNotSupported {
 		b[0] |= 0x04
 	}
 
-	if p.StatusBitMaks.WrongDescriptor {
+	if p.StatusBitMask.WrongDescriptor {
 		b[0] |= 0x08
 	}
 
-	b[0] |= (p.StatusBitMaks.FragIndex & 0x03) << 6
+	b[0] |= (p.StatusBitMask.FragIndex & 0x03) << 6
 
 	return b, nil
 }
@@ -320,11 +320,11 @@ func (p *FragSessionSetupAnsPayload) UnmarshalBinary(data []byte) error {
 		return fmt.Errorf("lorawan/applayer/fragmentation: %d byte is expected", p.Size())
 	}
 
-	p.StatusBitMaks.EncodingUnsupported = data[0]&0x01 != 0
-	p.StatusBitMaks.NotEngoughMemory = data[0]&0x02 != 0
-	p.StatusBitMaks.FragSessionIndexNotSupported = data[0]&0x04 != 0
-	p.StatusBitMaks.WrongDescriptor = data[0]&0x08 != 0
-	p.StatusBitMaks.FragIndex = (data[0] >> 6) & 0x03
+	p.StatusBitMask.EncodingUnsupported = data[0]&0x01 != 0
+	p.StatusBitMask.NotEngoughMemory = data[0]&0x02 != 0
+	p.StatusBitMask.FragSessionIndexNotSupported = data[0]&0x04 != 0
+	p.StatusBitMask.WrongDescriptor = data[0]&0x08 != 0
+	p.StatusBitMask.FragIndex = (data[0] >> 6) & 0x03
 
 	return nil
 }
