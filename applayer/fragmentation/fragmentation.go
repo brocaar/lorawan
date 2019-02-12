@@ -280,7 +280,7 @@ type FragSessionSetupAnsPayloadStatusBitMask struct {
 	FragIndex                    uint8
 	WrongDescriptor              bool
 	FragSessionIndexNotSupported bool
-	NotEngoughMemory             bool
+	NotEnoughMemory              bool
 	EncodingUnsupported          bool
 }
 
@@ -297,7 +297,7 @@ func (p FragSessionSetupAnsPayload) MarshalBinary() ([]byte, error) {
 		b[0] |= 0x01
 	}
 
-	if p.StatusBitMask.NotEngoughMemory {
+	if p.StatusBitMask.NotEnoughMemory {
 		b[0] |= 0x02
 	}
 
@@ -321,7 +321,7 @@ func (p *FragSessionSetupAnsPayload) UnmarshalBinary(data []byte) error {
 	}
 
 	p.StatusBitMask.EncodingUnsupported = data[0]&0x01 != 0
-	p.StatusBitMask.NotEngoughMemory = data[0]&0x02 != 0
+	p.StatusBitMask.NotEnoughMemory = data[0]&0x02 != 0
 	p.StatusBitMask.FragSessionIndexNotSupported = data[0]&0x04 != 0
 	p.StatusBitMask.WrongDescriptor = data[0]&0x08 != 0
 	p.StatusBitMask.FragIndex = (data[0] >> 6) & 0x03

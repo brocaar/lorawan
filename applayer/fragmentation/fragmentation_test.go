@@ -77,7 +77,7 @@ func TestFragmentation(t *testing.T) {
 						FragIndex:                    3,
 						WrongDescriptor:              true,
 						FragSessionIndexNotSupported: true,
-						NotEngoughMemory:             true,
+						NotEnoughMemory:              true,
 						EncodingUnsupported:          true,
 					},
 				},
