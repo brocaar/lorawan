@@ -1,4 +1,5 @@
 //go:generate stringer -type=CID
+//go:generate stringer -type=DeviceModeIndClass
 
 package lorawan
 
