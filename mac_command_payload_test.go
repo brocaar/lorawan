@@ -54,19 +54,46 @@ func (ts MACCommandPayloadTestSuite) TestDeviceModeIndClass() {
 		},
 		{
 			Payload: &DeviceModeIndPayload{
-				Class: DeviceModeIndClassA,
+				Class: DeviceModeClassA,
 			},
 			Bytes: []byte{0x00},
 		},
 		{
 			Payload: &DeviceModeIndPayload{
-				Class: DeviceModeIndClassC,
+				Class: DeviceModeClassC,
 			},
 			Bytes: []byte{0x02},
 		},
 	}
 
 	ts.run(func() MACCommandPayload { return &DeviceModeIndPayload{} }, tests)
+}
+
+func (ts MACCommandPayloadTestSuite) TestDeviceModeConfClass() {
+	tests := []macCommandPayloadTest{
+		{
+			Bytes: []byte{},
+			Error: errors.New("lorawan: 1 byte of data is expected"),
+		},
+		{
+			Bytes: []byte{0x00, 0x01},
+			Error: errors.New("lorawan: 1 byte of data is expected"),
+		},
+		{
+			Payload: &DeviceModeConfPayload{
+				Class: DeviceModeClassA,
+			},
+			Bytes: []byte{0x00},
+		},
+		{
+			Payload: &DeviceModeConfPayload{
+				Class: DeviceModeClassC,
+			},
+			Bytes: []byte{0x02},
+		},
+	}
+
+	ts.run(func() MACCommandPayload { return &DeviceModeConfPayload{} }, tests)
 }
 
 func TestMACCommandPayloads(t *testing.T) {

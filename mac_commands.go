@@ -1,5 +1,5 @@
 //go:generate stringer -type=CID
-//go:generate stringer -type=DeviceModeIndClass
+//go:generate stringer -type=DeviceModeClass
 
 package lorawan
 
@@ -103,6 +103,7 @@ var macPayloadRegistry = map[bool]map[CID]macPayloadInfo{
 		ADRParamSetupReq:    {1, func() MACCommandPayload { return &ADRParamSetupReqPayload{} }},
 		ForceRejoinReq:      {2, func() MACCommandPayload { return &ForceRejoinReqPayload{} }},
 		RejoinParamSetupReq: {1, func() MACCommandPayload { return &RejoinParamSetupReqPayload{} }},
+		DeviceModeConf:      {1, func() MACCommandPayload { return &DeviceModeConfPayload{} }},
 	},
 	true: map[CID]macPayloadInfo{
 		ResetInd:            {1, func() MACCommandPayload { return &ResetIndPayload{} }},
@@ -1221,18 +1222,18 @@ func (p *RejoinParamSetupAnsPayload) UnmarshalBinary(data []byte) error {
 }
 
 // DeviceModeIndClass defines the DeviceModeInd class.
-type DeviceModeIndClass byte
+type DeviceModeClass byte
 
 // DeviceModeInd class options.
 const (
-	DeviceModeIndClassA DeviceModeIndClass = 0x00
-	DeviceModeIndRFU    DeviceModeIndClass = 0x01
-	DeviceModeIndClassC DeviceModeIndClass = 0x02
+	DeviceModeClassA DeviceModeClass = 0x00
+	DeviceModeRFU    DeviceModeClass = 0x01
+	DeviceModeClassC DeviceModeClass = 0x02
 )
 
 // DeviceModeIndPayload represents the DeviceModeInd payload.
 type DeviceModeIndPayload struct {
-	Class DeviceModeIndClass
+	Class DeviceModeClass
 }
 
 // MarshalBinary encodes the object into bytes.
@@ -1246,7 +1247,28 @@ func (p *DeviceModeIndPayload) UnmarshalBinary(data []byte) error {
 		return errors.New("lorawan: 1 byte of data is expected")
 	}
 
-	p.Class = DeviceModeIndClass(data[0])
+	p.Class = DeviceModeClass(data[0])
+
+	return nil
+}
+
+// DeviceModeConfPayload represents the DeviceModeConf payload.
+type DeviceModeConfPayload struct {
+	Class DeviceModeClass
+}
+
+// MarshalBinary encodes the object into bytes.
+func (p DeviceModeConfPayload) MarshalBinary() ([]byte, error) {
+	return []byte{byte(p.Class)}, nil
+}
+
+// UnmarshalBinary decodes the object from bytes.
+func (p *DeviceModeConfPayload) UnmarshalBinary(data []byte) error {
+	if len(data) != 1 {
+		return errors.New("lorawan: 1 byte of data is expected")
+	}
+
+	p.Class = DeviceModeClass(data[0])
 
 	return nil
 }
