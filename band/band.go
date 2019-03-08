@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/brocaar/lorawan"
@@ -22,6 +21,7 @@ const (
 	LoRaWAN_1_0_0 = "1.0.0"
 	LoRaWAN_1_0_1 = "1.0.1"
 	LoRaWAN_1_0_2 = "1.0.2"
+	LoRaWAN_1_0_3 = "1.0.3"
 	LoRaWAN_1_1_0 = "1.1.0"
 )
 
@@ -399,13 +399,17 @@ func (b *band) GetDisabledUplinkChannelIndices() []int {
 }
 
 func (b *band) GetCFList(protocolVersion string) *lorawan.CFList {
-	if !b.supportsExtraChannels && strings.HasPrefix(protocolVersion, "1.0") {
+	// Sending the channel-mask in the CFList is supported since LoRaWAN 1.0.3.
+	// For earlier versions, only a CFList with (extra) channel-list is
+	// supported.
+	if !b.supportsExtraChannels && (protocolVersion == LoRaWAN_1_0_0 || protocolVersion == LoRaWAN_1_0_1 || protocolVersion == LoRaWAN_1_0_2) {
 		return nil
 	}
 
 	if b.supportsExtraChannels {
 		return b.getCFListChannels()
 	}
+
 	return b.getCFListChannelMask()
 }
 
