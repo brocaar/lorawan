@@ -335,7 +335,7 @@ func (p *McGroupStatusAnsPayload) UnmarshalBinary(data []byte) error {
 type McGroupSetupReqPayload struct {
 	McGroupIDHeader McGroupSetupReqPayloadMcGroupIDHeader
 	McAddr          lorawan.DevAddr
-	McKeyEncrypted  lorawan.AES128Key
+	McKeyEncrypted  [16]byte
 	MinMcFCnt       uint32
 	MaxMcFCnt       uint32
 }
@@ -364,12 +364,8 @@ func (p McGroupSetupReqPayload) MarshalBinary() ([]byte, error) {
 	}
 	copy(b[1:5], bb)
 
-	// McKeyEncrypted
-	bb, err = p.McKeyEncrypted.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	copy(b[5:21], bb)
+	// The McKeyEncrypted is copied as-is.
+	copy(b[5:21], p.McKeyEncrypted[:])
 
 	// MinMcFCnt
 	binary.LittleEndian.PutUint32(b[21:25], p.MinMcFCnt)
@@ -394,10 +390,8 @@ func (p *McGroupSetupReqPayload) UnmarshalBinary(data []byte) error {
 		return err
 	}
 
-	// McKeyEncrypted
-	if err := p.McKeyEncrypted.UnmarshalBinary(data[5:21]); err != nil {
-		return err
-	}
+	// The McKeyEncrypted is copied as-is.
+	copy(p.McKeyEncrypted[:], data[5:21])
 
 	// MinMcFCnt
 	p.MinMcFCnt = binary.LittleEndian.Uint32(data[21:25])
