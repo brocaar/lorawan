@@ -32,7 +32,7 @@ const (
 	RegParamRevC = "C"
 )
 
-// Available ISM bands.
+// Available ISM bands (deprecated, use the common name).
 const (
 	AS_923     Name = "AS_923"
 	AU_915_928 Name = "AU_915_928"
@@ -44,6 +44,20 @@ const (
 	KR_920_923 Name = "KR_920_923"
 	US_902_928 Name = "US_902_928"
 	RU_864_870 Name = "RU_864_870"
+)
+
+// Available ISM bands (by common name).
+const (
+	EU868 Name = "EU868"
+	US915 Name = "US915"
+	CN779 Name = "CN779"
+	EU433 Name = "EU433"
+	AU915 Name = "AU915"
+	CN470 Name = "CN470"
+	AS923 Name = "AS923"
+	KR920 Name = "KR920"
+	IN865 Name = "IN865"
+	RU864 Name = "RU864"
 )
 
 // Modulation defines the modulation type.
@@ -587,25 +601,25 @@ func channelIsActive(channels []int, i int) bool {
 // of the repeater and dwell time arguments.
 func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 	switch name {
-	case AS_923:
+	case AS_923, AS923:
 		return newAS923Band(repeaterCompatible, dt)
-	case AU_915_928:
+	case AU_915_928, AU915:
 		return newAU915Band(repeaterCompatible, dt)
-	case CN_470_510:
+	case CN_470_510, CN470:
 		return newCN470Band(repeaterCompatible)
-	case CN_779_787:
+	case CN_779_787, CN779:
 		return newCN779Band(repeaterCompatible)
-	case EU_433:
+	case EU_433, EU433:
 		return newEU433Band(repeaterCompatible)
-	case EU_863_870:
+	case EU_863_870, EU868:
 		return newEU863Band(repeaterCompatible)
-	case IN_865_867:
+	case IN_865_867, IN865:
 		return newIN865Band(repeaterCompatible)
-	case KR_920_923:
+	case KR_920_923, KR920:
 		return newKR920Band(repeaterCompatible)
-	case US_902_928:
+	case US_902_928, US915:
 		return newUS902Band(repeaterCompatible)
-	case RU_864_870:
+	case RU_864_870, RU864:
 		return newRU864Band(repeaterCompatible)
 	default:
 		return nil, fmt.Errorf("lorawan/band: band %s is undefined", name)
