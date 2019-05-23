@@ -1,6 +1,6 @@
 # LoRaWAN (Go)
 
-[![Build Status](https://travis-ci.org/brocaar/lorawan.svg?branch=master)](https://travis-ci.org/brocaar/lorawan)
+[![CircleCI](https://circleci.com/gh/brocaar/lorawan.svg?style=svg)](https://circleci.com/gh/brocaar/lorawan)
 [![GoDoc](https://godoc.org/github.com/brocaar/lorawan?status.svg)](https://godoc.org/github.com/brocaar/lorawan)
 
 Package lorawan provides structures and tools to read and write LoRaWAN
