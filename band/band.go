@@ -48,16 +48,17 @@ const (
 
 // Available ISM bands (by common name).
 const (
-	EU868 Name = "EU868"
-	US915 Name = "US915"
-	CN779 Name = "CN779"
-	EU433 Name = "EU433"
-	AU915 Name = "AU915"
-	CN470 Name = "CN470"
-	AS923 Name = "AS923"
-	KR920 Name = "KR920"
-	IN865 Name = "IN865"
-	RU864 Name = "RU864"
+	EU868    Name = "EU868"
+	US915    Name = "US915"
+	CN779    Name = "CN779"
+	EU433    Name = "EU433"
+	AU915    Name = "AU915"
+	CN470    Name = "CN470"
+	AS923    Name = "AS923"
+	KR920    Name = "KR920"
+	IN865    Name = "IN865"
+	RU864    Name = "RU864"
+	EXP24GHZ Name = "EXP24GHZ"
 )
 
 // Modulation defines the modulation type.
@@ -621,6 +622,8 @@ func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, 
 		return newUS902Band(repeaterCompatible)
 	case RU_864_870, RU864:
 		return newRU864Band(repeaterCompatible)
+	case EXP24GHZ:
+		return newExp24GHzBand()
 	default:
 		return nil, fmt.Errorf("lorawan/band: band %s is undefined", name)
 	}
