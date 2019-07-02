@@ -151,6 +151,17 @@ func (b *au915Band) GetEnabledUplinkChannelIndicesForLinkADRReqPayloads(deviceEn
 	return out, nil
 }
 
+func (b *au915Band) ImplementsTxParamSetup(protocolVersion string) bool {
+	// In these versions it is specified that this mac-command is not implemented.
+	if protocolVersion == "1.0.1" || protocolVersion == "1.0.2" {
+		return false
+	}
+
+	// In later versions it is specified that this mac-command must be
+	// implmented.
+	return true
+}
+
 func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 	b := au915Band{
 		dwellTime: dt,

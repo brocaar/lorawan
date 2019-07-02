@@ -72,6 +72,10 @@ func (b *as923Band) GetRX1DataRateIndex(uplinkDR, rx1DROffset int) (int, error) 
 	return dr, nil
 }
 
+func (b *as923Band) ImplementsTxParamSetup(protocolVersion string) bool {
+	return true
+}
+
 func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 	b := as923Band{
 		dwellTime: dt,

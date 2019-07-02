@@ -42,6 +42,10 @@ func (b *kr920Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int,
 	return uplinkFrequency, nil
 }
 
+func (b *kr920Band) ImplementsTxParamSetup(protocolVersion string) bool {
+	return false
+}
+
 func newKR920Band(repeaterCompatible bool) (Band, error) {
 	b := kr920Band{
 		band: band{

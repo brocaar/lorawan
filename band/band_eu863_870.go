@@ -42,6 +42,10 @@ func (b *eu863Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int,
 	return uplinkFrequency, nil
 }
 
+func (b *eu863Band) ImplementsTxParamSetup(protocolVersion string) bool {
+	return false
+}
+
 func newEU863Band(repeatedCompatible bool) (Band, error) {
 	b := eu863Band{
 		band: band{

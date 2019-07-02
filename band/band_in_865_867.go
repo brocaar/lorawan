@@ -42,6 +42,10 @@ func (b *in865Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int,
 	return uplinkFrequency, nil
 }
 
+func (b *in865Band) ImplementsTxParamSetup(protocolVersion string) bool {
+	return false
+}
+
 func newIN865Band(repeaterCompatible bool) (Band, error) {
 	b := in865Band{
 		band: band{

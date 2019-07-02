@@ -150,6 +150,10 @@ func (b *us902Band) GetEnabledUplinkChannelIndicesForLinkADRReqPayloads(deviceEn
 	return out, nil
 }
 
+func (b *us902Band) ImplementsTxParamSetup(protocolVersion string) bool {
+	return false
+}
+
 func newUS902Band(repeaterCompatible bool) (Band, error) {
 	b := us902Band{
 		band: band{
