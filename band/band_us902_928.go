@@ -154,7 +154,7 @@ func (b *us902Band) GetEnabledUplinkChannelIndicesForLinkADRReqPayloads(deviceEn
 	return out, nil
 }
 
-func (b *us902Band) ImplementsTxParamSetup(protocolVersion string) bool {
+func (b *us902Band) ImplementsTXParamSetup(protocolVersion string) bool {
 	return false
 }
 

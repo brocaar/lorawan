@@ -227,8 +227,8 @@ type Band interface {
 	// GetDefaults returns the band defaults.
 	GetDefaults() Defaults
 
-	// ImplementsTxParamSetup returns if the device supports the TxParamSetup mac-command.
-	ImplementsTxParamSetup(protocolVersion string) bool
+	// ImplementsTXParamSetup returns if the device supports the TxParamSetup mac-command.
+	ImplementsTXParamSetup(protocolVersion string) bool
 }
 
 type band struct {

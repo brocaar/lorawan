@@ -58,7 +58,7 @@ func (b *cn470Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int,
 	return b.downlinkChannels[rx1Chan].Frequency, nil
 }
 
-func (b *cn470Band) ImplementsTxParamSetup(protocolVersion string) bool {
+func (b *cn470Band) ImplementsTXParamSetup(protocolVersion string) bool {
 	return false
 }
 

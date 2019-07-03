@@ -155,7 +155,7 @@ func (b *au915Band) GetEnabledUplinkChannelIndicesForLinkADRReqPayloads(deviceEn
 	return out, nil
 }
 
-func (b *au915Band) ImplementsTxParamSetup(protocolVersion string) bool {
+func (b *au915Band) ImplementsTXParamSetup(protocolVersion string) bool {
 	// In these versions it is specified that this mac-command is not implemented.
 	if protocolVersion == "1.0.1" || protocolVersion == "1.0.2" {
 		return false

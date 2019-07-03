@@ -76,7 +76,7 @@ func (b *as923Band) GetRX1DataRateIndex(uplinkDR, rx1DROffset int) (int, error) 
 	return dr, nil
 }
 
-func (b *as923Band) ImplementsTxParamSetup(protocolVersion string) bool {
+func (b *as923Band) ImplementsTXParamSetup(protocolVersion string) bool {
 	return true
 }
 
