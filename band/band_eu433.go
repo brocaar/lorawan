@@ -30,6 +30,10 @@ func (b *eu443Band) GetDownlinkTXPower(freq int) int {
 	return 10
 }
 
+func (b *eu443Band) GetDefaultMaxUplinkEIRP() float32 {
+	return 12.15
+}
+
 func (b *eu443Band) GetPingSlotFrequency(lorawan.DevAddr, time.Duration) (int, error) {
 	return 434665000, nil
 }

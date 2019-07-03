@@ -220,6 +220,10 @@ type Band interface {
 	// values for different frequencies.
 	GetDownlinkTXPower(frequency int) int
 
+	// GetDefaultMaxUplinkEIRP returns the default uplink EIRP as defined by the
+	// Regional Parameters.
+	GetDefaultMaxUplinkEIRP() float32
+
 	// GetDefaults returns the band defaults.
 	GetDefaults() Defaults
 
