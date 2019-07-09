@@ -698,54 +698,6 @@ func TestRXTimingSetupReqPayload(t *testing.T) {
 	})
 }
 
-func TestTXParamSetupReqPayload(t *testing.T) {
-	Convey("Given an empty TXParamSetupReqPayload", t, func() {
-		var p TXParamSetupReqPayload
-
-		Convey("Then MarshalBinary returns an error (invalid MaxEIRP)", func() {
-			_, err := p.MarshalBinary()
-			So(err, ShouldResemble, errors.New("lorawan: invalid MaxEIRP value"))
-		})
-
-		tests := []struct {
-			DownlinkDwelltime DwellTime
-			UplinkDwellTime   DwellTime
-			MaxEIRP           uint8
-			Bytes             []byte
-		}{
-			{DwellTimeNoLimit, DwellTimeNoLimit, 36, []byte{15}},
-			{DwellTime400ms, DwellTimeNoLimit, 36, []byte{47}},
-			{DwellTime400ms, DwellTime400ms, 36, []byte{63}},
-		}
-
-		for i, test := range tests {
-			Convey(fmt.Sprintf("Given DownlinkDwelltime: %d, UplinkDwellTime: %d, MaxEIRP: %d [%d]", test.DownlinkDwelltime, test.UplinkDwellTime, test.MaxEIRP, i), func() {
-				p.DownlinkDwelltime = test.DownlinkDwelltime
-				p.UplinkDwellTime = test.UplinkDwellTime
-				p.MaxEIRP = test.MaxEIRP
-
-				Convey(fmt.Sprintf("Then MarshalBinary returns %v", test.Bytes), func() {
-					b, err := p.MarshalBinary()
-					So(err, ShouldBeNil)
-					So(b, ShouldResemble, test.Bytes)
-				})
-			})
-		}
-
-		for i, test := range tests {
-			Convey(fmt.Sprintf("When unmarshaling %v [%d]", test.Bytes, i), func() {
-				So(p.UnmarshalBinary(test.Bytes), ShouldBeNil)
-
-				Convey(fmt.Sprintf("Then DownlinkDwelltime: %d, UplinkDwellTime: %d and MaxEIRP: %d are expected", test.DownlinkDwelltime, test.UplinkDwellTime, test.MaxEIRP), func() {
-					So(p.DownlinkDwelltime, ShouldEqual, test.DownlinkDwelltime)
-					So(p.UplinkDwellTime, ShouldEqual, test.UplinkDwellTime)
-					So(p.MaxEIRP, ShouldEqual, test.MaxEIRP)
-				})
-			})
-		}
-	})
-}
-
 func TestDLChannelReqPayload(t *testing.T) {
 	Convey("Given an empty DLChannelReqPayload", t, func() {
 		var p DLChannelReqPayload
