@@ -11,5 +11,6 @@ test: lint
 	go test -cover -v ./...
 
 dev-requirements:
+	go mod download
 	go install golang.org/x/lint/golint
 
