@@ -22,6 +22,8 @@ var eirpTable = [...]float32{
 }
 
 // GetTXParamSetupEIRPIndex returns the coded value for the given EIRP (dBm).
+// Note that it returns the coded value that is closest to the given EIRP,
+// without exceeding it.
 func GetTXParamSetupEIRPIndex(eirp float32) uint8 {
 	var out uint8
 	for i, e := range eirpTable {

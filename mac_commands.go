@@ -696,6 +696,10 @@ func (p *RXTimingSetupReqPayload) UnmarshalBinary(data []byte) error {
 }
 
 // TXParamSetupReqPayload represents the TXParamSetupReq payload.
+// Note that the MaxEIRP holds the coded index value, not the actual EIRP.
+// To translate from the actual EIRP to the coded index value, use the
+// GetTXParamSetupEIRPIndex function. To translate a coded index value back
+// to the actual EIRP, use the GetTXParamSetupEIRP function.
 type TXParamSetupReqPayload struct {
 	DownlinkDwelltime DwellTime `json:"downlinkDwellTime"`
 	UplinkDwellTime   DwellTime `json:"uplinkDwellTime"`
