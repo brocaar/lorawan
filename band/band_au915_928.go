@@ -33,6 +33,10 @@ func (b *au915Band) GetDownlinkTXPower(freq int) int {
 	return 27
 }
 
+func (b *au915Band) GetDefaultMaxUplinkEIRP() float32 {
+	return 30
+}
+
 func (b *au915Band) GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
 	downlinkChannel := (int(binary.BigEndian.Uint32(devAddr[:])) + int(beaconTime/(128*time.Second))) % 8
 	return b.downlinkChannels[downlinkChannel].Frequency, nil
@@ -149,6 +153,17 @@ func (b *au915Band) GetEnabledUplinkChannelIndicesForLinkADRReqPayloads(deviceEn
 	}
 
 	return out, nil
+}
+
+func (b *au915Band) ImplementsTXParamSetup(protocolVersion string) bool {
+	// In these versions it is specified that this mac-command is not implemented.
+	if protocolVersion == "1.0.1" || protocolVersion == "1.0.2" {
+		return false
+	}
+
+	// In later versions it is specified that this mac-command must be
+	// implmented.
+	return true
 }
 
 func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {

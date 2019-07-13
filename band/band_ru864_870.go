@@ -30,6 +30,10 @@ func (b *ru864Band) GetDownlinkTXPower(freq int) int {
 	return 14
 }
 
+func (b *ru864Band) GetDefaultMaxUplinkEIRP() float32 {
+	return 16
+}
+
 func (b *ru864Band) GetPingSlotFrequency(lorawan.DevAddr, time.Duration) (int, error) {
 	return 868900000, nil
 }
@@ -40,6 +44,10 @@ func (b *ru864Band) GetRX1ChannelIndexForUplinkChannelIndex(uplinkChannel int) (
 
 func (b *ru864Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int, error) {
 	return uplinkFrequency, nil
+}
+
+func (b *ru864Band) ImplementsTXParamSetup(protocolVersion string) bool {
+	return false
 }
 
 func newRU864Band(repeaterCompatible bool) (Band, error) {

@@ -24,8 +24,13 @@ func (ts MACCommandPayloadTestSuite) run(newPLFunc func() MACCommandPayload, tes
 	for _, tst := range tests {
 		if tst.Payload != nil {
 			b, err := tst.Payload.MarshalBinary()
-			assert.NoError(err)
+			assert.Equal(tst.Error, err)
 			assert.Equal(tst.Bytes, b)
+
+			// if there is a Payload and error, skip to the next test
+			if tst.Error != nil {
+				continue
+			}
 		}
 
 		pl := newPLFunc()
@@ -94,6 +99,41 @@ func (ts MACCommandPayloadTestSuite) TestDeviceModeConfClass() {
 	}
 
 	ts.run(func() MACCommandPayload { return &DeviceModeConfPayload{} }, tests)
+}
+
+func (ts MACCommandPayloadTestSuite) TestTXParamSetupReqPayload() {
+	tests := []macCommandPayloadTest{
+		{
+			Bytes: []byte{},
+			Error: errors.New("lorawan: 1 byte of data is expected"),
+		},
+		{
+			Payload: &TXParamSetupReqPayload{
+				UplinkDwellTime:   DwellTime400ms,
+				DownlinkDwelltime: DwellTimeNoLimit,
+				MaxEIRP:           7,
+			},
+			Bytes: []byte{0x17},
+		},
+		{
+			Payload: &TXParamSetupReqPayload{
+				UplinkDwellTime:   DwellTimeNoLimit,
+				DownlinkDwelltime: DwellTime400ms,
+				MaxEIRP:           7,
+			},
+			Bytes: []byte{0x27},
+		},
+		{
+			Payload: &TXParamSetupReqPayload{
+				UplinkDwellTime:   DwellTimeNoLimit,
+				DownlinkDwelltime: DwellTime400ms,
+				MaxEIRP:           16,
+			},
+			Error: errors.New("lorawan: max value of MaxEIRP is 15"),
+		},
+	}
+
+	ts.run(func() MACCommandPayload { return &TXParamSetupReqPayload{} }, tests)
 }
 
 func TestMACCommandPayloads(t *testing.T) {

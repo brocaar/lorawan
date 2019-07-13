@@ -30,6 +30,10 @@ func (b *eu443Band) GetDownlinkTXPower(freq int) int {
 	return 10
 }
 
+func (b *eu443Band) GetDefaultMaxUplinkEIRP() float32 {
+	return 12.15
+}
+
 func (b *eu443Band) GetPingSlotFrequency(lorawan.DevAddr, time.Duration) (int, error) {
 	return 434665000, nil
 }
@@ -40,6 +44,10 @@ func (b *eu443Band) GetRX1ChannelIndexForUplinkChannelIndex(uplinkChannel int) (
 
 func (b *eu443Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int, error) {
 	return uplinkFrequency, nil
+}
+
+func (b *eu443Band) ImplementsTXParamSetup(protocolVersion string) bool {
+	return false
 }
 
 func newEU433Band(repeaterCompatible bool) (Band, error) {

@@ -32,6 +32,10 @@ func (b *us902Band) GetDownlinkTXPower(freq int) int {
 	return 20
 }
 
+func (b *us902Band) GetDefaultMaxUplinkEIRP() float32 {
+	return 30
+}
+
 func (b *us902Band) GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
 	downlinkChannel := (int(binary.BigEndian.Uint32(devAddr[:])) + int(beaconTime/(128*time.Second))) % 8
 	return b.downlinkChannels[downlinkChannel].Frequency, nil
@@ -148,6 +152,10 @@ func (b *us902Band) GetEnabledUplinkChannelIndicesForLinkADRReqPayloads(deviceEn
 	}
 
 	return out, nil
+}
+
+func (b *us902Band) ImplementsTXParamSetup(protocolVersion string) bool {
+	return false
 }
 
 func newUS902Band(repeaterCompatible bool) (Band, error) {
