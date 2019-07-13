@@ -30,6 +30,10 @@ func (b *exp24GHzBand) GetDownlinkTXPower(freq int) int {
 	return 10
 }
 
+func (b *exp24GHzBand) GetDefaultMaxUplinkEIRP() float32 {
+	return 16
+}
+
 func (b *exp24GHzBand) GetPingSlotFrequency(lorawan.DevAddr, time.Duration) (int, error) {
 	return 0, nil
 }
@@ -40,6 +44,10 @@ func (b *exp24GHzBand) GetRX1ChannelIndexForUplinkChannelIndex(uplinkChannel int
 
 func (b *exp24GHzBand) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int, error) {
 	return uplinkFrequency, nil
+}
+
+func (b *exp24GHzBand) ImplementsTXParamSetup(protocolVersion string) bool {
+	return false
 }
 
 func newExp24GHzBand() (Band, error) {
