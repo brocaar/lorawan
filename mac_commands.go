@@ -1114,7 +1114,7 @@ func (p *ADRParam) UnmarshalBinary(data []byte) error {
 
 // ADRParamSetupReqPayload represents the ADRParamReq payload.
 type ADRParamSetupReqPayload struct {
-	ADRParam ADRParam `josn:"adrParam"`
+	ADRParam ADRParam `json:"adrParam"`
 }
 
 // MarshalBinary encodes the object into bytes.
