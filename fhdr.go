@@ -30,9 +30,9 @@ func (a DevAddr) NwkID() []byte {
 	case 2:
 		return a.getNwkID(3, 9)
 	case 3:
-		return a.getNwkID(4, 10)
+		return a.getNwkID(4, 11)
 	case 4:
-		return a.getNwkID(5, 11)
+		return a.getNwkID(5, 12)
 	case 5:
 		return a.getNwkID(6, 13)
 	case 6:
@@ -54,9 +54,9 @@ func (a *DevAddr) SetAddrPrefix(netID NetID) {
 	case 2:
 		a.setAddrPrefix(3, 9, netID)
 	case 3:
-		a.setAddrPrefix(4, 10, netID)
+		a.setAddrPrefix(4, 11, netID)
 	case 4:
-		a.setAddrPrefix(5, 11, netID)
+		a.setAddrPrefix(5, 12, netID)
 	case 5:
 		a.setAddrPrefix(6, 13, netID)
 	case 6:
