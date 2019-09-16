@@ -12,9 +12,9 @@ type DevAddr [4]byte
 
 // NetIDType returns the NetID type of the DevAddr.
 func (a DevAddr) NetIDType() int {
-	for i := 0; i < 8; i++ {
-		if a[0]&(0xff<<(byte(7-i))) == 0xff&(0xff<<(byte(8-i))) {
-			return i
+	for i := 7; i >= 0; i-- {
+		if a[0]&(1<<byte(i)) == 0 {
+			return 7 - i
 		}
 	}
 	panic("NetIDType bug!")
