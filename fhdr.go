@@ -203,19 +203,22 @@ func (c FCtrl) MarshalBinary() ([]byte, error) {
 	if c.fOptsLen > 15 {
 		return []byte{}, errors.New("lorawan: max value of FOptsLen is 15")
 	}
-	b := byte(c.fOptsLen)
-	if c.FPending || c.ClassB {
-		b = b ^ (1 << 4)
-	}
-	if c.ACK {
-		b = b ^ (1 << 5)
+
+	var b byte
+	if c.ADR {
+		b |= 0x80
 	}
 	if c.ADRACKReq {
-		b = b ^ (1 << 6)
+		b |= 0x40
 	}
-	if c.ADR {
-		b = b ^ (1 << 7)
+	if c.ACK {
+		b |= 0x20
 	}
+	if c.ClassB || c.FPending {
+		b |= 0x10
+	}
+	b |= byte(c.fOptsLen) & 0x0f
+
 	return []byte{b}, nil
 }
 
@@ -224,12 +227,14 @@ func (c *FCtrl) UnmarshalBinary(data []byte) error {
 	if len(data) != 1 {
 		return errors.New("lorawan: 1 byte of data is expected")
 	}
-	c.fOptsLen = data[0] & ((1 << 3) ^ (1 << 2) ^ (1 << 1) ^ (1 << 0))
-	c.FPending = data[0]&(1<<4) != 0
-	c.ClassB = data[0]&(1<<4) != 0
-	c.ACK = data[0]&(1<<5) != 0
-	c.ADRACKReq = data[0]&(1<<6) != 0
-	c.ADR = data[0]&(1<<7) != 0
+
+	c.ADR = data[0]&0x80 != 0
+	c.ADRACKReq = data[0]&0x40 != 0
+	c.ACK = data[0]&0x20 != 0
+	c.ClassB = data[0]&0x10 != 0
+	c.FPending = data[0]&0x10 != 0
+	c.fOptsLen = data[0] & 0x0f
+
 	return nil
 }
 
