@@ -88,7 +88,7 @@ func (p *MACPayload) UnmarshalBinary(uplink bool, data []byte) error {
 	}
 
 	// decode the optional FPort
-	if dataLen >= 7+int(p.FHDR.FCtrl.fOptsLen)+1 {
+	if dataLen > 7+int(p.FHDR.FCtrl.fOptsLen) {
 		fPort := uint8(data[7+int(p.FHDR.FCtrl.fOptsLen)])
 		p.FPort = &fPort
 	}
