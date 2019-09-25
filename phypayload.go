@@ -148,7 +148,7 @@ type MHDR struct {
 
 // MarshalBinary marshals the object in binary form.
 func (h MHDR) MarshalBinary() ([]byte, error) {
-	return []byte{byte(h.Major) ^ (byte(h.MType) << 5)}, nil
+	return []byte{(byte(h.MType) << 5) | (byte(h.Major) & 0x03)}, nil
 }
 
 // UnmarshalBinary decodes the object from binary form.
@@ -156,8 +156,8 @@ func (h *MHDR) UnmarshalBinary(data []byte) error {
 	if len(data) != 1 {
 		return errors.New("lorawan: 1 byte of data is expected")
 	}
-	h.Major = Major(data[0] & 3)
-	h.MType = MType((data[0] & 224) >> 5)
+	h.MType = MType(data[0] >> 5)
+	h.Major = Major(data[0] & 0x03)
 	return nil
 }
 
