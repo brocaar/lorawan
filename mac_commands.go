@@ -257,12 +257,16 @@ type ChMask [16]bool
 
 // MarshalBinary marshals the object in binary form.
 func (m ChMask) MarshalBinary() ([]byte, error) {
-	b := make([]byte, 2)
-	for i := uint8(0); i < 16; i++ {
+	var n uint16
+	for i := uint(0); i < 16; i++ {
 		if m[i] {
-			b[i/8] = b[i/8] ^ 1<<(i%8)
+			n |= 1 << i
 		}
 	}
+
+	b := make([]byte, 2)
+	binary.LittleEndian.PutUint16(b, n)
+
 	return b, nil
 }
 
@@ -271,13 +275,14 @@ func (m *ChMask) UnmarshalBinary(data []byte) error {
 	if len(data) != 2 {
 		return errors.New("lorawan: 2 bytes of data are expected")
 	}
-	for i, b := range data {
-		for j := uint8(0); j < 8; j++ {
-			if b&(1<<j) > 0 {
-				m[uint8(i)*8+j] = true
-			}
+
+	n := binary.LittleEndian.Uint16(data)
+	for i := uint(0); i < 16; i++ {
+		if n&(1<<i) != 0 {
+			m[i] = true
 		}
 	}
+
 	return nil
 }
 
