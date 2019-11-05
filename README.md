@@ -86,8 +86,8 @@ You can download the LoRaWAN specification here: https://lora-alliance.org/loraw
 
 ## Support
 
-For questions, feedback or support, please refer to the LoRa Server project
-forum: [https://forum.loraserver.io](https://forum.loraserver.io/).
+For questions, feedback or support, please refer to the ChirpStack Community Forum:
+[https://forum.chirpstack.io](https://forum.chirpstack.io/).
 
 ## License
 
