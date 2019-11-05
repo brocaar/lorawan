@@ -1,6 +1,7 @@
 package lorawan
 
 import (
+	"database/sql/driver"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -183,6 +184,11 @@ func (a *DevAddr) Scan(src interface{}) error {
 	}
 	copy(a[:], b)
 	return nil
+}
+
+// Value implements driver.Valuer.
+func (a DevAddr) Value() (driver.Value, error) {
+	return a[:], nil
 }
 
 // FCtrl represents the FCtrl (frame control) field.
