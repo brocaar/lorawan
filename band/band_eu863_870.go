@@ -27,7 +27,15 @@ func (b *eu863Band) GetDefaults() Defaults {
 }
 
 func (b *eu863Band) GetDownlinkTXPower(freq int) int {
-	return 14
+	// NOTE: as there are currently no further boundary checks on the frequency, this check is sufficient.
+	// TODO: However, there should be some mechanism, that checks the frequency for compliance to regulations.
+	if 863000000 <= freq && freq < 869200000 {
+		return 14 //25mW
+	} else if 869400000 <= freq && freq < 869650000 {
+		return 27 //500mW
+	} else {
+		return 14 // Default case
+	}
 }
 
 func (b *eu863Band) GetDefaultMaxUplinkEIRP() float32 {

@@ -17,3 +17,5 @@ require (
 	golang.org/x/net v0.0.0-20190328230028-74de082e2cca // indirect
 	golang.org/x/sys v0.0.0-20190402054613-e4093980e83e // indirect
 )
+
+go 1.13

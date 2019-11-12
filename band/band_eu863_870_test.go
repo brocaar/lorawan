@@ -26,7 +26,31 @@ func TestEU863Band(t *testing.T) {
 			})
 		})
 
-		Convey("Then GetDownlinkTXPower returns the expected value", func() {
+		Convey("Then GetDownlinkTXPower returns the expected value for 863.000000 MHz", func() {
+			So(band.GetDownlinkTXPower(863000000), ShouldEqual, 14)
+		})
+
+		Convey("Then GetDownlinkTXPower returns the expected value for 863.000001 MHz", func() {
+			So(band.GetDownlinkTXPower(863000001), ShouldEqual, 14)
+		})
+
+		Convey("Then GetDownlinkTXPower returns the expected value for 869.200000 MHz", func() {
+			So(band.GetDownlinkTXPower(869200000), ShouldEqual, 14)
+		})
+
+		Convey("Then GetDownlinkTXPower returns the expected value for 869.400000 MHz", func() {
+			So(band.GetDownlinkTXPower(869400000), ShouldEqual, 27)
+		})
+
+		Convey("Then GetDownlinkTXPower returns the expected value for 869.400001 MHz", func() {
+			So(band.GetDownlinkTXPower(869400001), ShouldEqual, 27)
+		})
+
+		Convey("Then GetDownlinkTXPower returns the expected value for 869.650000 MHz", func() {
+			So(band.GetDownlinkTXPower(869650000), ShouldEqual, 14)
+		})
+
+		Convey("Then GetDownlinkTXPower returns the expected value for any other value (0)", func() {
 			So(band.GetDownlinkTXPower(0), ShouldEqual, 14)
 		})
 
