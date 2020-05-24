@@ -185,8 +185,7 @@ func (p *Percentage) UnmarshalJSON(str []byte) error {
 	return nil
 }
 
-// BasePayload defines the base payload that is sent with every request
-// and response.
+// BasePayload defines the base payload that is sent with every request.
 type BasePayload struct {
 	ProtocolVersion string      `json:"ProtocolVersion"` // Version of backend specification. E.g., "1.0"
 	SenderID        string      `json:"SenderID"`        // Hexadecimal representation in ASCII format in case of carrying NetID or JoinEUI, ASCII string in case of AS-ID
@@ -196,6 +195,12 @@ type BasePayload struct {
 	SenderToken     HEXBytes    `json:"SenderToken,omitempty"`
 	ReceiverToken   HEXBytes    `json:"ReceiverToken,omitempty"`
 	VSExtension     VSExtension `json:"VSExtension,omitempty"`
+}
+
+// BasePayloadResult defines the base payload that is sent with every result.
+type BasePayloadResult struct {
+	BasePayload
+	Result Result `json:"Result"`
 }
 
 // Result defines the result object.
@@ -278,9 +283,8 @@ type JoinReqPayload struct {
 
 // JoinAnsPayload defines the JoinAns message payload.
 type JoinAnsPayload struct {
-	BasePayload
-	PHYPayload   HEXBytes     `json:"PHYPayload,omitempty"` // Mandatory when Result=Success
-	Result       Result       `json:"Result"`
+	BasePayloadResult
+	PHYPayload   HEXBytes     `json:"PHYPayload,omitempty"`   // Mandatory when Result=Success
 	Lifetime     *int         `json:"Lifetime,omitempty"`     // Mandatory when Result=Success, in seconds
 	SNwkSIntKey  *KeyEnvelope `json:"SNwkSIntKey,omitempty"`  // Mandatory when Result=Success
 	FNwkSIntKey  *KeyEnvelope `json:"FNwkSIntKey,omitempty"`  // Mandatory when Result=Success
@@ -304,9 +308,8 @@ type RejoinReqPayload struct {
 
 // RejoinAnsPayload defines the RejoinAns message payload.
 type RejoinAnsPayload struct {
-	BasePayload
-	PHYPayload   HEXBytes     `json:"PHYPayload,omitempty"` // Mandatory when Result=Success
-	Result       Result       `json:"Result"`
+	BasePayloadResult
+	PHYPayload   HEXBytes     `json:"PHYPayload,omitempty"`   // Mandatory when Result=Success
 	Lifetime     *int         `json:"Lifetime,omitempty"`     // Mandatory when Result=Success, in seconds
 	SNwkSIntKey  *KeyEnvelope `json:"SNwkSIntKey,omitempty"`  // Mandatory when Result=Success
 	FNwkSIntKey  *KeyEnvelope `json:"FNwkSIntKey,omitempty"`  // Mandatory when Result=Success
@@ -325,8 +328,7 @@ type AppSKeyReqPayload struct {
 
 // AppSKeyAnsPayload defines the AppSKeyAns message payload.
 type AppSKeyAnsPayload struct {
-	BasePayload
-	Result       Result        `json:"Result"`
+	BasePayloadResult
 	DevEUI       lorawan.EUI64 `json:"DevEUI"`
 	AppSKey      *KeyEnvelope  `json:"AppSKey,omitempty"` // Mandatory when Result=Success
 	SessionKeyID HEXBytes      `json:"SessionKeyID"`
@@ -341,8 +343,7 @@ type PRStartReqPayload struct {
 
 // PRStartAnsPayload defines the PRStartAns message payload.
 type PRStartAnsPayload struct {
-	BasePayload
-	Result         Result          `json:"Result"`
+	BasePayloadResult
 	DevEUI         *lorawan.EUI64  `json:"DevEUI,omitempty"`   // Optional when Result=Success
 	Lifetime       *int            `json:"Lifetime,omitempty"` // Mandatory when Result=Success, in seconds
 	FNwkSIntKey    *KeyEnvelope    `json:"FNwkSIntKey"`        // Optional when Result=Success and not NwkSKey
@@ -360,8 +361,7 @@ type PRStopReqPayload struct {
 
 // PRStopAnsPayload defines the PRStopAns message payload.
 type PRStopAnsPayload struct {
-	BasePayload
-	Result Result `json:"Result"`
+	BasePayloadResult
 }
 
 // HRStartReqPayload defines the HRStartReq message payload.
@@ -380,9 +380,8 @@ type HRStartReqPayload struct {
 
 // HRStartAnsPayload defines the HRStartAns message payload.
 type HRStartAnsPayload struct {
-	BasePayload
-	PHYPayload             HEXBytes        `json:"PHYPayload,omitempty"` // Mandatory when Result=Success
-	Result                 Result          `json:"Result"`
+	BasePayloadResult
+	PHYPayload             HEXBytes        `json:"PHYPayload,omitempty"`             // Mandatory when Result=Success
 	Lifetime               *int            `json:"Lifetime,omitempty"`               // Mandatory when Result=Success, in seconds
 	SNwkSIntKey            *KeyEnvelope    `json:"SNwkSIntKey,omitempty"`            // Mandatory when Result=Success
 	FNwkSIntKey            *KeyEnvelope    `json:"FNwkSIntKey,omitempty"`            // Mandatory when Result=Success
@@ -402,8 +401,7 @@ type HRStopReqPayload struct {
 
 // HRStopAnsPayload defines the HRStopAns message payload.
 type HRStopAnsPayload struct {
-	BasePayload
-	Result Result `json:"Result"`
+	BasePayloadResult
 }
 
 // HomeNSReqPayload defines the HomeNSReq message payload.
@@ -414,8 +412,7 @@ type HomeNSReqPayload struct {
 
 // HomeNSAnsPayload defines the HomeNSAns message payload.
 type HomeNSAnsPayload struct {
-	BasePayload
-	Result Result        `json:"Result"`
+	BasePayloadResult
 	HNetID lorawan.NetID `json:"HNetID"`
 }
 
@@ -427,8 +424,7 @@ type ProfileReqPayload struct {
 
 // ProfileAnsPayload defines the ProfileAns message payload.
 type ProfileAnsPayload struct {
-	BasePayload
-	Result                 Result         `json:"Result"`
+	BasePayloadResult
 	DeviceProfile          *DeviceProfile `json:"DeviceProfile,omitempty"`          // Mandatory when Result=Success
 	DeviceProfileTimestamp *ISO8601Time   `json:"DeviceProfileTimestamp,omitempty"` // Mandatory when Result=Success. Timestamp of last DeviceProfile change.
 	RoamingActivationType  *RoamingType   `json:"RoamingActivationType"`            // Mandatory when Result=Success.
@@ -445,8 +441,7 @@ type XmitDataReqPayload struct {
 
 // XmitDataAnsPayload defines the XmitDataAns message payload.
 type XmitDataAnsPayload struct {
-	BasePayload
-	Result  Result   `json:"Result"`
+	BasePayloadResult
 	DLFreq1 *float64 `json:"DLFreq1,omitempty"` // Optional, when Result=Success, TODO: In MHz?
 	DLFreq2 *float64 `json:"DLFreq2,omitempty"` // Optional, when Result=Success, TODO: In Mhz?
 }

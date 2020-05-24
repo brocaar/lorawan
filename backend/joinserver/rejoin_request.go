@@ -37,10 +37,12 @@ func handleRejoinRequestWrapper(rejoinReqPL backend.RejoinReqPayload, dk DeviceK
 		}
 
 		rjaPL = backend.RejoinAnsPayload{
-			BasePayload: basePayload,
-			Result: backend.Result{
-				ResultCode:  resCode,
-				Description: err.Error(),
+			BasePayloadResult: backend.BasePayloadResult{
+				BasePayload: basePayload,
+				Result: backend.Result{
+					ResultCode:  resCode,
+					Description: err.Error(),
+				},
 			},
 		}
 	}
@@ -147,8 +149,10 @@ func createRejoinAnsPayload(ctx *context) error {
 	// as the rejoin-request is only implemented for LoRaWAN1.1+ there is no
 	// need to check the OptNeg flag
 	ctx.rejoinAnsPaylaod = backend.RejoinAnsPayload{
-		Result: backend.Result{
-			ResultCode: backend.Success,
+		BasePayloadResult: backend.BasePayloadResult{
+			Result: backend.Result{
+				ResultCode: backend.Success,
+			},
 		},
 		PHYPayload: backend.HEXBytes(b),
 		// TODO: add Lifetime?

@@ -38,10 +38,12 @@ func handleJoinRequestWrapper(joinReqPL backend.JoinReqPayload, dk DeviceKeys, a
 		}
 
 		jaPL = backend.JoinAnsPayload{
-			BasePayload: basePayload,
-			Result: backend.Result{
-				ResultCode:  resCode,
-				Description: err.Error(),
+			BasePayloadResult: backend.BasePayloadResult{
+				BasePayload: basePayload,
+				Result: backend.Result{
+					ResultCode:  resCode,
+					Description: err.Error(),
+				},
 			},
 		}
 	}
@@ -195,10 +197,12 @@ func createJoinAnsPayload(ctx *context) error {
 	}
 
 	ctx.joinAnsPayload = backend.JoinAnsPayload{
-		PHYPayload: backend.HEXBytes(b),
-		Result: backend.Result{
-			ResultCode: backend.Success,
+		BasePayloadResult: backend.BasePayloadResult{
+			Result: backend.Result{
+				ResultCode: backend.Success,
+			},
 		},
+		PHYPayload: backend.HEXBytes(b),
 		// TODO add Lifetime?
 	}
 

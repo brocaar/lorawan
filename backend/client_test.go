@@ -78,15 +78,17 @@ func (ts *ClientTestSuite) TestPRStartReq() {
 	lifetime := 60
 
 	resp := PRStartAnsPayload{
-		BasePayload: BasePayload{
-			ProtocolVersion: ProtocolVersion1_0,
-			SenderID:        "020202",
-			ReceiverID:      "010101",
-			TransactionID:   123,
-			MessageType:     PRStartAns,
-		},
-		Result: Result{
-			ResultCode: Success,
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				SenderID:        "020202",
+				ReceiverID:      "010101",
+				TransactionID:   123,
+				MessageType:     PRStartAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
 		},
 		DevEUI:   &devEUI,
 		Lifetime: &lifetime,
@@ -122,15 +124,17 @@ func (ts *ClientTestSuite) TestPRStopReq() {
 	assert.NoError(err)
 
 	resp := PRStopAnsPayload{
-		BasePayload: BasePayload{
-			ProtocolVersion: ProtocolVersion1_0,
-			SenderID:        "020202",
-			ReceiverID:      "010101",
-			TransactionID:   123,
-			MessageType:     PRStopAns,
-		},
-		Result: Result{
-			ResultCode: Success,
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				SenderID:        "020202",
+				ReceiverID:      "010101",
+				TransactionID:   123,
+				MessageType:     PRStopAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
 		},
 	}
 	respB, err := json.Marshal(resp)
@@ -186,15 +190,17 @@ func (ts *ClientTestSuite) TestXmitDataReq() {
 	assert.NoError(err)
 
 	resp := XmitDataAnsPayload{
-		BasePayload: BasePayload{
-			ProtocolVersion: ProtocolVersion1_0,
-			SenderID:        "020202",
-			ReceiverID:      "010101",
-			TransactionID:   123,
-			MessageType:     XmitDataAns,
-		},
-		Result: Result{
-			ResultCode: Success,
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				SenderID:        "020202",
+				ReceiverID:      "010101",
+				TransactionID:   123,
+				MessageType:     XmitDataAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
 		},
 	}
 	respB, err := json.Marshal(resp)
@@ -229,15 +235,17 @@ func (ts *ClientTestSuite) TestProfileReq() {
 	assert.NoError(err)
 
 	resp := ProfileAnsPayload{
-		BasePayload: BasePayload{
-			ProtocolVersion: ProtocolVersion1_0,
-			SenderID:        "020202",
-			ReceiverID:      "010101",
-			TransactionID:   123,
-			MessageType:     ProfileAns,
-		},
-		Result: Result{
-			ResultCode: Success,
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				SenderID:        "020202",
+				ReceiverID:      "010101",
+				TransactionID:   123,
+				MessageType:     ProfileAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
 		},
 		DeviceProfile: &DeviceProfile{
 			DeviceProfileID: "test-1234",

@@ -128,16 +128,18 @@ func (h *handler) returnError(w http.ResponseWriter, code int, resultCode backen
 
 func (h *handler) returnJoinReqError(w http.ResponseWriter, basePL backend.BasePayload, code int, resultCode backend.ResultCode, msg string) {
 	jaPL := backend.JoinAnsPayload{
-		BasePayload: backend.BasePayload{
-			ProtocolVersion: backend.ProtocolVersion1_0,
-			SenderID:        basePL.ReceiverID,
-			ReceiverID:      basePL.SenderID,
-			TransactionID:   basePL.TransactionID,
-			MessageType:     backend.JoinAns,
-		},
-		Result: backend.Result{
-			ResultCode:  resultCode,
-			Description: msg,
+		BasePayloadResult: backend.BasePayloadResult{
+			BasePayload: backend.BasePayload{
+				ProtocolVersion: backend.ProtocolVersion1_0,
+				SenderID:        basePL.ReceiverID,
+				ReceiverID:      basePL.SenderID,
+				TransactionID:   basePL.TransactionID,
+				MessageType:     backend.JoinAns,
+			},
+			Result: backend.Result{
+				ResultCode:  resultCode,
+				Description: msg,
+			},
 		},
 	}
 
@@ -146,16 +148,18 @@ func (h *handler) returnJoinReqError(w http.ResponseWriter, basePL backend.BaseP
 
 func (h *handler) returnRejoinReqError(w http.ResponseWriter, basePL backend.BasePayload, code int, resultCode backend.ResultCode, msg string) {
 	jaPL := backend.RejoinAnsPayload{
-		BasePayload: backend.BasePayload{
-			ProtocolVersion: backend.ProtocolVersion1_0,
-			SenderID:        basePL.ReceiverID,
-			ReceiverID:      basePL.SenderID,
-			TransactionID:   basePL.TransactionID,
-			MessageType:     backend.RejoinAns,
-		},
-		Result: backend.Result{
-			ResultCode:  resultCode,
-			Description: msg,
+		BasePayloadResult: backend.BasePayloadResult{
+			BasePayload: backend.BasePayload{
+				ProtocolVersion: backend.ProtocolVersion1_0,
+				SenderID:        basePL.ReceiverID,
+				ReceiverID:      basePL.SenderID,
+				TransactionID:   basePL.TransactionID,
+				MessageType:     backend.RejoinAns,
+			},
+			Result: backend.Result{
+				ResultCode:  resultCode,
+				Description: msg,
+			},
 		},
 	}
 

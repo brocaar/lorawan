@@ -207,15 +207,17 @@ func (ts *JoinServerTestSuite) TestJoinRequest() {
 				CFList:  backend.HEXBytes(cFListB),
 			},
 			ExpectedAnsPayload: backend.JoinAnsPayload{
-				BasePayload: backend.BasePayload{
-					ProtocolVersion: backend.ProtocolVersion1_0,
-					SenderID:        "0807060504030201",
-					ReceiverID:      "010203",
-					TransactionID:   1234,
-					MessageType:     backend.JoinAns,
-				},
-				Result: backend.Result{
-					ResultCode: backend.Success,
+				BasePayloadResult: backend.BasePayloadResult{
+					BasePayload: backend.BasePayload{
+						ProtocolVersion: backend.ProtocolVersion1_0,
+						SenderID:        "0807060504030201",
+						ReceiverID:      "010203",
+						TransactionID:   1234,
+						MessageType:     backend.JoinAns,
+					},
+					Result: backend.Result{
+						ResultCode: backend.Success,
+					},
 				},
 				PHYPayload: backend.HEXBytes(validJAPHYBytes),
 				NwkSKey: &backend.KeyEnvelope{
@@ -250,15 +252,17 @@ func (ts *JoinServerTestSuite) TestJoinRequest() {
 				CFList:  backend.HEXBytes(cFListB),
 			},
 			ExpectedAnsPayload: backend.JoinAnsPayload{
-				BasePayload: backend.BasePayload{
-					ProtocolVersion: backend.ProtocolVersion1_0,
-					SenderID:        "0807060504030201",
-					ReceiverID:      "010203",
-					TransactionID:   1234,
-					MessageType:     backend.JoinAns,
-				},
-				Result: backend.Result{
-					ResultCode: backend.Success,
+				BasePayloadResult: backend.BasePayloadResult{
+					BasePayload: backend.BasePayload{
+						ProtocolVersion: backend.ProtocolVersion1_0,
+						SenderID:        "0807060504030201",
+						ReceiverID:      "010203",
+						TransactionID:   1234,
+						MessageType:     backend.JoinAns,
+					},
+					Result: backend.Result{
+						ResultCode: backend.Success,
+					},
 				},
 				PHYPayload: backend.HEXBytes(validJAPHYLW11Bytes),
 				FNwkSIntKey: &backend.KeyEnvelope{
@@ -304,15 +308,17 @@ func (ts *JoinServerTestSuite) TestJoinRequest() {
 				CFList:  backend.HEXBytes(cFListB),
 			},
 			ExpectedAnsPayload: backend.JoinAnsPayload{
-				BasePayload: backend.BasePayload{
-					ProtocolVersion: backend.ProtocolVersion1_0,
-					SenderID:        "0807060504030201",
-					ReceiverID:      "010203",
-					TransactionID:   1234,
-					MessageType:     backend.JoinAns,
-				},
-				Result: backend.Result{
-					ResultCode: backend.Success,
+				BasePayloadResult: backend.BasePayloadResult{
+					BasePayload: backend.BasePayload{
+						ProtocolVersion: backend.ProtocolVersion1_0,
+						SenderID:        "0807060504030201",
+						ReceiverID:      "010203",
+						TransactionID:   1234,
+						MessageType:     backend.JoinAns,
+					},
+					Result: backend.Result{
+						ResultCode: backend.Success,
+					},
 				},
 				PHYPayload: backend.HEXBytes(validJAPHYLW11Bytes),
 				FNwkSIntKey: &backend.KeyEnvelope{
@@ -356,16 +362,18 @@ func (ts *JoinServerTestSuite) TestJoinRequest() {
 				CFList:  backend.HEXBytes(cFListB),
 			},
 			ExpectedAnsPayload: backend.JoinAnsPayload{
-				BasePayload: backend.BasePayload{
-					ProtocolVersion: backend.ProtocolVersion1_0,
-					SenderID:        "0807060504030201",
-					ReceiverID:      "010203",
-					TransactionID:   1234,
-					MessageType:     backend.JoinAns,
-				},
-				Result: backend.Result{
-					ResultCode:  backend.MICFailed,
-					Description: "invalid mic",
+				BasePayloadResult: backend.BasePayloadResult{
+					BasePayload: backend.BasePayload{
+						ProtocolVersion: backend.ProtocolVersion1_0,
+						SenderID:        "0807060504030201",
+						ReceiverID:      "010203",
+						TransactionID:   1234,
+						MessageType:     backend.JoinAns,
+					},
+					Result: backend.Result{
+						ResultCode:  backend.MICFailed,
+						Description: "invalid mic",
+					},
 				},
 			},
 		},
@@ -391,16 +399,18 @@ func (ts *JoinServerTestSuite) TestJoinRequest() {
 				CFList:  backend.HEXBytes(cFListB),
 			},
 			ExpectedAnsPayload: backend.JoinAnsPayload{
-				BasePayload: backend.BasePayload{
-					ProtocolVersion: backend.ProtocolVersion1_0,
-					SenderID:        "0807060504030201",
-					ReceiverID:      "010203",
-					TransactionID:   1234,
-					MessageType:     backend.JoinAns,
-				},
-				Result: backend.Result{
-					ResultCode:  backend.UnknownDevEUI,
-					Description: ErrDevEUINotFound.Error(),
+				BasePayloadResult: backend.BasePayloadResult{
+					BasePayload: backend.BasePayload{
+						ProtocolVersion: backend.ProtocolVersion1_0,
+						SenderID:        "0807060504030201",
+						ReceiverID:      "010203",
+						TransactionID:   1234,
+						MessageType:     backend.JoinAns,
+					},
+					Result: backend.Result{
+						ResultCode:  backend.UnknownDevEUI,
+						Description: ErrDevEUINotFound.Error(),
+					},
 				},
 			},
 		},
@@ -620,15 +630,17 @@ func (ts *JoinServerTestSuite) TestRejoinRequest() {
 				CFList:  backend.HEXBytes(cFListB),
 			},
 			ExpectedAnsPayload: backend.RejoinAnsPayload{
-				BasePayload: backend.BasePayload{
-					ProtocolVersion: backend.ProtocolVersion1_0,
-					SenderID:        "0807060504030201",
-					ReceiverID:      "010203",
-					TransactionID:   1234,
-					MessageType:     backend.RejoinAns,
-				},
-				Result: backend.Result{
-					ResultCode: backend.Success,
+				BasePayloadResult: backend.BasePayloadResult{
+					BasePayload: backend.BasePayload{
+						ProtocolVersion: backend.ProtocolVersion1_0,
+						SenderID:        "0807060504030201",
+						ReceiverID:      "010203",
+						TransactionID:   1234,
+						MessageType:     backend.RejoinAns,
+					},
+					Result: backend.Result{
+						ResultCode: backend.Success,
+					},
 				},
 				PHYPayload: backend.HEXBytes(ja0PHYBytes),
 				SNwkSIntKey: &backend.KeyEnvelope{
@@ -669,15 +681,17 @@ func (ts *JoinServerTestSuite) TestRejoinRequest() {
 				CFList:  backend.HEXBytes(cFListB),
 			},
 			ExpectedAnsPayload: backend.RejoinAnsPayload{
-				BasePayload: backend.BasePayload{
-					ProtocolVersion: backend.ProtocolVersion1_0,
-					SenderID:        "0807060504030201",
-					ReceiverID:      "010203",
-					TransactionID:   1234,
-					MessageType:     backend.RejoinAns,
-				},
-				Result: backend.Result{
-					ResultCode: backend.Success,
+				BasePayloadResult: backend.BasePayloadResult{
+					BasePayload: backend.BasePayload{
+						ProtocolVersion: backend.ProtocolVersion1_0,
+						SenderID:        "0807060504030201",
+						ReceiverID:      "010203",
+						TransactionID:   1234,
+						MessageType:     backend.RejoinAns,
+					},
+					Result: backend.Result{
+						ResultCode: backend.Success,
+					},
 				},
 				PHYPayload: backend.HEXBytes(ja1PHYBytes),
 				SNwkSIntKey: &backend.KeyEnvelope{
@@ -717,15 +731,17 @@ func (ts *JoinServerTestSuite) TestRejoinRequest() {
 				RxDelay: 1,
 			},
 			ExpectedAnsPayload: backend.RejoinAnsPayload{
-				BasePayload: backend.BasePayload{
-					ProtocolVersion: backend.ProtocolVersion1_0,
-					SenderID:        "0807060504030201",
-					ReceiverID:      "010203",
-					TransactionID:   1234,
-					MessageType:     backend.RejoinAns,
-				},
-				Result: backend.Result{
-					ResultCode: backend.Success,
+				BasePayloadResult: backend.BasePayloadResult{
+					BasePayload: backend.BasePayload{
+						ProtocolVersion: backend.ProtocolVersion1_0,
+						SenderID:        "0807060504030201",
+						ReceiverID:      "010203",
+						TransactionID:   1234,
+						MessageType:     backend.RejoinAns,
+					},
+					Result: backend.Result{
+						ResultCode: backend.Success,
+					},
 				},
 				PHYPayload: backend.HEXBytes(ja2PHYBytes),
 				SNwkSIntKey: &backend.KeyEnvelope{
