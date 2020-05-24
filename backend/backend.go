@@ -76,7 +76,7 @@ const (
 	UnknownDevEUI          ResultCode = "UnknownDevEUI"          // End-Device with a matching DevEUI is not found
 	UnknownDevAddr         ResultCode = "UnknownDevAddr"         // End-Device with a matching DevAddr is not found
 	UnknownSender          ResultCode = "UnknownSender"          // SenderID is unknown
-	UnkownReceiver         ResultCode = "UnkownReceiver"         // ReceiverID is unknown
+	UnknownReceiver        ResultCode = "UnkownReceiver"         // ReceiverID is unknown
 	Deferred               ResultCode = "Deferred"               // Passive Roaming is not allowed for a period of time
 	XmitFailed             ResultCode = "XmitFailed"             // fNS failed to transmit DL packet
 	InvalidFPort           ResultCode = "InvalidFPort"           // Invalid FPort for DL (e.g., FPort=0)
