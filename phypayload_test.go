@@ -405,6 +405,7 @@ func TestPHYPayloadMACPayloadLoRaWAN11(t *testing.T) {
 				var ok bool
 				var err error
 
+				// test MIC
 				switch phy.MHDR.MType {
 				case UnconfirmedDataUp, ConfirmedDataUp:
 					ok, err = phy.ValidateUplinkDataMIC(LoRaWAN1_1, 1, 2, 3, test.FNwkSIntKey, test.SNwkSIntKey)
@@ -428,6 +429,13 @@ func TestPHYPayloadMACPayloadLoRaWAN11(t *testing.T) {
 					fmt.Printf("expected mic: %s (%v)\n", mic, mic[:])
 				}
 				So(ok, ShouldBeTrue)
+
+				// test MICF
+				if phy.MHDR.MType == UnconfirmedDataUp || phy.MHDR.MType == ConfirmedDataUp {
+					ok, err := phy.ValidateUplinkDataMICF(test.FNwkSIntKey)
+					So(err, ShouldBeNil)
+					So(ok, ShouldBeTrue)
+				}
 
 				if test.EncryptFOpts {
 					So(phy.DecryptFOpts(test.NwkSEncKey), ShouldBeNil)

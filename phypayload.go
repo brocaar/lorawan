@@ -5,6 +5,7 @@
 package lorawan
 
 import (
+	"bytes"
 	"crypto/aes"
 	"database/sql/driver"
 	"encoding/base64"
@@ -192,6 +193,21 @@ func (p PHYPayload) ValidateUplinkDataMIC(macVersion MACVersion, confFCnt uint32
 		return false, err
 	}
 	return p.MIC == mic, nil
+}
+
+// ValidateUplinkDataMICF validates the cmacF part of the uplink data MIC (LoRaWAN 1.1 only).
+// In order to validate the MIC, the FCnt value must first be set to the
+// full 32 bit frame-counter value, as only the 16 least-significant bits
+// are transmitted.
+func (p PHYPayload) ValidateUplinkDataMICF(fNwkSIntKey AES128Key) (bool, error) {
+	// We are only interested in mic[2:] (cmacF bytes), therefore there is no
+	// need to pass the correct confFCnt, txDR, txCh and sNwkSIntKey parameters.
+	mic, err := p.calculateUplinkDataMIC(LoRaWAN1_1, 0, 0, 0, fNwkSIntKey, fNwkSIntKey)
+	if err != nil {
+		return false, err
+	}
+
+	return bytes.Equal(p.MIC[2:], mic[2:]), nil
 }
 
 // SetDownlinkDataMIC calculates and sets the MIC field for downlink data frames.
