@@ -26,11 +26,14 @@ type Client interface {
 }
 
 // NewClient creates a new Client.
-func NewClient(server, caCert, tlsCert, tlsKey string) (Client, error) {
+func NewClient(senderID, receiverID string, server, caCert, tlsCert, tlsKey string) (Client, error) {
 	if caCert == "" && tlsCert == "" && tlsKey == "" {
 		return &client{
-			server:     server,
-			httpClient: http.DefaultClient,
+			server:          server,
+			httpClient:      http.DefaultClient,
+			senderID:        senderID,
+			receiverID:      receiverID,
+			protocolVersion: ProtocolVersion1_0,
 		}, nil
 	}
 
@@ -70,11 +73,19 @@ func NewClient(server, caCert, tlsCert, tlsKey string) (Client, error) {
 }
 
 type client struct {
-	server     string
-	httpClient *http.Client
+	server          string
+	httpClient      *http.Client
+	protocolVersion string
+	senderID        string
+	receiverID      string
 }
 
 func (c *client) PRStartReq(ctx context.Context, pl PRStartReqPayload) (PRStartAnsPayload, error) {
+	pl.BasePayload.ProtocolVersion = c.protocolVersion
+	pl.BasePayload.SenderID = c.senderID
+	pl.BasePayload.ReceiverID = c.receiverID
+	pl.BasePayload.MessageType = PRStartReq
+
 	var ans PRStartAnsPayload
 
 	if err := c.request(ctx, pl, &ans); err != nil {
@@ -89,6 +100,11 @@ func (c *client) PRStartReq(ctx context.Context, pl PRStartReqPayload) (PRStartA
 }
 
 func (c *client) PRStopReq(ctx context.Context, pl PRStopReqPayload) (PRStopAnsPayload, error) {
+	pl.BasePayload.ProtocolVersion = c.protocolVersion
+	pl.BasePayload.SenderID = c.senderID
+	pl.BasePayload.ReceiverID = c.receiverID
+	pl.BasePayload.MessageType = PRStopReq
+
 	var ans PRStopAnsPayload
 
 	if err := c.request(ctx, pl, &ans); err != nil {
@@ -103,6 +119,11 @@ func (c *client) PRStopReq(ctx context.Context, pl PRStopReqPayload) (PRStopAnsP
 }
 
 func (c *client) XmitDataReq(ctx context.Context, pl XmitDataReqPayload) (XmitDataAnsPayload, error) {
+	pl.BasePayload.ProtocolVersion = c.protocolVersion
+	pl.BasePayload.SenderID = c.senderID
+	pl.BasePayload.ReceiverID = c.receiverID
+	pl.BasePayload.MessageType = XmitDataReq
+
 	var ans XmitDataAnsPayload
 
 	if err := c.request(ctx, pl, &ans); err != nil {
@@ -117,6 +138,11 @@ func (c *client) XmitDataReq(ctx context.Context, pl XmitDataReqPayload) (XmitDa
 }
 
 func (c *client) ProfileReq(ctx context.Context, pl ProfileReqPayload) (ProfileAnsPayload, error) {
+	pl.BasePayload.ProtocolVersion = c.protocolVersion
+	pl.BasePayload.SenderID = c.senderID
+	pl.BasePayload.ReceiverID = c.receiverID
+	pl.BasePayload.MessageType = ProfileReq
+
 	var ans ProfileAnsPayload
 
 	if err := c.request(ctx, pl, &ans); err != nil {

@@ -27,7 +27,7 @@ func (ts *ClientTestSuite) SetupSuite() {
 	assert := require.New(ts.T())
 	var err error
 	ts.server = httptest.NewServer(http.HandlerFunc(ts.apiHandler))
-	ts.client, err = NewClient(ts.server.URL, "", "", "")
+	ts.client, err = NewClient("010101", "020202", ts.server.URL, "", "", "")
 	assert.NoError(err)
 }
 
