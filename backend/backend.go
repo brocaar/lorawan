@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/brocaar/lorawan"
+	"github.com/brocaar/lorawan/band"
 	"github.com/pkg/errors"
 )
 
@@ -85,20 +86,6 @@ const (
 	MalformedRequest       ResultCode = "MalformedRequest"       // JSON parsing failed (missing object or incorrect content)
 	FrameSizeError         ResultCode = "FrameSizeError"         // Wrong size of PHYPayload or FRMPayload
 	Other                  ResultCode = "Other"                  // Used for encoding error cases that are not standardized yet
-)
-
-// RFRegion defines the RF Region type.
-type RFRegion string
-
-// Supported RF Regions
-const (
-	EU868        RFRegion = "EU868"
-	US902        RFRegion = "US902"
-	China779     RFRegion = "China779"
-	EU433        RFRegion = "EU433"
-	Australia915 RFRegion = "Australia915"
-	China470     RFRegion = "China470"
-	AS923        RFRegion = "AS923"
 )
 
 // HEXBytes defines a type which represents bytes as HEX when marshaled to
@@ -223,14 +210,14 @@ type VSExtension struct {
 
 // GWInfoElement defines the gateway info element.
 type GWInfoElement struct {
-	ID        HEXBytes `json:"ID,omitempty"` // TODO: shouldn't this be the gateway MAC (64 bit)?
-	RFRegion  RFRegion `json:"RFRegion,omitempty"`
-	RSSI      *int     `json:"RSSI,omitempty"` // Signed integer, unit: dBm
-	SNR       *float64 `json:"SRN,omitempty"`  // Unit: dB
-	Lat       *float64 `json:"Lat,omitempty"`
-	Lon       *float64 `json:"Lon,omitempty"`
-	ULToken   HEXBytes `json:"ULToken,omitempty"`
-	DLAllowed bool     `json:"DLAllowed,omitempty"`
+	ID        HEXBytes  `json:"ID,omitempty"` // TODO: shouldn't this be the gateway MAC (64 bit)?
+	RFRegion  band.Name `json:"RFRegion,omitempty"`
+	RSSI      *int      `json:"RSSI,omitempty"` // Signed integer, unit: dBm
+	SNR       *float64  `json:"SRN,omitempty"`  // Unit: dB
+	Lat       *float64  `json:"Lat,omitempty"`
+	Lon       *float64  `json:"Lon,omitempty"`
+	ULToken   HEXBytes  `json:"ULToken,omitempty"`
+	DLAllowed bool      `json:"DLAllowed,omitempty"`
 }
 
 // ULMetaData defines the uplink metadata.
@@ -247,7 +234,7 @@ type ULMetaData struct {
 	Battery    *int             `json:"Battery,omitempty"`  // Integer value reported by the end-device in DevStatusAns
 	FNSULToken HEXBytes         `json:"FNSULToken,omitempty"`
 	RecvTime   ISO8601Time      `json:"RecvTime"`
-	RFRegion   RFRegion         `json:"RFRegion,omitempty"`
+	RFRegion   band.Name        `json:"RFRegion,omitempty"`
 	GWCnt      *int             `json:"GWCnt,omitempty"`
 	GWInfo     []GWInfoElement  `json:"GWInfo,omitempty"`
 }
@@ -493,7 +480,7 @@ type DeviceProfile struct {
 	MaxEIRP            int         `json:"MaxEIRP" db:"max_eirp"`                        // In dBm
 	MaxDutyCycle       Percentage  `json:"MaxDutyCycle" db:"max_duty_cycle"`             // Example: 0.10 indicates 10%
 	SupportsJoin       bool        `json:"SupportsJoin" db:"supports_join"`
-	RFRegion           RFRegion    `json:"RFRegion" db:"rf_region"`
+	RFRegion           band.Name   `json:"RFRegion" db:"rf_region"`
 	Supports32bitFCnt  bool        `json:"Supports32bitFCnt" db:"supports_32bit_fcnt"`
 }
 

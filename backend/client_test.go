@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/brocaar/lorawan"
+	"github.com/brocaar/lorawan/band"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -60,12 +61,12 @@ func (ts *ClientTestSuite) TestPRStartReq() {
 			DataRate: &dr,
 			ULFreq:   &uFreq,
 			RecvTime: ISO8601Time(time.Now()),
-			RFRegion: EU868,
+			RFRegion: band.EU868,
 			GWCnt:    &gwCount,
 			GWInfo: []GWInfoElement{
 				{
 					ID:       []byte{1, 2, 3, 4},
-					RFRegion: EU868,
+					RFRegion: band.EU868,
 					RSSI:     &rssi,
 					SNR:      &snr,
 				},
@@ -174,12 +175,12 @@ func (ts *ClientTestSuite) TestXmitDataReq() {
 			DataRate: &dr,
 			ULFreq:   &uFreq,
 			RecvTime: ISO8601Time(time.Now()),
-			RFRegion: EU868,
+			RFRegion: band.EU868,
 			GWCnt:    &gwCount,
 			GWInfo: []GWInfoElement{
 				{
 					ID:       []byte{1, 2, 3, 4},
-					RFRegion: EU868,
+					RFRegion: band.EU868,
 					RSSI:     &rssi,
 					SNR:      &snr,
 				},
