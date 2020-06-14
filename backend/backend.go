@@ -2,13 +2,14 @@
 package backend
 
 import (
+	"crypto/aes"
 	"encoding/hex"
 	"encoding/json"
 	"strconv"
 	"time"
 
+	keywrap "github.com/NickBall/go-aes-key-wrap"
 	"github.com/brocaar/lorawan"
-	"github.com/brocaar/lorawan/band"
 	"github.com/pkg/errors"
 )
 
@@ -202,6 +203,48 @@ type KeyEnvelope struct {
 	AESKey   HEXBytes `json:"AESKey"`
 }
 
+// Unwrap unwraps the AESKey with the given Key Encryption Key.
+func (k KeyEnvelope) Unwrap(kek []byte) (lorawan.AES128Key, error) {
+	var key lorawan.AES128Key
+
+	block, err := aes.NewCipher(kek)
+	if err != nil {
+		return key, errors.Wrap(err, "new cipher error")
+	}
+
+	b, err := keywrap.Unwrap(block, k.AESKey[:])
+	if err != nil {
+		return key, errors.Wrap(err, "unwrap key errror")
+	}
+
+	copy(key[:], b)
+	return key, nil
+}
+
+// NewKeyEnvelope creates a new KeyEnvelope.
+func NewKeyEnvelope(kekLabel string, kek []byte, key lorawan.AES128Key) (*KeyEnvelope, error) {
+	if kekLabel == "" || len(kek) == 0 {
+		return &KeyEnvelope{
+			AESKey: HEXBytes(key[:]),
+		}, nil
+	}
+
+	block, err := aes.NewCipher(kek)
+	if err != nil {
+		return nil, errors.Wrap(err, "new cipher error")
+	}
+
+	b, err := keywrap.Wrap(block, key[:])
+	if err != nil {
+		return nil, errors.Wrap(err, "key wrap error")
+	}
+
+	return &KeyEnvelope{
+		KEKLabel: kekLabel,
+		AESKey:   HEXBytes(b),
+	}, nil
+}
+
 // VSExtension defines vendor specific data.
 type VSExtension struct {
 	VendorID HEXBytes        `json:"VendorID,omitempty"` // OUI of the vendor
@@ -210,14 +253,14 @@ type VSExtension struct {
 
 // GWInfoElement defines the gateway info element.
 type GWInfoElement struct {
-	ID        HEXBytes  `json:"ID,omitempty"` // TODO: shouldn't this be the gateway MAC (64 bit)?
-	RFRegion  band.Name `json:"RFRegion,omitempty"`
-	RSSI      *int      `json:"RSSI,omitempty"` // Signed integer, unit: dBm
-	SNR       *float64  `json:"SRN,omitempty"`  // Unit: dB
-	Lat       *float64  `json:"Lat,omitempty"`
-	Lon       *float64  `json:"Lon,omitempty"`
-	ULToken   HEXBytes  `json:"ULToken,omitempty"`
-	DLAllowed bool      `json:"DLAllowed,omitempty"`
+	ID        HEXBytes `json:"ID,omitempty"` // TODO: shouldn't this be the gateway MAC (64 bit)?
+	RFRegion  string   `json:"RFRegion,omitempty"`
+	RSSI      *int     `json:"RSSI,omitempty"` // Signed integer, unit: dBm
+	SNR       *float64 `json:"SRN,omitempty"`  // Unit: dB
+	Lat       *float64 `json:"Lat,omitempty"`
+	Lon       *float64 `json:"Lon,omitempty"`
+	ULToken   HEXBytes `json:"ULToken,omitempty"`
+	DLAllowed bool     `json:"DLAllowed,omitempty"`
 }
 
 // ULMetaData defines the uplink metadata.
@@ -234,7 +277,7 @@ type ULMetaData struct {
 	Battery    *int             `json:"Battery,omitempty"`  // Integer value reported by the end-device in DevStatusAns
 	FNSULToken HEXBytes         `json:"FNSULToken,omitempty"`
 	RecvTime   ISO8601Time      `json:"RecvTime"`
-	RFRegion   band.Name        `json:"RFRegion,omitempty"`
+	RFRegion   string           `json:"RFRegion,omitempty"`
 	GWCnt      *int             `json:"GWCnt,omitempty"`
 	GWInfo     []GWInfoElement  `json:"GWInfo,omitempty"`
 }
@@ -480,7 +523,7 @@ type DeviceProfile struct {
 	MaxEIRP            int         `json:"MaxEIRP" db:"max_eirp"`                        // In dBm
 	MaxDutyCycle       Percentage  `json:"MaxDutyCycle" db:"max_duty_cycle"`             // Example: 0.10 indicates 10%
 	SupportsJoin       bool        `json:"SupportsJoin" db:"supports_join"`
-	RFRegion           band.Name   `json:"RFRegion" db:"rf_region"`
+	RFRegion           string      `json:"RFRegion" db:"rf_region"`
 	Supports32bitFCnt  bool        `json:"Supports32bitFCnt" db:"supports_32bit_fcnt"`
 }
 

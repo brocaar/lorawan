@@ -206,28 +206,28 @@ func createJoinAnsPayload(ctx *context) error {
 		// TODO add Lifetime?
 	}
 
-	ctx.joinAnsPayload.AppSKey, err = getKeyEnvelope(ctx.asKEKLabel, ctx.asKEK, ctx.appSKey)
+	ctx.joinAnsPayload.AppSKey, err = backend.NewKeyEnvelope(ctx.asKEKLabel, ctx.asKEK, ctx.appSKey)
 	if err != nil {
 		return err
 	}
 
 	if ctx.joinReqPayload.DLSettings.OptNeg {
 		// LoRaWAN 1.1+
-		ctx.joinAnsPayload.FNwkSIntKey, err = getKeyEnvelope(ctx.nsKEKLabel, ctx.nsKEK, ctx.fNwkSIntKey)
+		ctx.joinAnsPayload.FNwkSIntKey, err = backend.NewKeyEnvelope(ctx.nsKEKLabel, ctx.nsKEK, ctx.fNwkSIntKey)
 		if err != nil {
 			return err
 		}
-		ctx.joinAnsPayload.SNwkSIntKey, err = getKeyEnvelope(ctx.nsKEKLabel, ctx.nsKEK, ctx.sNwkSIntKey)
+		ctx.joinAnsPayload.SNwkSIntKey, err = backend.NewKeyEnvelope(ctx.nsKEKLabel, ctx.nsKEK, ctx.sNwkSIntKey)
 		if err != nil {
 			return err
 		}
-		ctx.joinAnsPayload.NwkSEncKey, err = getKeyEnvelope(ctx.nsKEKLabel, ctx.nsKEK, ctx.nwkSEncKey)
+		ctx.joinAnsPayload.NwkSEncKey, err = backend.NewKeyEnvelope(ctx.nsKEKLabel, ctx.nsKEK, ctx.nwkSEncKey)
 		if err != nil {
 			return err
 		}
 	} else {
 		// LoRaWAN 1.0.x
-		ctx.joinAnsPayload.NwkSKey, err = getKeyEnvelope(ctx.nsKEKLabel, ctx.nsKEK, ctx.fNwkSIntKey)
+		ctx.joinAnsPayload.NwkSKey, err = backend.NewKeyEnvelope(ctx.nsKEKLabel, ctx.nsKEK, ctx.fNwkSIntKey)
 		if err != nil {
 			return err
 		}

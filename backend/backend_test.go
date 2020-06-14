@@ -5,7 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/brocaar/lorawan"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHEXBytes(t *testing.T) {
@@ -82,6 +84,40 @@ func TestISO8601Time(t *testing.T) {
 			var ts2 time.Time
 			So(json.Unmarshal([]byte(`"2017-12-27T17:06:35Z"`), &ts2), ShouldBeNil)
 			So(ts2.Equal(ts), ShouldBeTrue)
+		})
+	})
+}
+
+func TestKeyEnvelope(t *testing.T) {
+	key := lorawan.AES128Key{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8}
+	kek := lorawan.AES128Key{8, 7, 6, 5, 4, 3, 2, 1, 8, 7, 6, 5, 4, 3, 2, 1}
+
+	t.Run("No kek label", func(t *testing.T) {
+		assert := require.New(t)
+
+		ke, err := NewKeyEnvelope("", nil, key)
+		assert.NoError(err)
+		assert.Equal(&KeyEnvelope{
+			AESKey: HEXBytes(key[:]),
+		}, ke)
+	})
+
+	t.Run("With kek label", func(t *testing.T) {
+		assert := require.New(t)
+
+		ke, err := NewKeyEnvelope("test-kek", kek[:], key)
+		assert.NoError(err)
+		assert.Equal(&KeyEnvelope{
+			KEKLabel: "test-kek",
+			AESKey:   HEXBytes([]byte{0xe3, 0xd5, 0xa4, 0x7b, 0xa2, 0x5c, 0xbe, 0x6e, 0x5d, 0xa8, 0x20, 0x84, 0x6e, 0xc, 0xb6, 0xa8, 0x2b, 0x75, 0xc, 0x59, 0xd8, 0x48, 0xec, 0x7a}),
+		}, ke)
+
+		t.Run("Unwrap", func(t *testing.T) {
+			assert := require.New(t)
+
+			keyRet, err := ke.Unwrap(kek[:])
+			assert.NoError(err)
+			assert.Equal(key, keyRet)
 		})
 	})
 }

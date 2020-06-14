@@ -61,12 +61,12 @@ func (ts *ClientTestSuite) TestPRStartReq() {
 			DataRate: &dr,
 			ULFreq:   &uFreq,
 			RecvTime: ISO8601Time(time.Now()),
-			RFRegion: band.EU868,
+			RFRegion: string(band.EU868),
 			GWCnt:    &gwCount,
 			GWInfo: []GWInfoElement{
 				{
 					ID:       []byte{1, 2, 3, 4},
-					RFRegion: band.EU868,
+					RFRegion: string(band.EU868),
 					RSSI:     &rssi,
 					SNR:      &snr,
 				},
@@ -175,12 +175,12 @@ func (ts *ClientTestSuite) TestXmitDataReq() {
 			DataRate: &dr,
 			ULFreq:   &uFreq,
 			RecvTime: ISO8601Time(time.Now()),
-			RFRegion: band.EU868,
+			RFRegion: string(band.EU868),
 			GWCnt:    &gwCount,
 			GWInfo: []GWInfoElement{
 				{
 					ID:       []byte{1, 2, 3, 4},
-					RFRegion: band.EU868,
+					RFRegion: string(band.EU868),
 					RSSI:     &rssi,
 					SNR:      &snr,
 				},

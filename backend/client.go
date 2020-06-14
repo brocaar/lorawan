@@ -162,7 +162,7 @@ func (c *client) request(ctx context.Context, pl interface{}, ans interface{}) e
 		return errors.Wrap(err, "json marshal error")
 	}
 
-	// todo add context for cancellation
+	// TODO add context for cancellation
 	resp, err := c.httpClient.Post(c.server, "application/json", bytes.NewReader(b))
 	if err != nil {
 		return errors.Wrap(err, "http post error")
