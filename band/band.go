@@ -3,10 +3,11 @@
 package band
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/brocaar/lorawan"
 )
@@ -159,6 +160,10 @@ type Band interface {
 	// a default LoRaWAN channel and one time as a custom channel using a 250 kHz
 	// data-rate), a bool must be given indicating this is a default channel.
 	GetUplinkChannelIndex(frequency int, defaultChannel bool) (int, error)
+
+	// GetUplinkChannelIndexForFrequencyDR returns the uplink channel index given
+	// a frequency and data-rate.
+	GetUplinkChannelIndexForFrequencyDR(frequency int, dr int) (int, error)
 
 	// GetDownlinkChannel returns the downlink channel for the given index.
 	GetDownlinkChannel(channel int) (Channel, error)
@@ -346,6 +351,31 @@ func (b *band) GetUplinkChannelIndex(frequency int, defaultChannel bool) (int, e
 	}
 
 	return 0, fmt.Errorf("lorawan/band: unknown channel for frequency: %d", frequency)
+}
+
+func (b *band) GetUplinkChannelIndexForFrequencyDR(frequency int, dr int) (int, error) {
+	for _, defaultChannel := range []bool{true, false} {
+		i, err := b.GetUplinkChannelIndex(frequency, defaultChannel)
+		if err != nil {
+			continue
+		}
+
+		c, err := b.GetUplinkChannel(i)
+		if err != nil {
+			return 0, errors.Wrap(err, "get channel error")
+		}
+
+		// there could be multiple channels using the same frequency, but with different data-rates.
+		// eg EU868:
+		//  channel 1 (868.3 DR 0-5)
+		//  channel x (868.3 DR 6)
+		if c.MinDR <= dr && c.MaxDR >= dr {
+			return i, nil
+		}
+
+	}
+
+	return 0, fmt.Errorf("no channel found for frequency: %d, dr: %d", frequency, dr)
 }
 
 func (b *band) GetDownlinkChannel(channel int) (Channel, error) {

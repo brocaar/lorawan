@@ -158,7 +158,7 @@ func TestEU863Band(t *testing.T) {
 
 			})
 
-			Convey("Then GetUplinkChannelFrequency takes the extra channels into consideration", func() {
+			Convey("Then GetUplinkChannelIndex takes the extra channels into consideration", func() {
 				tests := []int{
 					868100000,
 					868300000,
@@ -176,6 +176,25 @@ func TestEU863Band(t *testing.T) {
 						defaultChannel = true
 					}
 					channel, err := band.GetUplinkChannelIndex(expFreq, defaultChannel)
+					So(err, ShouldBeNil)
+					So(channel, ShouldEqual, expChannel)
+				}
+			})
+
+			Convey("Then GetUplinkChannelIndexForFrequencyDR takes the extra channels into consideration", func() {
+				tests := []int{
+					868100000,
+					868300000,
+					868500000,
+					867100000,
+					867300000,
+					867500000,
+					867700000,
+					867900000,
+				}
+
+				for expChannel, freq := range tests {
+					channel, err := band.GetUplinkChannelIndexForFrequencyDR(freq, 3)
 					So(err, ShouldBeNil)
 					So(channel, ShouldEqual, expChannel)
 				}
