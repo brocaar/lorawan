@@ -89,6 +89,12 @@ const (
 	Other                  ResultCode = "Other"                  // Used for encoding error cases that are not standardized yet
 )
 
+// Answer defines the payload answer interface.
+type Answer interface {
+	// GetBasePayload returns the base payload of the answer.
+	GetBasePayload() BasePayloadResult
+}
+
 // HEXBytes defines a type which represents bytes as HEX when marshaled to
 // text.
 type HEXBytes []byte
@@ -189,6 +195,10 @@ type BasePayload struct {
 type BasePayloadResult struct {
 	BasePayload
 	Result Result `json:"Result"`
+}
+
+func (p BasePayloadResult) GetBasePayload() BasePayloadResult {
+	return p
 }
 
 // Result defines the result object.
@@ -324,6 +334,10 @@ type JoinAnsPayload struct {
 	SessionKeyID HEXBytes     `json:"SessionKeyID,omitempty"` // Mandatory when Result=Success and not AppSKey
 }
 
+func (p JoinAnsPayload) GetBasePayload() BasePayloadResult {
+	return p.BasePayloadResult
+}
+
 // RejoinReqPayload defines the RejoinReq message payload.
 type RejoinReqPayload struct {
 	BasePayload
@@ -349,6 +363,10 @@ type RejoinAnsPayload struct {
 	SessionKeyID HEXBytes     `json:"SessionKeyID,omitempty"` // Mandatory when Result=Success and not AppSKey
 }
 
+func (p RejoinAnsPayload) GetBasePayload() BasePayloadResult {
+	return p.BasePayloadResult
+}
+
 // AppSKeyReqPayload defines the AppSKeyReq message payload.
 type AppSKeyReqPayload struct {
 	BasePayload
@@ -362,6 +380,10 @@ type AppSKeyAnsPayload struct {
 	DevEUI       lorawan.EUI64 `json:"DevEUI"`
 	AppSKey      *KeyEnvelope  `json:"AppSKey,omitempty"` // Mandatory when Result=Success
 	SessionKeyID HEXBytes      `json:"SessionKeyID"`
+}
+
+func (p AppSKeyAnsPayload) GetBasePayload() BasePayloadResult {
+	return p.BasePayloadResult
 }
 
 // PRStartReqPayload defines the PRStartReq message payload.
@@ -382,6 +404,10 @@ type PRStartAnsPayload struct {
 	ServiceProfile *ServiceProfile `json:"ServiceProfile"`     // Optional when Result=Success
 }
 
+func (p PRStartAnsPayload) GetBasePayload() BasePayloadResult {
+	return p.BasePayloadResult
+}
+
 // PRStopReqPayload defines the PRStopReq message payload.
 type PRStopReqPayload struct {
 	BasePayload
@@ -392,6 +418,10 @@ type PRStopReqPayload struct {
 // PRStopAnsPayload defines the PRStopAns message payload.
 type PRStopAnsPayload struct {
 	BasePayloadResult
+}
+
+func (p PRStopAnsPayload) GetBasePayload() BasePayloadResult {
+	return p.BasePayloadResult
 }
 
 // HRStartReqPayload defines the HRStartReq message payload.
@@ -423,6 +453,10 @@ type HRStartAnsPayload struct {
 	DeviceProfileTimestamp *ISO8601Time    `json:"DeviceProfileTimestamp,omitempty"` // Optional, when Result=Failure, timestamp of last DeviceProfile change
 }
 
+func (p HRStartAnsPayload) GetBasePayload() BasePayloadResult {
+	return p.BasePayloadResult
+}
+
 // HRStopReqPayload defines the HRStopReq message payload.
 type HRStopReqPayload struct {
 	BasePayload
@@ -432,6 +466,10 @@ type HRStopReqPayload struct {
 // HRStopAnsPayload defines the HRStopAns message payload.
 type HRStopAnsPayload struct {
 	BasePayloadResult
+}
+
+func (p HRStopAnsPayload) GetBasePayload() BasePayloadResult {
+	return p.BasePayloadResult
 }
 
 // HomeNSReqPayload defines the HomeNSReq message payload.
@@ -444,6 +482,10 @@ type HomeNSReqPayload struct {
 type HomeNSAnsPayload struct {
 	BasePayloadResult
 	HNetID lorawan.NetID `json:"HNetID"`
+}
+
+func (p HomeNSAnsPayload) GetBasePayload() BasePayloadResult {
+	return p.BasePayloadResult
 }
 
 // ProfileReqPayload defines the ProfileReq message payload.
@@ -460,6 +502,10 @@ type ProfileAnsPayload struct {
 	RoamingActivationType  *RoamingType   `json:"RoamingActivationType"`            // Mandatory when Result=Success.
 }
 
+func (p ProfileAnsPayload) GetBasePayload() BasePayloadResult {
+	return p.BasePayloadResult
+}
+
 // XmitDataReqPayload defines the XmitDataReq message payload.
 type XmitDataReqPayload struct {
 	BasePayload
@@ -474,6 +520,10 @@ type XmitDataAnsPayload struct {
 	BasePayloadResult
 	DLFreq1 *float64 `json:"DLFreq1,omitempty"` // Optional, when Result=Success, TODO: In MHz?
 	DLFreq2 *float64 `json:"DLFreq2,omitempty"` // Optional, when Result=Success, TODO: In Mhz?
+}
+
+func (p XmitDataAnsPayload) GetBasePayload() BasePayloadResult {
+	return p.BasePayloadResult
 }
 
 // ServiceProfile includes service parameters that are needed by the NS for
