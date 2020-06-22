@@ -23,6 +23,8 @@ type Client interface {
 	XmitDataReq(context.Context, XmitDataReqPayload) (XmitDataAnsPayload, error)
 	// ProfileReq method.
 	ProfileReq(context.Context, ProfileReqPayload) (ProfileAnsPayload, error)
+	// HomeNSReq method.
+	HomeNSReq(context.Context, HomeNSReqPayload) (HomeNSAnsPayload, error)
 }
 
 // NewClient creates a new Client.
@@ -144,6 +146,25 @@ func (c *client) ProfileReq(ctx context.Context, pl ProfileReqPayload) (ProfileA
 	pl.BasePayload.MessageType = ProfileReq
 
 	var ans ProfileAnsPayload
+
+	if err := c.request(ctx, pl, &ans); err != nil {
+		return ans, err
+	}
+
+	if ans.Result.ResultCode != Success {
+		return ans, fmt.Errorf("response error, code: %s, description: %s", ans.Result.ResultCode, ans.Result.Description)
+	}
+
+	return ans, nil
+}
+
+func (c *client) HomeNSReq(ctx context.Context, pl HomeNSReqPayload) (HomeNSAnsPayload, error) {
+	pl.BasePayload.ProtocolVersion = c.protocolVersion
+	pl.BasePayload.SenderID = c.senderID
+	pl.BasePayload.ReceiverID = c.receiverID
+	pl.BasePayload.MessageType = HomeNSReq
+
+	var ans HomeNSAnsPayload
 
 	if err := c.request(ctx, pl, &ans); err != nil {
 		return ans, err

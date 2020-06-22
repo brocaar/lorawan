@@ -267,6 +267,51 @@ func (ts *ClientTestSuite) TestProfileReq() {
 	assert.Equal(string(reqB), ts.apiRequest)
 }
 
+func (ts *ClientTestSuite) TestHomeNSReq() {
+	assert := require.New(ts.T())
+
+	devEUI := lorawan.EUI64{1, 2, 3, 4, 5, 6, 7, 8}
+	netID := lorawan.NetID{1, 2, 3}
+
+	req := HomeNSReqPayload{
+		BasePayload: BasePayload{
+			ProtocolVersion: ProtocolVersion1_0,
+			SenderID:        "010101",
+			ReceiverID:      "020202",
+			TransactionID:   123,
+			MessageType:     HomeNSReq,
+		},
+		DevEUI: devEUI,
+	}
+	reqB, err := json.Marshal(req)
+	assert.NoError(err)
+
+	resp := HomeNSAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				SenderID:        "020202",
+				ReceiverID:      "010101",
+				TransactionID:   123,
+				MessageType:     HomeNSAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+		HNetID: netID,
+	}
+	respB, err := json.Marshal(resp)
+	assert.NoError(err)
+	ts.apiResponse = string(respB)
+
+	apiResp, err := ts.client.HomeNSReq(context.Background(), req)
+	assert.NoError(err)
+	assert.Equal(resp, apiResp)
+
+	assert.Equal(string(reqB), ts.apiRequest)
+}
+
 func (ts *ClientTestSuite) apiHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
