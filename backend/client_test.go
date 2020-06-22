@@ -219,7 +219,7 @@ func (ts *ClientTestSuite) TestProfileReq() {
 	assert := require.New(ts.T())
 
 	devEUI := lorawan.EUI64{1, 2, 3, 4, 5, 6, 7, 8}
-	timestamp := ISO8601Time(time.Now().Truncate(time.Second))
+	timestamp := ISO8601Time(time.Now().UTC().Truncate(time.Second))
 	handover := Handover
 
 	req := ProfileReqPayload{
