@@ -396,12 +396,14 @@ type PRStartReqPayload struct {
 // PRStartAnsPayload defines the PRStartAns message payload.
 type PRStartAnsPayload struct {
 	BasePayloadResult
-	DevEUI         *lorawan.EUI64  `json:"DevEUI,omitempty"`   // Optional when Result=Success
-	Lifetime       *int            `json:"Lifetime,omitempty"` // Mandatory when Result=Success, in seconds
-	FNwkSIntKey    *KeyEnvelope    `json:"FNwkSIntKey"`        // Optional when Result=Success and not NwkSKey
-	NwkSKey        *KeyEnvelope    `json:"NwkSKey"`            // Optional when Result=Success and not FNwkSIntKey
-	FCntUp         *uint32         `json:"FCntUp"`             // Optional when Result=Success
-	ServiceProfile *ServiceProfile `json:"ServiceProfile"`     // Optional when Result=Success
+	PHYPayload     HEXBytes        `json:"PHYPayload,omitempty"` // Optional when Result=Success
+	DevEUI         *lorawan.EUI64  `json:"DevEUI,omitempty"`     // Optional when Result=Success
+	Lifetime       *int            `json:"Lifetime,omitempty"`   // Mandatory when Result=Success, in seconds
+	FNwkSIntKey    *KeyEnvelope    `json:"FNwkSIntKey"`          // Optional when Result=Success and not NwkSKey
+	NwkSKey        *KeyEnvelope    `json:"NwkSKey"`              // Optional when Result=Success and not FNwkSIntKey
+	FCntUp         *uint32         `json:"FCntUp"`               // Optional when Result=Success
+	ServiceProfile *ServiceProfile `json:"ServiceProfile"`       // Optional when Result=Success
+	DLMetaData     *DLMetaData     `json:"DLMetaData"`           // Optional when Result=Success
 }
 
 func (p PRStartAnsPayload) GetBasePayload() BasePayloadResult {
