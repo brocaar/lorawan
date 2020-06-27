@@ -34,26 +34,18 @@ type Client interface {
 	GetRandomTransactionID() uint32
 	// PRStartReq method.
 	PRStartReq(context.Context, PRStartReqPayload) (PRStartAnsPayload, error)
-	// HandleAsyncPRStartAns method.
-	HandleAsyncPRStartAns(context.Context, PRStartAnsPayload) error
 	// PRStopReq method.
 	PRStopReq(context.Context, PRStopReqPayload) (PRStopAnsPayload, error)
-	// HandleAsyncPRStopAns method.
-	HandleAsyncPRStopAns(context.Context, PRStopAnsPayload) error
 	// XmitDataReq method.
 	XmitDataReq(context.Context, XmitDataReqPayload) (XmitDataAnsPayload, error)
-	// HandleAsyncXmitDataAns method.
-	HandleAsyncXmitDataAns(context.Context, XmitDataAnsPayload) error
 	// ProfileReq method.
 	ProfileReq(context.Context, ProfileReqPayload) (ProfileAnsPayload, error)
-	// HandleAsyncProfileAns method.
-	HandleAsyncProfileAns(context.Context, ProfileAnsPayload) error
 	// HomeNSReq method.
 	HomeNSReq(context.Context, HomeNSReqPayload) (HomeNSAnsPayload, error)
-	// HandleAsyncHomeNSAns method.
-	HandleAsyncHomeNSAns(context.Context, HomeNSAnsPayload) error
 	// SendAnswer sends the async answer.
 	SendAnswer(context.Context, Answer) error
+	// HandleAnswer handles an async answer.
+	HandleAnswer(context.Context, Answer) error
 }
 
 // ClientConfig holds the backend client configuration.
@@ -68,7 +60,7 @@ type ClientConfig struct {
 	// RedisClient holds the optional Redis database client. When set the client
 	// will use the aysnc protocol scheme. In this case the client will wait
 	// AsyncTimeout before returning a timeout error.
-	RedisClient *redis.Client
+	RedisClient redis.UniversalClient
 
 	// AsyncTimeout defines the async timeout. This must be set when RedisClient
 	// is set.
@@ -130,7 +122,7 @@ type client struct {
 	protocolVersion string
 	senderID        string
 	receiverID      string
-	redisClient     *redis.Client
+	redisClient     redis.UniversalClient
 	asyncTimeout    time.Duration
 }
 
@@ -151,6 +143,9 @@ func (c *client) PRStartReq(ctx context.Context, pl PRStartReqPayload) (PRStartA
 	pl.BasePayload.SenderID = c.senderID
 	pl.BasePayload.ReceiverID = c.receiverID
 	pl.BasePayload.MessageType = PRStartReq
+	if pl.BasePayload.TransactionID == 0 {
+		pl.BasePayload.TransactionID = c.GetRandomTransactionID()
+	}
 
 	var ans PRStartAnsPayload
 
@@ -165,15 +160,14 @@ func (c *client) PRStartReq(ctx context.Context, pl PRStartReqPayload) (PRStartA
 	return ans, nil
 }
 
-func (c *client) HandleAsyncPRStartAns(ctx context.Context, pl PRStartAnsPayload) error {
-	return c.writeAsync(ctx, PRStartReq, pl)
-}
-
 func (c *client) PRStopReq(ctx context.Context, pl PRStopReqPayload) (PRStopAnsPayload, error) {
 	pl.BasePayload.ProtocolVersion = c.protocolVersion
 	pl.BasePayload.SenderID = c.senderID
 	pl.BasePayload.ReceiverID = c.receiverID
 	pl.BasePayload.MessageType = PRStopReq
+	if pl.BasePayload.TransactionID == 0 {
+		pl.BasePayload.TransactionID = c.GetRandomTransactionID()
+	}
 
 	var ans PRStopAnsPayload
 
@@ -188,15 +182,14 @@ func (c *client) PRStopReq(ctx context.Context, pl PRStopReqPayload) (PRStopAnsP
 	return ans, nil
 }
 
-func (c *client) HandleAsyncPRStopAns(ctx context.Context, pl PRStopAnsPayload) error {
-	return c.writeAsync(ctx, PRStopReq, pl)
-}
-
 func (c *client) XmitDataReq(ctx context.Context, pl XmitDataReqPayload) (XmitDataAnsPayload, error) {
 	pl.BasePayload.ProtocolVersion = c.protocolVersion
 	pl.BasePayload.SenderID = c.senderID
 	pl.BasePayload.ReceiverID = c.receiverID
 	pl.BasePayload.MessageType = XmitDataReq
+	if pl.BasePayload.TransactionID == 0 {
+		pl.BasePayload.TransactionID = c.GetRandomTransactionID()
+	}
 
 	var ans XmitDataAnsPayload
 
@@ -211,15 +204,14 @@ func (c *client) XmitDataReq(ctx context.Context, pl XmitDataReqPayload) (XmitDa
 	return ans, nil
 }
 
-func (c *client) HandleAsyncXmitDataAns(ctx context.Context, pl XmitDataAnsPayload) error {
-	return c.writeAsync(ctx, XmitDataReq, pl)
-}
-
 func (c *client) ProfileReq(ctx context.Context, pl ProfileReqPayload) (ProfileAnsPayload, error) {
 	pl.BasePayload.ProtocolVersion = c.protocolVersion
 	pl.BasePayload.SenderID = c.senderID
 	pl.BasePayload.ReceiverID = c.receiverID
 	pl.BasePayload.MessageType = ProfileReq
+	if pl.BasePayload.TransactionID == 0 {
+		pl.BasePayload.TransactionID = c.GetRandomTransactionID()
+	}
 
 	var ans ProfileAnsPayload
 
@@ -234,15 +226,14 @@ func (c *client) ProfileReq(ctx context.Context, pl ProfileReqPayload) (ProfileA
 	return ans, nil
 }
 
-func (c *client) HandleAsyncProfileAns(ctx context.Context, pl ProfileAnsPayload) error {
-	return c.writeAsync(ctx, ProfileReq, pl)
-}
-
 func (c *client) HomeNSReq(ctx context.Context, pl HomeNSReqPayload) (HomeNSAnsPayload, error) {
 	pl.BasePayload.ProtocolVersion = c.protocolVersion
 	pl.BasePayload.SenderID = c.senderID
 	pl.BasePayload.ReceiverID = c.receiverID
 	pl.BasePayload.MessageType = HomeNSReq
+	if pl.BasePayload.TransactionID == 0 {
+		pl.BasePayload.TransactionID = c.GetRandomTransactionID()
+	}
 
 	var ans HomeNSAnsPayload
 
@@ -255,10 +246,6 @@ func (c *client) HomeNSReq(ctx context.Context, pl HomeNSReqPayload) (HomeNSAnsP
 	}
 
 	return ans, nil
-}
-
-func (c *client) HandleAsyncHomeNSAns(ctx context.Context, pl HomeNSAnsPayload) error {
-	return c.writeAsync(ctx, HomeNSReq, pl)
 }
 
 func (c *client) request(ctx context.Context, pl Request, ans interface{}) error {
@@ -274,7 +261,7 @@ func (c *client) request(ctx context.Context, pl Request, ans interface{}) error
 	// this before making the request, as the response might come in, before the
 	// request has returned.
 	if c.IsAsync() {
-		key := c.getAsyncKey(pl.GetBasePayload().MessageType, pl.GetBasePayload().TransactionID)
+		key := c.getAsyncKey(pl.GetBasePayload().TransactionID)
 
 		go func() {
 			bb, err := c.readAsync(ctx, key)
@@ -312,6 +299,29 @@ func (c *client) request(ctx context.Context, pl Request, ans interface{}) error
 		}
 	}
 
+	fmt.Println("Request:")
+	c.debug(pl)
+	fmt.Println("Answer:")
+	c.debug(ans)
+
+	return nil
+}
+
+func (c *client) HandleAnswer(ctx context.Context, pl Answer) error {
+	if !c.IsAsync() {
+		return errors.New("async is not configured")
+	}
+
+	b, err := json.Marshal(pl)
+	if err != nil {
+		return errors.Wrap(err, "marshal answer error")
+	}
+
+	err = c.redisClient.Publish(c.getAsyncKey(pl.GetBasePayload().TransactionID), b).Err()
+	if err != nil {
+		return errors.Wrap(err, "publish answer error")
+	}
+
 	return nil
 }
 
@@ -345,8 +355,8 @@ func (c *client) GetRandomTransactionID() uint32 {
 	return binary.LittleEndian.Uint32(b)
 }
 
-func (c *client) getAsyncKey(typ MessageType, id uint32) string {
-	return fmt.Sprintf("lora:backend:async:%s:%d", typ, id)
+func (c *client) getAsyncKey(id uint32) string {
+	return fmt.Sprintf("lora:backend:async:%d", id)
 }
 
 func (c *client) readAsync(ctx context.Context, key string) ([]byte, error) {
@@ -363,16 +373,9 @@ func (c *client) readAsync(ctx context.Context, key string) ([]byte, error) {
 	}
 }
 
-func (c *client) writeAsync(ctx context.Context, typ MessageType, pl Answer) error {
-	b, err := json.Marshal(pl)
-	if err != nil {
-		return errors.Wrap(err, "marshal answer error")
-	}
-
-	err = c.redisClient.Publish(c.getAsyncKey(typ, pl.GetBasePayload().TransactionID), b).Err()
-	if err != nil {
-		return errors.Wrap(err, "publish answer error")
-	}
-
-	return nil
+func (c *client) debug(v interface{}) {
+	b, _ := json.MarshalIndent(v, "  ", "  ")
+	fmt.Println("========================")
+	fmt.Println(string(b))
+	fmt.Println("========================")
 }

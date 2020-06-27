@@ -414,7 +414,7 @@ func (ts *AysncClientTestSuite) TestWrongTransactionID() {
 
 	go func() {
 		time.Sleep(time.Millisecond * 10)
-		assert.NoError(ts.client.HandleAsyncPRStartAns(context.Background(), ans))
+		assert.NoError(ts.client.HandleAnswer(context.Background(), ans))
 	}()
 
 	_, err := ts.client.PRStartReq(context.Background(), req)
@@ -451,7 +451,7 @@ func (ts *AysncClientTestSuite) TestPRStartReq() {
 
 	go func() {
 		time.Sleep(time.Millisecond * 10)
-		assert.NoError(ts.client.HandleAsyncPRStartAns(context.Background(), ans))
+		assert.NoError(ts.client.HandleAnswer(context.Background(), ans))
 	}()
 
 	resp, err := ts.client.PRStartReq(context.Background(), req)
@@ -489,7 +489,7 @@ func (ts *AysncClientTestSuite) TestPRStopReq() {
 
 	go func() {
 		time.Sleep(time.Millisecond * 10)
-		assert.NoError(ts.client.HandleAsyncPRStopAns(context.Background(), ans))
+		assert.NoError(ts.client.HandleAnswer(context.Background(), ans))
 	}()
 
 	resp, err := ts.client.PRStopReq(context.Background(), req)
@@ -527,7 +527,7 @@ func (ts *AysncClientTestSuite) TestXmitDataReq() {
 
 	go func() {
 		time.Sleep(time.Millisecond * 10)
-		assert.NoError(ts.client.HandleAsyncXmitDataAns(context.Background(), ans))
+		assert.NoError(ts.client.HandleAnswer(context.Background(), ans))
 	}()
 
 	resp, err := ts.client.XmitDataReq(context.Background(), req)
@@ -565,7 +565,7 @@ func (ts *AysncClientTestSuite) TestProfileReq() {
 
 	go func() {
 		time.Sleep(time.Millisecond * 10)
-		assert.NoError(ts.client.HandleAsyncProfileAns(context.Background(), ans))
+		assert.NoError(ts.client.HandleAnswer(context.Background(), ans))
 	}()
 
 	resp, err := ts.client.ProfileReq(context.Background(), req)
@@ -603,7 +603,7 @@ func (ts *AysncClientTestSuite) TestHomeNSReq() {
 
 	go func() {
 		time.Sleep(time.Millisecond * 10)
-		assert.NoError(ts.client.HandleAsyncHomeNSAns(context.Background(), ans))
+		assert.NoError(ts.client.HandleAnswer(context.Background(), ans))
 	}()
 
 	resp, err := ts.client.HomeNSReq(context.Background(), req)
