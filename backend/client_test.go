@@ -459,31 +459,6 @@ func (ts *AysncClientTestSuite) TestPRStartReq() {
 	assert.Equal(ans, resp)
 }
 
-func (ts *AysncClientTestSuite) TestPRStartAns() {
-	assert := require.New(ts.T())
-
-	req := PRStartAnsPayload{
-		BasePayloadResult: BasePayloadResult{
-			BasePayload: BasePayload{
-				ProtocolVersion: ProtocolVersion1_0,
-				SenderID:        "010101",
-				ReceiverID:      "020202",
-				TransactionID:   123,
-				MessageType:     PRStartAns,
-			},
-			Result: Result{
-				ResultCode: Success,
-			},
-		},
-	}
-
-	reqB, err := json.Marshal(req)
-	assert.NoError(err)
-
-	assert.NoError(ts.client.PRStartAns(context.Background(), req))
-	assert.Equal(string(reqB), ts.apiRequest)
-}
-
 func (ts *AysncClientTestSuite) TestPRStopReq() {
 	assert := require.New(ts.T())
 
@@ -520,31 +495,6 @@ func (ts *AysncClientTestSuite) TestPRStopReq() {
 	resp, err := ts.client.PRStopReq(context.Background(), req)
 	assert.NoError(err)
 	assert.Equal(ans, resp)
-}
-
-func (ts *AysncClientTestSuite) TestPRStopAns() {
-	assert := require.New(ts.T())
-
-	req := PRStopAnsPayload{
-		BasePayloadResult: BasePayloadResult{
-			BasePayload: BasePayload{
-				ProtocolVersion: ProtocolVersion1_0,
-				SenderID:        "010101",
-				ReceiverID:      "020202",
-				TransactionID:   123,
-				MessageType:     PRStopAns,
-			},
-			Result: Result{
-				ResultCode: Success,
-			},
-		},
-	}
-
-	reqB, err := json.Marshal(req)
-	assert.NoError(err)
-
-	assert.NoError(ts.client.PRStopAns(context.Background(), req))
-	assert.Equal(string(reqB), ts.apiRequest)
 }
 
 func (ts *AysncClientTestSuite) TestXmitDataReq() {
@@ -585,31 +535,6 @@ func (ts *AysncClientTestSuite) TestXmitDataReq() {
 	assert.Equal(ans, resp)
 }
 
-func (ts *AysncClientTestSuite) TestXmitDataAns() {
-	assert := require.New(ts.T())
-
-	req := XmitDataAnsPayload{
-		BasePayloadResult: BasePayloadResult{
-			BasePayload: BasePayload{
-				ProtocolVersion: ProtocolVersion1_0,
-				SenderID:        "010101",
-				ReceiverID:      "020202",
-				TransactionID:   123,
-				MessageType:     XmitDataAns,
-			},
-			Result: Result{
-				ResultCode: Success,
-			},
-		},
-	}
-
-	reqB, err := json.Marshal(req)
-	assert.NoError(err)
-
-	assert.NoError(ts.client.XmitDataAns(context.Background(), req))
-	assert.Equal(string(reqB), ts.apiRequest)
-}
-
 func (ts *AysncClientTestSuite) TestProfileReq() {
 	assert := require.New(ts.T())
 
@@ -646,31 +571,6 @@ func (ts *AysncClientTestSuite) TestProfileReq() {
 	resp, err := ts.client.ProfileReq(context.Background(), req)
 	assert.NoError(err)
 	assert.Equal(ans, resp)
-}
-
-func (ts *AysncClientTestSuite) TestProfileAns() {
-	assert := require.New(ts.T())
-
-	req := ProfileAnsPayload{
-		BasePayloadResult: BasePayloadResult{
-			BasePayload: BasePayload{
-				ProtocolVersion: ProtocolVersion1_0,
-				SenderID:        "010101",
-				ReceiverID:      "020202",
-				TransactionID:   123,
-				MessageType:     ProfileAns,
-			},
-			Result: Result{
-				ResultCode: Success,
-			},
-		},
-	}
-
-	reqB, err := json.Marshal(req)
-	assert.NoError(err)
-
-	assert.NoError(ts.client.ProfileAns(context.Background(), req))
-	assert.Equal(string(reqB), ts.apiRequest)
 }
 
 func (ts *AysncClientTestSuite) TestHomeNSReq() {
@@ -711,7 +611,7 @@ func (ts *AysncClientTestSuite) TestHomeNSReq() {
 	assert.Equal(ans, resp)
 }
 
-func (ts *AysncClientTestSuite) TestHomeNSAns() {
+func (ts *AysncClientTestSuite) TestSendAnswer() {
 	assert := require.New(ts.T())
 
 	ans := HomeNSAnsPayload{
@@ -732,7 +632,7 @@ func (ts *AysncClientTestSuite) TestHomeNSAns() {
 	ansB, err := json.Marshal(ans)
 	assert.NoError(err)
 
-	assert.NoError(ts.client.HomeNSAns(context.Background(), ans))
+	assert.NoError(ts.client.SendAnswer(context.Background(), ans))
 	assert.Equal(string(ansB), ts.apiRequest)
 }
 

@@ -30,36 +30,30 @@ type Client interface {
 	GetReceiverID() string
 	// IsAsync returns a bool indicating if the client is async.
 	IsAsync() bool
+	// GetRandomTransactionID returns a random transaction id.
+	GetRandomTransactionID() uint32
 	// PRStartReq method.
 	PRStartReq(context.Context, PRStartReqPayload) (PRStartAnsPayload, error)
-	// PRStartAns method.
-	PRStartAns(context.Context, PRStartAnsPayload) error
 	// HandleAsyncPRStartAns method.
 	HandleAsyncPRStartAns(context.Context, PRStartAnsPayload) error
 	// PRStopReq method.
 	PRStopReq(context.Context, PRStopReqPayload) (PRStopAnsPayload, error)
-	// PRStopAns method.
-	PRStopAns(context.Context, PRStopAnsPayload) error
 	// HandleAsyncPRStopAns method.
 	HandleAsyncPRStopAns(context.Context, PRStopAnsPayload) error
 	// XmitDataReq method.
 	XmitDataReq(context.Context, XmitDataReqPayload) (XmitDataAnsPayload, error)
-	// XmitDataAns method.
-	XmitDataAns(context.Context, XmitDataAnsPayload) error
 	// HandleAsyncXmitDataAns method.
 	HandleAsyncXmitDataAns(context.Context, XmitDataAnsPayload) error
 	// ProfileReq method.
 	ProfileReq(context.Context, ProfileReqPayload) (ProfileAnsPayload, error)
-	// ProfileAns method.
-	ProfileAns(context.Context, ProfileAnsPayload) error
 	// HandleAsyncProfileAns method.
 	HandleAsyncProfileAns(context.Context, ProfileAnsPayload) error
 	// HomeNSReq method.
 	HomeNSReq(context.Context, HomeNSReqPayload) (HomeNSAnsPayload, error)
-	// HomeNSAns method.
-	HomeNSAns(context.Context, HomeNSAnsPayload) error
 	// HandleAsyncHomeNSAns method.
 	HandleAsyncHomeNSAns(context.Context, HomeNSAnsPayload) error
+	// SendAnswer sends the async answer.
+	SendAnswer(context.Context, Answer) error
 }
 
 // ClientConfig holds the backend client configuration.
@@ -171,15 +165,6 @@ func (c *client) PRStartReq(ctx context.Context, pl PRStartReqPayload) (PRStartA
 	return ans, nil
 }
 
-func (c *client) PRStartAns(ctx context.Context, pl PRStartAnsPayload) error {
-	pl.BasePayload.ProtocolVersion = c.protocolVersion
-	pl.BasePayload.SenderID = c.senderID
-	pl.BasePayload.ReceiverID = c.receiverID
-	pl.BasePayload.MessageType = PRStartAns
-
-	return c.responseRequest(ctx, pl)
-}
-
 func (c *client) HandleAsyncPRStartAns(ctx context.Context, pl PRStartAnsPayload) error {
 	return c.writeAsync(ctx, PRStartReq, pl)
 }
@@ -201,15 +186,6 @@ func (c *client) PRStopReq(ctx context.Context, pl PRStopReqPayload) (PRStopAnsP
 	}
 
 	return ans, nil
-}
-
-func (c *client) PRStopAns(ctx context.Context, pl PRStopAnsPayload) error {
-	pl.BasePayload.ProtocolVersion = c.protocolVersion
-	pl.BasePayload.SenderID = c.senderID
-	pl.BasePayload.ReceiverID = c.receiverID
-	pl.BasePayload.MessageType = PRStopAns
-
-	return c.responseRequest(ctx, pl)
 }
 
 func (c *client) HandleAsyncPRStopAns(ctx context.Context, pl PRStopAnsPayload) error {
@@ -235,15 +211,6 @@ func (c *client) XmitDataReq(ctx context.Context, pl XmitDataReqPayload) (XmitDa
 	return ans, nil
 }
 
-func (c *client) XmitDataAns(ctx context.Context, pl XmitDataAnsPayload) error {
-	pl.BasePayload.ProtocolVersion = c.protocolVersion
-	pl.BasePayload.SenderID = c.senderID
-	pl.BasePayload.ReceiverID = c.receiverID
-	pl.BasePayload.MessageType = XmitDataAns
-
-	return c.responseRequest(ctx, pl)
-}
-
 func (c *client) HandleAsyncXmitDataAns(ctx context.Context, pl XmitDataAnsPayload) error {
 	return c.writeAsync(ctx, XmitDataReq, pl)
 }
@@ -267,15 +234,6 @@ func (c *client) ProfileReq(ctx context.Context, pl ProfileReqPayload) (ProfileA
 	return ans, nil
 }
 
-func (c *client) ProfileAns(ctx context.Context, pl ProfileAnsPayload) error {
-	pl.BasePayload.ProtocolVersion = c.protocolVersion
-	pl.BasePayload.SenderID = c.senderID
-	pl.BasePayload.ReceiverID = c.receiverID
-	pl.BasePayload.MessageType = ProfileAns
-
-	return c.responseRequest(ctx, pl)
-}
-
 func (c *client) HandleAsyncProfileAns(ctx context.Context, pl ProfileAnsPayload) error {
 	return c.writeAsync(ctx, ProfileReq, pl)
 }
@@ -297,15 +255,6 @@ func (c *client) HomeNSReq(ctx context.Context, pl HomeNSReqPayload) (HomeNSAnsP
 	}
 
 	return ans, nil
-}
-
-func (c *client) HomeNSAns(ctx context.Context, pl HomeNSAnsPayload) error {
-	pl.BasePayload.ProtocolVersion = c.protocolVersion
-	pl.BasePayload.SenderID = c.senderID
-	pl.BasePayload.ReceiverID = c.receiverID
-	pl.BasePayload.MessageType = HomeNSAns
-
-	return c.responseRequest(ctx, pl)
 }
 
 func (c *client) HandleAsyncHomeNSAns(ctx context.Context, pl HomeNSAnsPayload) error {
@@ -366,7 +315,7 @@ func (c *client) request(ctx context.Context, pl Request, ans interface{}) error
 	return nil
 }
 
-func (c *client) responseRequest(ctx context.Context, pl Answer) error {
+func (c *client) SendAnswer(ctx context.Context, pl Answer) error {
 	b, err := json.Marshal(pl)
 	if err != nil {
 		return errors.Wrap(err, "json marshal error")
@@ -390,7 +339,7 @@ func (c *client) responseRequest(ctx context.Context, pl Answer) error {
 	return nil
 }
 
-func (c *client) getTransactionID() uint32 {
+func (c *client) GetRandomTransactionID() uint32 {
 	b := make([]byte, 4)
 	rand.Read(b)
 	return binary.LittleEndian.Uint32(b)
