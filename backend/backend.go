@@ -95,6 +95,12 @@ type Answer interface {
 	GetBasePayload() BasePayloadResult
 }
 
+// Request defines the payload request interface.
+type Request interface {
+	// GetBasePayload returns the base payload of the request.
+	GetBasePayload() BasePayload
+}
+
 // HEXBytes defines a type which represents bytes as HEX when marshaled to
 // text.
 type HEXBytes []byte
@@ -197,6 +203,7 @@ type BasePayloadResult struct {
 	Result Result `json:"Result"`
 }
 
+// GetBasePayload returns the base payload.
 func (p BasePayloadResult) GetBasePayload() BasePayloadResult {
 	return p
 }
@@ -321,6 +328,11 @@ type JoinReqPayload struct {
 	CFList     HEXBytes           `json:"CFList,omitempty"` // Optional
 }
 
+// GetBasePayload returns the base payload.
+func (p JoinReqPayload) GetBasePayload() BasePayload {
+	return p.BasePayload
+}
+
 // JoinAnsPayload defines the JoinAns message payload.
 type JoinAnsPayload struct {
 	BasePayloadResult
@@ -334,6 +346,7 @@ type JoinAnsPayload struct {
 	SessionKeyID HEXBytes     `json:"SessionKeyID,omitempty"` // Mandatory when Result=Success and not AppSKey
 }
 
+// GetBasePayload returns the base payload.
 func (p JoinAnsPayload) GetBasePayload() BasePayloadResult {
 	return p.BasePayloadResult
 }
@@ -350,6 +363,11 @@ type RejoinReqPayload struct {
 	CFList     HEXBytes           `json:"CFList,omitempty"` // Optional
 }
 
+// GetBasePayload returns the base payload.
+func (p RejoinReqPayload) GetBasePayload() BasePayload {
+	return p.BasePayload
+}
+
 // RejoinAnsPayload defines the RejoinAns message payload.
 type RejoinAnsPayload struct {
 	BasePayloadResult
@@ -363,6 +381,7 @@ type RejoinAnsPayload struct {
 	SessionKeyID HEXBytes     `json:"SessionKeyID,omitempty"` // Mandatory when Result=Success and not AppSKey
 }
 
+// GetBasePayload returns the base payload.
 func (p RejoinAnsPayload) GetBasePayload() BasePayloadResult {
 	return p.BasePayloadResult
 }
@@ -374,6 +393,11 @@ type AppSKeyReqPayload struct {
 	SessionKeyID HEXBytes      `json:"SessionKeyID"`
 }
 
+// GetBasePayload returns the base payload.
+func (p AppSKeyReqPayload) GetBasePayload() BasePayload {
+	return p.BasePayload
+}
+
 // AppSKeyAnsPayload defines the AppSKeyAns message payload.
 type AppSKeyAnsPayload struct {
 	BasePayloadResult
@@ -382,6 +406,7 @@ type AppSKeyAnsPayload struct {
 	SessionKeyID HEXBytes      `json:"SessionKeyID"`
 }
 
+// GetBasePayload returns the base payload.
 func (p AppSKeyAnsPayload) GetBasePayload() BasePayloadResult {
 	return p.BasePayloadResult
 }
@@ -391,6 +416,11 @@ type PRStartReqPayload struct {
 	BasePayload
 	PHYPayload HEXBytes   `json:"PHYPayload,omitempty"`
 	ULMetaData ULMetaData `json:"ULMetaData"`
+}
+
+// GetBasePayload returns the base payload.
+func (p PRStartReqPayload) GetBasePayload() BasePayload {
+	return p.BasePayload
 }
 
 // PRStartAnsPayload defines the PRStartAns message payload.
@@ -406,6 +436,7 @@ type PRStartAnsPayload struct {
 	DLMetaData     *DLMetaData     `json:"DLMetaData"`           // Optional when Result=Success
 }
 
+// GetBasePayload returns the base payload.
 func (p PRStartAnsPayload) GetBasePayload() BasePayloadResult {
 	return p.BasePayloadResult
 }
@@ -417,11 +448,17 @@ type PRStopReqPayload struct {
 	Lifetime *int          `json:"Lifetime,omitempty"` // Optional, in seconds
 }
 
+// GetBasePayload returns the base payload.
+func (p PRStopReqPayload) GetBasePayload() BasePayload {
+	return p.BasePayload
+}
+
 // PRStopAnsPayload defines the PRStopAns message payload.
 type PRStopAnsPayload struct {
 	BasePayloadResult
 }
 
+// GetBasePayload returns the base payload.
 func (p PRStopAnsPayload) GetBasePayload() BasePayloadResult {
 	return p.BasePayloadResult
 }
@@ -440,6 +477,11 @@ type HRStartReqPayload struct {
 	DeviceProfileTimestamp ISO8601Time        `json:"DeviceProfileTimestamp"` // Timestamp of last DeviceProfile change
 }
 
+// GetBasePayload returns the base payload.
+func (p HRStartReqPayload) GetBasePayload() BasePayload {
+	return p.BasePayload
+}
+
 // HRStartAnsPayload defines the HRStartAns message payload.
 type HRStartAnsPayload struct {
 	BasePayloadResult
@@ -455,6 +497,7 @@ type HRStartAnsPayload struct {
 	DeviceProfileTimestamp *ISO8601Time    `json:"DeviceProfileTimestamp,omitempty"` // Optional, when Result=Failure, timestamp of last DeviceProfile change
 }
 
+// GetBasePayload returns the base payload.
 func (p HRStartAnsPayload) GetBasePayload() BasePayloadResult {
 	return p.BasePayloadResult
 }
@@ -465,11 +508,17 @@ type HRStopReqPayload struct {
 	DevEUI lorawan.EUI64 `json:"DevEUI"`
 }
 
+// GetBasePayload returns the base payload.
+func (p HRStopReqPayload) GetBasePayload() BasePayload {
+	return p.BasePayload
+}
+
 // HRStopAnsPayload defines the HRStopAns message payload.
 type HRStopAnsPayload struct {
 	BasePayloadResult
 }
 
+// GetBasePayload returns the base payload.
 func (p HRStopAnsPayload) GetBasePayload() BasePayloadResult {
 	return p.BasePayloadResult
 }
@@ -480,12 +529,18 @@ type HomeNSReqPayload struct {
 	DevEUI lorawan.EUI64 `json:"DevEUI"`
 }
 
+// GetBasePayload returns the base payload.
+func (p HomeNSReqPayload) GetBasePayload() BasePayload {
+	return p.BasePayload
+}
+
 // HomeNSAnsPayload defines the HomeNSAns message payload.
 type HomeNSAnsPayload struct {
 	BasePayloadResult
 	HNetID lorawan.NetID `json:"HNetID"`
 }
 
+// GetBasePayload returns the base payload.
 func (p HomeNSAnsPayload) GetBasePayload() BasePayloadResult {
 	return p.BasePayloadResult
 }
@@ -496,6 +551,11 @@ type ProfileReqPayload struct {
 	DevEUI lorawan.EUI64 `json:"DevEUI"`
 }
 
+// GetBasePayload returns the base payload.
+func (p ProfileReqPayload) GetBasePayload() BasePayload {
+	return p.BasePayload
+}
+
 // ProfileAnsPayload defines the ProfileAns message payload.
 type ProfileAnsPayload struct {
 	BasePayloadResult
@@ -504,6 +564,7 @@ type ProfileAnsPayload struct {
 	RoamingActivationType  *RoamingType   `json:"RoamingActivationType"`            // Mandatory when Result=Success.
 }
 
+// GetBasePayload returns the base payload.
 func (p ProfileAnsPayload) GetBasePayload() BasePayloadResult {
 	return p.BasePayloadResult
 }
@@ -517,6 +578,11 @@ type XmitDataReqPayload struct {
 	DLMetaData *DLMetaData `json:"DLMetaData,omitempty"` // Either ULMetaData or DLMetaData must be used
 }
 
+// GetBasePayload returns the base payload.
+func (p XmitDataReqPayload) GetBasePayload() BasePayload {
+	return p.BasePayload
+}
+
 // XmitDataAnsPayload defines the XmitDataAns message payload.
 type XmitDataAnsPayload struct {
 	BasePayloadResult
@@ -524,6 +590,7 @@ type XmitDataAnsPayload struct {
 	DLFreq2 *float64 `json:"DLFreq2,omitempty"` // Optional, when Result=Success, TODO: In Mhz?
 }
 
+// GetBasePayload returns the base payload.
 func (p XmitDataAnsPayload) GetBasePayload() BasePayloadResult {
 	return p.BasePayloadResult
 }

@@ -11,11 +11,13 @@ import (
 
 	"github.com/brocaar/lorawan"
 	"github.com/brocaar/lorawan/band"
+	"github.com/go-redis/redis/v7"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
-type ClientTestSuite struct {
+type SyncClientTestSuite struct {
 	suite.Suite
 
 	client      Client
@@ -24,19 +26,23 @@ type ClientTestSuite struct {
 	apiResponse string
 }
 
-func (ts *ClientTestSuite) SetupSuite() {
+func (ts *SyncClientTestSuite) SetupSuite() {
 	assert := require.New(ts.T())
 	var err error
 	ts.server = httptest.NewServer(http.HandlerFunc(ts.apiHandler))
-	ts.client, err = NewClient("010101", "020202", ts.server.URL, "", "", "")
+	ts.client, err = NewClient(ClientConfig{
+		SenderID:   "010101",
+		ReceiverID: "020202",
+		Server:     ts.server.URL,
+	})
 	assert.NoError(err)
 }
 
-func (ts *ClientTestSuite) TearDownSuite() {
+func (ts *SyncClientTestSuite) TearDownSuite() {
 	ts.server.Close()
 }
 
-func (ts *ClientTestSuite) TestPRStartReq() {
+func (ts *SyncClientTestSuite) TestPRStartReq() {
 	assert := require.New(ts.T())
 
 	devAddr := lorawan.DevAddr{1, 2, 3, 4}
@@ -108,7 +114,7 @@ func (ts *ClientTestSuite) TestPRStartReq() {
 	assert.Equal(string(reqB), ts.apiRequest)
 }
 
-func (ts *ClientTestSuite) TestPRStopReq() {
+func (ts *SyncClientTestSuite) TestPRStopReq() {
 	assert := require.New(ts.T())
 
 	req := PRStopReqPayload{
@@ -149,7 +155,7 @@ func (ts *ClientTestSuite) TestPRStopReq() {
 	assert.Equal(string(reqB), ts.apiRequest)
 }
 
-func (ts *ClientTestSuite) TestXmitDataReq() {
+func (ts *SyncClientTestSuite) TestXmitDataReq() {
 	assert := require.New(ts.T())
 
 	devAddr := lorawan.DevAddr{1, 2, 3, 4}
@@ -215,7 +221,7 @@ func (ts *ClientTestSuite) TestXmitDataReq() {
 	assert.Equal(string(reqB), ts.apiRequest)
 }
 
-func (ts *ClientTestSuite) TestProfileReq() {
+func (ts *SyncClientTestSuite) TestProfileReq() {
 	assert := require.New(ts.T())
 
 	devEUI := lorawan.EUI64{1, 2, 3, 4, 5, 6, 7, 8}
@@ -267,7 +273,7 @@ func (ts *ClientTestSuite) TestProfileReq() {
 	assert.Equal(string(reqB), ts.apiRequest)
 }
 
-func (ts *ClientTestSuite) TestHomeNSReq() {
+func (ts *SyncClientTestSuite) TestHomeNSReq() {
 	assert := require.New(ts.T())
 
 	devEUI := lorawan.EUI64{1, 2, 3, 4, 5, 6, 7, 8}
@@ -312,7 +318,7 @@ func (ts *ClientTestSuite) TestHomeNSReq() {
 	assert.Equal(string(reqB), ts.apiRequest)
 }
 
-func (ts *ClientTestSuite) apiHandler(w http.ResponseWriter, r *http.Request) {
+func (ts *SyncClientTestSuite) apiHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
@@ -322,6 +328,424 @@ func (ts *ClientTestSuite) apiHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(ts.apiResponse))
 }
 
-func TestClient(t *testing.T) {
-	suite.Run(t, new(ClientTestSuite))
+func TestSyncClient(t *testing.T) {
+	suite.Run(t, new(SyncClientTestSuite))
+}
+
+type AysncClientTestSuite struct {
+	suite.Suite
+
+	client      Client
+	redisClient *redis.Client
+
+	server      *httptest.Server
+	apiRequest  string
+	apiResponse string
+}
+
+func (ts *AysncClientTestSuite) SetupSuite() {
+	assert := require.New(ts.T())
+	var err error
+
+	ts.redisClient = redis.NewClient(&redis.Options{
+		Addr: "redis:6379",
+	})
+	assert.NoError(ts.redisClient.Ping().Err())
+
+	ts.server = httptest.NewServer(http.HandlerFunc(ts.apiHandler))
+	ts.client, err = NewClient(ClientConfig{
+		SenderID:     "010101",
+		ReceiverID:   "020202",
+		Server:       ts.server.URL,
+		RedisClient:  ts.redisClient,
+		AsyncTimeout: time.Millisecond * 100,
+	})
+	assert.NoError(err)
+}
+
+func (ts *AysncClientTestSuite) TearDownSuite() {
+	ts.redisClient.Close()
+}
+
+func (ts *AysncClientTestSuite) TestRequestTimeout() {
+	assert := require.New(ts.T())
+
+	req := PRStartReqPayload{
+		BasePayload: BasePayload{
+			ProtocolVersion: ProtocolVersion1_0,
+			SenderID:        "010101",
+			ReceiverID:      "020202",
+			TransactionID:   123,
+			MessageType:     PRStartReq,
+		},
+	}
+
+	_, err := ts.client.PRStartReq(context.Background(), req)
+	assert.Equal(ErrAsyncTimeout, errors.Cause(err))
+}
+
+func (ts *AysncClientTestSuite) TestWrongTransactionID() {
+	assert := require.New(ts.T())
+
+	req := PRStartReqPayload{
+		BasePayload: BasePayload{
+			ProtocolVersion: ProtocolVersion1_0,
+			SenderID:        "010101",
+			ReceiverID:      "020202",
+			TransactionID:   123,
+			MessageType:     PRStartReq,
+		},
+	}
+
+	ans := PRStartAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				ReceiverID:      "010101",
+				SenderID:        "020202",
+				TransactionID:   1234,
+				MessageType:     PRStartAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	go func() {
+		time.Sleep(time.Millisecond * 10)
+		assert.NoError(ts.client.HandleAsyncPRStartAns(context.Background(), ans))
+	}()
+
+	_, err := ts.client.PRStartReq(context.Background(), req)
+	assert.Equal(ErrAsyncTimeout, errors.Cause(err))
+}
+
+func (ts *AysncClientTestSuite) TestPRStartReq() {
+	assert := require.New(ts.T())
+
+	req := PRStartReqPayload{
+		BasePayload: BasePayload{
+			ProtocolVersion: ProtocolVersion1_0,
+			SenderID:        "010101",
+			ReceiverID:      "020202",
+			TransactionID:   123,
+			MessageType:     PRStartReq,
+		},
+	}
+
+	ans := PRStartAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				ReceiverID:      "010101",
+				SenderID:        "020202",
+				TransactionID:   123,
+				MessageType:     PRStartAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	go func() {
+		time.Sleep(time.Millisecond * 10)
+		assert.NoError(ts.client.HandleAsyncPRStartAns(context.Background(), ans))
+	}()
+
+	resp, err := ts.client.PRStartReq(context.Background(), req)
+	assert.NoError(err)
+	assert.Equal(ans, resp)
+}
+
+func (ts *AysncClientTestSuite) TestPRStartAns() {
+	assert := require.New(ts.T())
+
+	req := PRStartAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				SenderID:        "010101",
+				ReceiverID:      "020202",
+				TransactionID:   123,
+				MessageType:     PRStartAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	reqB, err := json.Marshal(req)
+	assert.NoError(err)
+
+	assert.NoError(ts.client.PRStartAns(context.Background(), req))
+	assert.Equal(string(reqB), ts.apiRequest)
+}
+
+func (ts *AysncClientTestSuite) TestPRStopReq() {
+	assert := require.New(ts.T())
+
+	req := PRStopReqPayload{
+		BasePayload: BasePayload{
+			ProtocolVersion: ProtocolVersion1_0,
+			SenderID:        "010101",
+			ReceiverID:      "020202",
+			TransactionID:   123,
+			MessageType:     PRStopReq,
+		},
+	}
+
+	ans := PRStopAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				ReceiverID:      "010101",
+				SenderID:        "020202",
+				TransactionID:   123,
+				MessageType:     PRStopAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	go func() {
+		time.Sleep(time.Millisecond * 10)
+		assert.NoError(ts.client.HandleAsyncPRStopAns(context.Background(), ans))
+	}()
+
+	resp, err := ts.client.PRStopReq(context.Background(), req)
+	assert.NoError(err)
+	assert.Equal(ans, resp)
+}
+
+func (ts *AysncClientTestSuite) TestPRStopAns() {
+	assert := require.New(ts.T())
+
+	req := PRStopAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				SenderID:        "010101",
+				ReceiverID:      "020202",
+				TransactionID:   123,
+				MessageType:     PRStopAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	reqB, err := json.Marshal(req)
+	assert.NoError(err)
+
+	assert.NoError(ts.client.PRStopAns(context.Background(), req))
+	assert.Equal(string(reqB), ts.apiRequest)
+}
+
+func (ts *AysncClientTestSuite) TestXmitDataReq() {
+	assert := require.New(ts.T())
+
+	req := XmitDataReqPayload{
+		BasePayload: BasePayload{
+			ProtocolVersion: ProtocolVersion1_0,
+			SenderID:        "010101",
+			ReceiverID:      "020202",
+			TransactionID:   123,
+			MessageType:     XmitDataReq,
+		},
+	}
+
+	ans := XmitDataAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				ReceiverID:      "010101",
+				SenderID:        "020202",
+				TransactionID:   123,
+				MessageType:     XmitDataAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	go func() {
+		time.Sleep(time.Millisecond * 10)
+		assert.NoError(ts.client.HandleAsyncXmitDataAns(context.Background(), ans))
+	}()
+
+	resp, err := ts.client.XmitDataReq(context.Background(), req)
+	assert.NoError(err)
+	assert.Equal(ans, resp)
+}
+
+func (ts *AysncClientTestSuite) TestXmitDataAns() {
+	assert := require.New(ts.T())
+
+	req := XmitDataAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				SenderID:        "010101",
+				ReceiverID:      "020202",
+				TransactionID:   123,
+				MessageType:     XmitDataAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	reqB, err := json.Marshal(req)
+	assert.NoError(err)
+
+	assert.NoError(ts.client.XmitDataAns(context.Background(), req))
+	assert.Equal(string(reqB), ts.apiRequest)
+}
+
+func (ts *AysncClientTestSuite) TestProfileReq() {
+	assert := require.New(ts.T())
+
+	req := ProfileReqPayload{
+		BasePayload: BasePayload{
+			ProtocolVersion: ProtocolVersion1_0,
+			SenderID:        "010101",
+			ReceiverID:      "020202",
+			TransactionID:   123,
+			MessageType:     ProfileReq,
+		},
+	}
+
+	ans := ProfileAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				ReceiverID:      "010101",
+				SenderID:        "020202",
+				TransactionID:   123,
+				MessageType:     ProfileAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	go func() {
+		time.Sleep(time.Millisecond * 10)
+		assert.NoError(ts.client.HandleAsyncProfileAns(context.Background(), ans))
+	}()
+
+	resp, err := ts.client.ProfileReq(context.Background(), req)
+	assert.NoError(err)
+	assert.Equal(ans, resp)
+}
+
+func (ts *AysncClientTestSuite) TestProfileAns() {
+	assert := require.New(ts.T())
+
+	req := ProfileAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				SenderID:        "010101",
+				ReceiverID:      "020202",
+				TransactionID:   123,
+				MessageType:     ProfileAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	reqB, err := json.Marshal(req)
+	assert.NoError(err)
+
+	assert.NoError(ts.client.ProfileAns(context.Background(), req))
+	assert.Equal(string(reqB), ts.apiRequest)
+}
+
+func (ts *AysncClientTestSuite) TestHomeNSReq() {
+	assert := require.New(ts.T())
+
+	req := HomeNSReqPayload{
+		BasePayload: BasePayload{
+			ProtocolVersion: ProtocolVersion1_0,
+			SenderID:        "010101",
+			ReceiverID:      "020202",
+			TransactionID:   123,
+			MessageType:     HomeNSReq,
+		},
+	}
+
+	ans := HomeNSAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				ReceiverID:      "010101",
+				SenderID:        "020202",
+				TransactionID:   123,
+				MessageType:     HomeNSAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	go func() {
+		time.Sleep(time.Millisecond * 10)
+		assert.NoError(ts.client.HandleAsyncHomeNSAns(context.Background(), ans))
+	}()
+
+	resp, err := ts.client.HomeNSReq(context.Background(), req)
+	assert.NoError(err)
+	assert.Equal(ans, resp)
+}
+
+func (ts *AysncClientTestSuite) TestHomeNSAns() {
+	assert := require.New(ts.T())
+
+	ans := HomeNSAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				SenderID:        "010101",
+				ReceiverID:      "020202",
+				TransactionID:   123,
+				MessageType:     HomeNSAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	ansB, err := json.Marshal(ans)
+	assert.NoError(err)
+
+	assert.NoError(ts.client.HomeNSAns(context.Background(), ans))
+	assert.Equal(string(ansB), ts.apiRequest)
+}
+
+func (ts *AysncClientTestSuite) apiHandler(w http.ResponseWriter, r *http.Request) {
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	ts.apiRequest = string(b)
+	w.Write([]byte(ts.apiResponse))
+}
+
+func TestAysncClient(t *testing.T) {
+	suite.Run(t, new(AysncClientTestSuite))
 }
