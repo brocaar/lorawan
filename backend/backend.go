@@ -270,14 +270,15 @@ type VSExtension struct {
 
 // GWInfoElement defines the gateway info element.
 type GWInfoElement struct {
-	ID        HEXBytes `json:"ID,omitempty"` // TODO: shouldn't this be the gateway MAC (64 bit)?
-	RFRegion  string   `json:"RFRegion,omitempty"`
-	RSSI      *int     `json:"RSSI,omitempty"` // Signed integer, unit: dBm
-	SNR       *float64 `json:"SNR,omitempty"`  // Unit: dB
-	Lat       *float64 `json:"Lat,omitempty"`
-	Lon       *float64 `json:"Lon,omitempty"`
-	ULToken   HEXBytes `json:"ULToken,omitempty"`
-	DLAllowed bool     `json:"DLAllowed,omitempty"`
+	ID           HEXBytes `json:"ID,omitempty"`           // TODO: shouldn't this be the gateway MAC (64 bit)?
+	FineRecvTime *int     `json:"FineRecvTime,omitempty"` // Nanosec within RecvTime
+	RFRegion     string   `json:"RFRegion,omitempty"`
+	RSSI         *int     `json:"RSSI,omitempty"` // Signed integer, unit: dBm
+	SNR          *float64 `json:"SNR,omitempty"`  // Unit: dB
+	Lat          *float64 `json:"Lat,omitempty"`
+	Lon          *float64 `json:"Lon,omitempty"`
+	ULToken      HEXBytes `json:"ULToken,omitempty"`
+	DLAllowed    bool     `json:"DLAllowed,omitempty"`
 }
 
 // ULMetaData defines the uplink metadata.
