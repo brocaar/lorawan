@@ -273,8 +273,13 @@ func (c *client) request(ctx context.Context, pl Request, ans interface{}) error
 		}()
 	}
 
-	// TODO add context for cancellation
-	resp, err := c.httpClient.Post(c.server, "application/json", bytes.NewReader(b))
+	req, err := http.NewRequestWithContext(ctx, "POST", c.server, bytes.NewReader(b))
+	if err != nil {
+		return errors.Wrap(err, "new request error")
+	}
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "http post error")
 	}
