@@ -304,6 +304,11 @@ func (c *client) request(ctx context.Context, pl Request, ans interface{}) error
 		}
 	}
 
+	fmt.Println("Request:")
+	c.debug(pl)
+	fmt.Println("Answer:")
+	c.debug(ans)
+
 	return nil
 }
 
@@ -371,4 +376,11 @@ func (c *client) readAsync(ctx context.Context, key string) ([]byte, error) {
 	case <-time.After(c.asyncTimeout):
 		return nil, ErrAsyncTimeout
 	}
+}
+
+func (c *client) debug(v interface{}) {
+	b, _ := json.MarshalIndent(v, "  ", "  ")
+	fmt.Println("========================")
+	fmt.Println(string(b))
+	fmt.Println("========================")
 }
