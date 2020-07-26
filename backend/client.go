@@ -69,49 +69,48 @@ type ClientConfig struct {
 
 // NewClient creates a new Client.
 func NewClient(config ClientConfig) (Client, error) {
-	if config.CACert == "" && config.TLSCert == "" && config.TLSKey == "" {
-		return &client{
-			server:          config.Server,
-			httpClient:      http.DefaultClient,
-			senderID:        config.SenderID,
-			receiverID:      config.ReceiverID,
-			protocolVersion: ProtocolVersion1_0,
-			redisClient:     config.RedisClient,
-			asyncTimeout:    config.AsyncTimeout,
-		}, nil
-	}
+	httpClient := http.DefaultClient
 
-	tlsConfig := &tls.Config{}
+	if config.CACert != "" || config.TLSCert != "" || config.TLSKey != "" {
+		tlsConfig := &tls.Config{}
 
-	if config.CACert != "" {
-		rawCACert, err := ioutil.ReadFile(config.CACert)
-		if err != nil {
-			return nil, errors.Wrap(err, "read ca cert error")
+		if config.CACert != "" {
+			rawCACert, err := ioutil.ReadFile(config.CACert)
+			if err != nil {
+				return nil, errors.Wrap(err, "read ca cert error")
+			}
+
+			caCertPool := x509.NewCertPool()
+			if !caCertPool.AppendCertsFromPEM(rawCACert) {
+				return nil, errors.New("append ca cert to pool error")
+			}
+
+			tlsConfig.RootCAs = caCertPool
 		}
 
-		caCertPool := x509.NewCertPool()
-		if !caCertPool.AppendCertsFromPEM(rawCACert) {
-			return nil, errors.New("append ca cert to pool error")
+		if config.TLSCert != "" || config.TLSKey != "" {
+			cert, err := tls.LoadX509KeyPair(config.TLSCert, config.TLSKey)
+			if err != nil {
+				return nil, errors.Wrap(err, "load x509 keypair error")
+			}
+			tlsConfig.Certificates = []tls.Certificate{cert}
 		}
 
-		tlsConfig.RootCAs = caCertPool
-	}
-
-	if config.TLSCert != "" || config.TLSKey != "" {
-		cert, err := tls.LoadX509KeyPair(config.TLSCert, config.TLSKey)
-		if err != nil {
-			return nil, errors.Wrap(err, "load x509 keypair error")
-		}
-		tlsConfig.Certificates = []tls.Certificate{cert}
-	}
-
-	return &client{
-		server: config.Server,
-		httpClient: &http.Client{
+		httpClient = &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: tlsConfig,
 			},
-		},
+		}
+	}
+
+	return &client{
+		server:          config.Server,
+		httpClient:      httpClient,
+		senderID:        config.SenderID,
+		receiverID:      config.ReceiverID,
+		protocolVersion: ProtocolVersion1_0,
+		redisClient:     config.RedisClient,
+		asyncTimeout:    config.AsyncTimeout,
 	}, nil
 
 }
