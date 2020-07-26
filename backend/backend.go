@@ -427,14 +427,15 @@ func (p PRStartReqPayload) GetBasePayload() BasePayload {
 // PRStartAnsPayload defines the PRStartAns message payload.
 type PRStartAnsPayload struct {
 	BasePayloadResult
-	PHYPayload     HEXBytes        `json:"PHYPayload,omitempty"`     // Optional when Result=Success
-	DevEUI         *lorawan.EUI64  `json:"DevEUI,omitempty"`         // Optional when Result=Success
-	Lifetime       *int            `json:"Lifetime,omitempty"`       // Mandatory when Result=Success, in seconds
-	FNwkSIntKey    *KeyEnvelope    `json:"FNwkSIntKey,omitempty"`    // Optional when Result=Success and not NwkSKey
-	NwkSKey        *KeyEnvelope    `json:"NwkSKey,omitempty"`        // Optional when Result=Success and not FNwkSIntKey
-	FCntUp         *uint32         `json:"FCntUp,omitempty"`         // Optional when Result=Success
-	ServiceProfile *ServiceProfile `json:"ServiceProfile,omitempty"` // Optional when Result=Success
-	DLMetaData     *DLMetaData     `json:"DLMetaData,omitempty"`     // Optional when Result=Success
+	PHYPayload     HEXBytes         `json:"PHYPayload,omitempty"`     // Optional when Result=Success
+	DevEUI         *lorawan.EUI64   `json:"DevEUI,omitempty"`         // Optional when Result=Success
+	Lifetime       *int             `json:"Lifetime,omitempty"`       // Mandatory when Result=Success, in seconds
+	FNwkSIntKey    *KeyEnvelope     `json:"FNwkSIntKey,omitempty"`    // Optional when Result=Success and not NwkSKey
+	NwkSKey        *KeyEnvelope     `json:"NwkSKey,omitempty"`        // Optional when Result=Success and not FNwkSIntKey
+	FCntUp         *uint32          `json:"FCntUp,omitempty"`         // Optional when Result=Success
+	ServiceProfile *ServiceProfile  `json:"ServiceProfile,omitempty"` // Optional when Result=Success
+	DLMetaData     *DLMetaData      `json:"DLMetaData,omitempty"`     // Optional when Result=Success
+	DevAddr        *lorawan.DevAddr `json:"DevAddr,omitempty"`        // Optional when Result=Success (not specified in Backend Specs but needed for OTAA)
 }
 
 // GetBasePayload returns the base payload.
