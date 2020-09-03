@@ -28,9 +28,11 @@ const (
 
 // Regional parameters revisions.
 const (
-	RegParamRevA = "A"
-	RegParamRevB = "B"
-	RegParamRevC = "C"
+	RegParamRevA           = "A"
+	RegParamRevB           = "B"
+	RegParamRevC           = "C"
+	RegParamRevRP002_1_0_0 = "RP002-1.0.0"
+	RegParamRevRP002_1_0_1 = "RP002-1.0.1"
 )
 
 // Available ISM bands (deprecated, use the common name).

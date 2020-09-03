@@ -72,6 +72,8 @@ func newCN470Band(repeaterCompatible bool) (Band, error) {
 				3: {Modulation: LoRaModulation, SpreadFactor: 9, Bandwidth: 125, uplink: true, downlink: true},
 				4: {Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 125, uplink: true, downlink: true},
 				5: {Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 125, uplink: true, downlink: true},
+				6: {Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 500, uplink: true, downlink: true},
+				7: {Modulation: FSKModulation, BitRate: 50000, uplink: true, downlink: true},
 			},
 			rx1DataRateTable: map[int][]int{
 				0: {0, 0, 0, 0, 0, 0},
@@ -82,14 +84,14 @@ func newCN470Band(repeaterCompatible bool) (Band, error) {
 				5: {5, 4, 3, 2, 1, 0},
 			},
 			txPowerOffsets: []int{
-				0,
-				-2,
-				-4,
-				-6,
-				-8,
-				-10,
-				-12,
-				-14,
+				0,   // 0
+				-2,  // 1
+				-4,  // 2
+				-6,  // 3
+				-8,  // 4
+				-10, // 5
+				-12, // 6
+				-14, // 7
 			},
 			uplinkChannels:   make([]Channel, 96),
 			downlinkChannels: make([]Channel, 48),
@@ -98,14 +100,64 @@ func newCN470Band(repeaterCompatible bool) (Band, error) {
 
 	if repeaterCompatible {
 		b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
-			latest: map[string]map[int]MaxPayloadSize{
-				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.1, 1.0.2B, 1.1.0A, 1.1.0B
+			LoRaWAN_1_0_1: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.1
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},
 					3: {M: 123, N: 115},
 					4: {M: 230, N: 222},
 					5: {M: 230, N: 222},
+				},
+			},
+			LoRaWAN_1_0_2: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2A, 1.0.2B
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+				},
+			},
+			LoRaWAN_1_0_3: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.3A
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+				},
+			},
+			LoRaWAN_1_1_0: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.1.0A, 1.1.0B
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+				},
+			},
+			latest: map[string]map[int]MaxPayloadSize{
+				RegParamRevRP002_1_0_0: map[int]MaxPayloadSize{ // RP002-1.0.0
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+				},
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.1
+					0: {M: 0, N: 0},
+					1: {M: 31, N: 23},
+					2: {M: 94, N: 86},
+					3: {M: 172, N: 164},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+					6: {M: 230, N: 222},
+					7: {M: 230, N: 222},
 				},
 			},
 		}
@@ -121,14 +173,54 @@ func newCN470Band(repeaterCompatible bool) (Band, error) {
 					5: {M: 230, N: 222},
 				},
 			},
-			latest: map[string]map[int]MaxPayloadSize{
-				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B, 1.1.0A, 1.1.0B
+			LoRaWAN_1_0_2: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2A, 1.0.2B
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},
 					3: {M: 123, N: 115},
 					4: {M: 250, N: 242},
 					5: {M: 250, N: 242},
+				},
+			},
+			LoRaWAN_1_0_3: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.3A
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 250, N: 242},
+					5: {M: 250, N: 242},
+				},
+			},
+			LoRaWAN_1_1_0: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.1.0A, 1.1.0B
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 250, N: 242},
+					5: {M: 250, N: 242},
+				},
+			},
+			latest: map[string]map[int]MaxPayloadSize{
+				RegParamRevRP002_1_0_0: map[int]MaxPayloadSize{ // RP002-1.0.0
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 250, N: 242},
+					5: {M: 250, N: 242},
+				},
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.1
+					0: {M: 0, N: 0},
+					1: {M: 31, N: 23},
+					2: {M: 94, N: 86},
+					3: {M: 192, N: 184},
+					4: {M: 250, N: 242},
+					5: {M: 250, N: 242},
+					6: {M: 250, N: 242},
+					7: {M: 250, N: 242},
 				},
 			},
 		}

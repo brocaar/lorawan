@@ -61,14 +61,18 @@ func newKR920Band(repeaterCompatible bool) (Band, error) {
 				3: {Modulation: LoRaModulation, SpreadFactor: 9, Bandwidth: 125, uplink: true, downlink: true},
 				4: {Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 125, uplink: true, downlink: true},
 				5: {Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 125, uplink: true, downlink: true},
+				6: {},
+				7: {Modulation: FSKModulation, BitRate: 50000, uplink: true, downlink: true},
 			},
 			rx1DataRateTable: map[int][]int{
-				0: {0, 0, 0, 0, 0, 0},
-				1: {1, 0, 0, 0, 0, 0},
-				2: {2, 1, 0, 0, 0, 0},
-				3: {3, 2, 1, 0, 0, 0},
-				4: {4, 3, 2, 1, 0, 0},
-				5: {5, 4, 3, 2, 1, 0},
+				0: {0, 0, 0, 0, 0, 0, 1, 2},
+				1: {1, 0, 0, 0, 0, 0, 2, 3},
+				2: {2, 1, 0, 0, 0, 0, 3, 4},
+				3: {3, 2, 1, 0, 0, 0, 4, 5},
+				4: {4, 3, 2, 1, 0, 0, 5, 5},
+				5: {5, 4, 3, 2, 1, 0, 5, 7},
+				6: {0, 0, 0, 0, 0, 0, 0, 0},
+				7: {7, 5, 5, 4, 3, 2, 7, 7},
 			},
 			txPowerOffsets: []int{
 				0,
@@ -96,8 +100,8 @@ func newKR920Band(repeaterCompatible bool) (Band, error) {
 
 	if repeaterCompatible {
 		b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
-			latest: map[string]map[int]MaxPayloadSize{
-				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B, 1.1.0A
+			LoRaWAN_1_0_2: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},
@@ -106,17 +110,97 @@ func newKR920Band(repeaterCompatible bool) (Band, error) {
 					5: {M: 230, N: 222},
 				},
 			},
+			LoRaWAN_1_0_3: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.3A
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+				},
+			},
+			LoRaWAN_1_1_0: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.1.0A, 1.1.0B
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+				},
+			},
+			latest: map[string]map[int]MaxPayloadSize{
+				RegParamRevRP002_1_0_0: map[int]MaxPayloadSize{ // RP002-1.0.0
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+				},
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.1
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+					6: {M: 230, N: 222},
+					7: {M: 230, N: 222},
+				},
+			},
 		}
 	} else {
 		b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
-			latest: map[string]map[int]MaxPayloadSize{
-				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B, 1.1.0A
+			LoRaWAN_1_0_2: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},
 					3: {M: 123, N: 115},
 					4: {M: 250, N: 242},
 					5: {M: 250, N: 242},
+				},
+			},
+			LoRaWAN_1_0_3: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.3A
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 250, N: 242},
+					5: {M: 250, N: 242},
+				},
+			},
+			LoRaWAN_1_1_0: map[string]map[int]MaxPayloadSize{
+				latest: map[int]MaxPayloadSize{ // LoRaWAN 1.1.0A, 1.1.0B
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 250, N: 242},
+					5: {M: 250, N: 242},
+				},
+			},
+			latest: map[string]map[int]MaxPayloadSize{
+				RegParamRevRP002_1_0_0: map[int]MaxPayloadSize{ // RP002-1.0.0
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 250, N: 242},
+					5: {M: 250, N: 242},
+				},
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.1
+					0: {M: 59, N: 51},
+					1: {M: 59, N: 51},
+					2: {M: 59, N: 51},
+					3: {M: 123, N: 115},
+					4: {M: 250, N: 242},
+					5: {M: 250, N: 242},
+					6: {M: 250, N: 242},
+					7: {M: 250, N: 242},
 				},
 			},
 		}

@@ -207,6 +207,10 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 				-16, // 8
 				-18, // 9
 				-20, // 10
+				-22, // 11
+				-24, // 12
+				-26, // 13
+				-28, // 14
 			},
 			uplinkChannels:   make([]Channel, 72),
 			downlinkChannels: make([]Channel, 8),
@@ -215,10 +219,11 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 
 	if repeaterCompatible {
 		if dt == lorawan.DwellTime400ms {
-			// repeater compatbile + dwell time
+			// repeater compatibility + dwell time
 			b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
-				latest: map[string]map[int]MaxPayloadSize{
-					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.1.0B
+				// LoRaWAN < 1.0.3 + < LoRaWAN 1.1.0B does not have dwell-time
+				LoRaWAN_1_0_3: map[string]map[int]MaxPayloadSize{
+					latest: map[int]MaxPayloadSize{ // A
 						0: {M: 0, N: 0},
 						1: {M: 0, N: 0},
 						2: {M: 19, N: 11},
@@ -226,6 +231,42 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 						4: {M: 133, N: 125},
 						5: {M: 250, N: 242},
 						6: {M: 250, N: 242},
+						// 7
+						8:  {M: 41, N: 33},
+						9:  {M: 117, N: 109},
+						10: {M: 230, N: 222},
+						11: {M: 230, N: 222},
+						12: {M: 230, N: 222},
+						13: {M: 230, N: 222},
+					},
+				},
+				LoRaWAN_1_1_0: map[string]map[int]MaxPayloadSize{
+					latest: map[int]MaxPayloadSize{ // B
+						0: {M: 0, N: 0},
+						1: {M: 0, N: 0},
+						2: {M: 19, N: 11},
+						3: {M: 61, N: 53},
+						4: {M: 133, N: 125},
+						5: {M: 250, N: 242},
+						6: {M: 250, N: 242},
+						// 7
+						8:  {M: 41, N: 33},
+						9:  {M: 117, N: 109},
+						10: {M: 230, N: 222},
+						11: {M: 230, N: 222},
+						12: {M: 230, N: 222},
+						13: {M: 230, N: 222},
+					},
+				},
+				latest: map[string]map[int]MaxPayloadSize{
+					latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1
+						0: {M: 0, N: 0},
+						1: {M: 0, N: 0},
+						2: {M: 19, N: 11},
+						3: {M: 61, N: 53},
+						4: {M: 133, N: 125},
+						5: {M: 230, N: 222},
+						6: {M: 230, N: 222},
 						// 7
 						8:  {M: 41, N: 33},
 						9:  {M: 117, N: 109},
@@ -255,8 +296,76 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 						13: {M: 230, N: 222},
 					},
 				},
+				LoRaWAN_1_0_2: map[string]map[int]MaxPayloadSize{
+					RegParamRevA: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2A
+						0: {M: 19, N: 11},
+						1: {M: 61, N: 53},
+						2: {M: 134, N: 126},
+						3: {M: 250, N: 242},
+						4: {M: 250, N: 242},
+						// 5-7
+						8:  {M: 41, N: 33},
+						9:  {M: 117, N: 109},
+						10: {M: 230, N: 222},
+						11: {M: 230, N: 222},
+						12: {M: 230, N: 222},
+						13: {M: 230, N: 222},
+					},
+					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
+						0: {M: 59, N: 51},
+						1: {M: 59, N: 51},
+						2: {M: 59, N: 51},
+						3: {M: 123, N: 115},
+						4: {M: 230, N: 222},
+						5: {M: 230, N: 222},
+						6: {M: 230, N: 222},
+						// 7
+						8:  {M: 41, N: 33},
+						9:  {M: 117, N: 109},
+						10: {M: 230, N: 222},
+						11: {M: 230, N: 222},
+						12: {M: 230, N: 222},
+						13: {M: 230, N: 222},
+					},
+				},
+				LoRaWAN_1_0_3: map[string]map[int]MaxPayloadSize{
+					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.3A
+						0: {M: 59, N: 51},
+						1: {M: 59, N: 51},
+						2: {M: 59, N: 51},
+						3: {M: 123, N: 115},
+						4: {M: 230, N: 222},
+						5: {M: 230, N: 222},
+						6: {M: 230, N: 222},
+						// 7
+						8:  {M: 41, N: 33},
+						9:  {M: 117, N: 109},
+						10: {M: 230, N: 222},
+						11: {M: 230, N: 222},
+						12: {M: 230, N: 222},
+						13: {M: 230, N: 222},
+					},
+				},
+				LoRaWAN_1_1_0: map[string]map[int]MaxPayloadSize{
+					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.1.0A, 1.1.0B
+						0: {M: 59, N: 51},
+						1: {M: 59, N: 51},
+						2: {M: 59, N: 51},
+						3: {M: 123, N: 115},
+						4: {M: 230, N: 222},
+						5: {M: 230, N: 222},
+						6: {M: 230, N: 222},
+						// 7
+						8:  {M: 41, N: 33},
+						9:  {M: 117, N: 109},
+						10: {M: 230, N: 222},
+						11: {M: 230, N: 222},
+						12: {M: 230, N: 222},
+						13: {M: 230, N: 222},
+					},
+				},
 				latest: map[string]map[int]MaxPayloadSize{
-					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B, 1.1.0A, 1.1.0B
+					latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1
 						0: {M: 59, N: 51},
 						1: {M: 59, N: 51},
 						2: {M: 59, N: 51},
@@ -276,10 +385,48 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 			}
 		}
 	} else {
+		// no repeater compatibility + dwell time
 		if dt == lorawan.DwellTime400ms {
 			b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
-				latest: map[string]map[int]MaxPayloadSize{
+				// LoRaWAN < 1.0.3 + < LoRaWAN 1.1.0B does not have dwell-time
+				LoRaWAN_1_0_3: map[string]map[int]MaxPayloadSize{
+					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.3A
+						0: {M: 0, N: 0},
+						1: {M: 0, N: 0},
+						2: {M: 19, N: 11},
+						3: {M: 61, N: 53},
+						4: {M: 133, N: 125},
+						5: {M: 250, N: 242},
+						6: {M: 250, N: 242},
+						// 7
+						8:  {M: 61, N: 53},
+						9:  {M: 137, N: 129},
+						10: {M: 250, N: 242},
+						11: {M: 250, N: 242},
+						12: {M: 250, N: 242},
+						13: {M: 250, N: 242},
+					},
+				},
+				LoRaWAN_1_1_0: map[string]map[int]MaxPayloadSize{
 					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.1.0B
+						0: {M: 0, N: 0},
+						1: {M: 0, N: 0},
+						2: {M: 19, N: 11},
+						3: {M: 61, N: 53},
+						4: {M: 133, N: 125},
+						5: {M: 250, N: 242},
+						6: {M: 250, N: 242},
+						// 7
+						8:  {M: 61, N: 53},
+						9:  {M: 137, N: 129},
+						10: {M: 250, N: 242},
+						11: {M: 250, N: 242},
+						12: {M: 250, N: 242},
+						13: {M: 250, N: 242},
+					},
+				},
+				latest: map[string]map[int]MaxPayloadSize{
+					latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1
 						0: {M: 0, N: 0},
 						1: {M: 0, N: 0},
 						2: {M: 19, N: 11},
@@ -298,7 +445,7 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 				},
 			}
 		} else {
-			// no repeater compatibility + no dwell tiem
+			// no repeater compatibility + no dwell time
 			b.band.maxPayloadSizePerDR = map[string]map[string]map[int]MaxPayloadSize{
 				LoRaWAN_1_0_1: map[string]map[int]MaxPayloadSize{
 					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.1
@@ -316,8 +463,76 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 						13: {M: 250, N: 242},
 					},
 				},
+				LoRaWAN_1_0_2: map[string]map[int]MaxPayloadSize{
+					RegParamRevA: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2A
+						0: {M: 19, N: 11},
+						1: {M: 61, N: 53},
+						2: {M: 134, N: 126},
+						3: {M: 250, N: 242},
+						4: {M: 250, N: 242},
+						// 5-7
+						8:  {M: 61, N: 53},
+						9:  {M: 137, N: 129},
+						10: {M: 250, N: 242},
+						11: {M: 250, N: 242},
+						12: {M: 250, N: 242},
+						13: {M: 250, N: 242},
+					},
+					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B
+						0: {M: 59, N: 51},
+						1: {M: 59, N: 51},
+						2: {M: 59, N: 51},
+						3: {M: 123, N: 115},
+						4: {M: 250, N: 242},
+						5: {M: 250, N: 242},
+						6: {M: 250, N: 242},
+						// 7
+						8:  {M: 61, N: 53},
+						9:  {M: 137, N: 129},
+						10: {M: 250, N: 242},
+						11: {M: 250, N: 242},
+						12: {M: 250, N: 242},
+						13: {M: 250, N: 242},
+					},
+				},
+				LoRaWAN_1_0_3: map[string]map[int]MaxPayloadSize{
+					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.3A
+						0: {M: 59, N: 51},
+						1: {M: 59, N: 51},
+						2: {M: 59, N: 51},
+						3: {M: 123, N: 115},
+						4: {M: 250, N: 242},
+						5: {M: 250, N: 242},
+						6: {M: 250, N: 242},
+						// 7
+						8:  {M: 61, N: 53},
+						9:  {M: 137, N: 129},
+						10: {M: 250, N: 242},
+						11: {M: 250, N: 242},
+						12: {M: 250, N: 242},
+						13: {M: 250, N: 242},
+					},
+				},
+				LoRaWAN_1_1_0: map[string]map[int]MaxPayloadSize{
+					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.1.0A, LoRaWAN 1.1.0B
+						0: {M: 59, N: 51},
+						1: {M: 59, N: 51},
+						2: {M: 59, N: 51},
+						3: {M: 123, N: 115},
+						4: {M: 250, N: 242},
+						5: {M: 250, N: 242},
+						6: {M: 250, N: 242},
+						// 7
+						8:  {M: 61, N: 53},
+						9:  {M: 137, N: 129},
+						10: {M: 250, N: 242},
+						11: {M: 250, N: 242},
+						12: {M: 250, N: 242},
+						13: {M: 250, N: 242},
+					},
+				},
 				latest: map[string]map[int]MaxPayloadSize{
-					latest: map[int]MaxPayloadSize{ // LoRaWAN 1.0.2B, 1.1.0A, 1.1.0B
+					latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1
 						0: {M: 59, N: 51},
 						1: {M: 59, N: 51},
 						2: {M: 59, N: 51},
