@@ -15,6 +15,7 @@ import (
 
 	"github.com/go-redis/redis/v7"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 // Errors.
@@ -65,6 +66,9 @@ type ClientConfig struct {
 	// AsyncTimeout defines the async timeout. This must be set when RedisClient
 	// is set.
 	AsyncTimeout time.Duration
+
+	// Logger holds a Logger instance.
+	Logger *log.Logger
 }
 
 // NewClient creates a new Client.
@@ -103,7 +107,14 @@ func NewClient(config ClientConfig) (Client, error) {
 		}
 	}
 
+	if config.Logger == nil {
+		config.Logger = &log.Logger{
+			Out: ioutil.Discard,
+		}
+	}
+
 	return &client{
+		log:             config.Logger,
 		server:          config.Server,
 		httpClient:      httpClient,
 		senderID:        config.SenderID,
@@ -116,6 +127,7 @@ func NewClient(config ClientConfig) (Client, error) {
 }
 
 type client struct {
+	log             *log.Logger
 	server          string
 	httpClient      *http.Client
 	protocolVersion string
@@ -247,7 +259,7 @@ func (c *client) HomeNSReq(ctx context.Context, pl HomeNSReqPayload) (HomeNSAnsP
 	return ans, nil
 }
 
-func (c *client) request(ctx context.Context, pl Request, ans interface{}) error {
+func (c *client) request(ctx context.Context, pl Request, ans Answer) error {
 	b, err := json.Marshal(pl)
 	if err != nil {
 		return errors.Wrap(err, "json marshal error")
@@ -302,6 +314,15 @@ func (c *client) request(ctx context.Context, pl Request, ans interface{}) error
 			return errors.Wrap(err, "unmarshal response error")
 		}
 	}
+
+	c.log.WithFields(log.Fields{
+		"protocol_version": pl.GetBasePayload().ProtocolVersion,
+		"sender_id":        pl.GetBasePayload().SenderID,
+		"receiver_id":      pl.GetBasePayload().ReceiverID,
+		"transaction_id":   pl.GetBasePayload().TransactionID,
+		"message_type":     pl.GetBasePayload().MessageType,
+		"result_code":      ans.GetBasePayload().Result.ResultCode,
+	}).Info("lorawan/backend: finished backend api call")
 
 	return nil
 }
