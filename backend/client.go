@@ -33,6 +33,10 @@ type Client interface {
 	IsAsync() bool
 	// GetRandomTransactionID returns a random transaction id.
 	GetRandomTransactionID() uint32
+	// JoinReq method.
+	JoinReq(context.Context, JoinReqPayload) (JoinAnsPayload, error)
+	// RejoinReq method.
+	RejoinReq(context.Context, RejoinReqPayload) (RejoinAnsPayload, error)
 	// PRStartReq method.
 	PRStartReq(context.Context, PRStartReqPayload) (PRStartAnsPayload, error)
 	// PRStopReq method.
@@ -147,6 +151,50 @@ func (c *client) GetReceiverID() string {
 
 func (c *client) IsAsync() bool {
 	return c.redisClient != nil
+}
+
+func (c *client) JoinReq(ctx context.Context, pl JoinReqPayload) (JoinAnsPayload, error) {
+	pl.BasePayload.ProtocolVersion = c.protocolVersion
+	pl.BasePayload.SenderID = c.senderID
+	pl.BasePayload.ReceiverID = c.receiverID
+	pl.BasePayload.MessageType = JoinReq
+	if pl.BasePayload.TransactionID == 0 {
+		pl.BasePayload.TransactionID = c.GetRandomTransactionID()
+	}
+
+	var ans JoinAnsPayload
+
+	if err := c.request(ctx, pl, &ans); err != nil {
+		return ans, err
+	}
+
+	if ans.Result.ResultCode != Success {
+		return ans, fmt.Errorf("response error, code: %s, description: %s", ans.Result.ResultCode, ans.Result.Description)
+	}
+
+	return ans, nil
+}
+
+func (c *client) RejoinReq(ctx context.Context, pl RejoinReqPayload) (RejoinAnsPayload, error) {
+	pl.BasePayload.ProtocolVersion = c.protocolVersion
+	pl.BasePayload.SenderID = c.senderID
+	pl.BasePayload.ReceiverID = c.receiverID
+	pl.BasePayload.MessageType = RejoinReq
+	if pl.BasePayload.TransactionID == 0 {
+		pl.BasePayload.TransactionID = c.GetRandomTransactionID()
+	}
+
+	var ans RejoinAnsPayload
+
+	if err := c.request(ctx, pl, &ans); err != nil {
+		return ans, err
+	}
+
+	if ans.Result.ResultCode != Success {
+		return ans, fmt.Errorf("response error, code: %s, description: %s", ans.Result.ResultCode, ans.Result.Description)
+	}
+
+	return ans, nil
 }
 
 func (c *client) PRStartReq(ctx context.Context, pl PRStartReqPayload) (PRStartAnsPayload, error) {

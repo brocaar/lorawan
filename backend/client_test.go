@@ -42,6 +42,114 @@ func (ts *SyncClientTestSuite) TearDownSuite() {
 	ts.server.Close()
 }
 
+func (ts *SyncClientTestSuite) TestJoinReq() {
+	assert := require.New(ts.T())
+
+	req := JoinReqPayload{
+		BasePayload: BasePayload{
+			ProtocolVersion: ProtocolVersion1_0,
+			SenderID:        "010101",
+			ReceiverID:      "020202",
+			TransactionID:   123,
+			MessageType:     JoinReq,
+		},
+		MACVersion: "1.0.2",
+		PHYPayload: []byte{1, 2, 3, 4},
+		DevEUI:     lorawan.EUI64{1, 2, 3, 4, 5, 6, 7, 8},
+		DevAddr:    lorawan.DevAddr{1, 2, 3, 4},
+		DLSettings: lorawan.DLSettings{},
+		RxDelay:    1,
+	}
+	reqB, err := json.Marshal(req)
+	assert.NoError(err)
+
+	lifetime := 60
+	key := KeyEnvelope{
+		AESKey: HEXBytes{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8},
+	}
+
+	resp := JoinAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				SenderID:        "020202",
+				ReceiverID:      "010101",
+				TransactionID:   123,
+				MessageType:     JoinAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+		Lifetime: &lifetime,
+		AppSKey:  &key,
+		NwkSKey:  &key,
+	}
+	respB, err := json.Marshal(resp)
+	assert.NoError(err)
+	ts.apiResponse = string(respB)
+
+	apiResp, err := ts.client.JoinReq(context.Background(), req)
+	assert.NoError(err)
+	assert.Equal(resp, apiResp)
+
+	assert.Equal(string(reqB), ts.apiRequest)
+}
+
+func (ts *SyncClientTestSuite) TestRejoinReq() {
+	assert := require.New(ts.T())
+
+	req := RejoinReqPayload{
+		BasePayload: BasePayload{
+			ProtocolVersion: ProtocolVersion1_0,
+			SenderID:        "010101",
+			ReceiverID:      "020202",
+			TransactionID:   123,
+			MessageType:     RejoinReq,
+		},
+		MACVersion: "1.0.2",
+		PHYPayload: []byte{1, 2, 3, 4},
+		DevEUI:     lorawan.EUI64{1, 2, 3, 4, 5, 6, 7, 8},
+		DevAddr:    lorawan.DevAddr{1, 2, 3, 4},
+		DLSettings: lorawan.DLSettings{},
+		RxDelay:    1,
+	}
+	reqB, err := json.Marshal(req)
+	assert.NoError(err)
+
+	lifetime := 60
+	key := KeyEnvelope{
+		AESKey: HEXBytes{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8},
+	}
+
+	resp := RejoinAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				SenderID:        "020202",
+				ReceiverID:      "010101",
+				TransactionID:   123,
+				MessageType:     RejoinAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+		Lifetime: &lifetime,
+		AppSKey:  &key,
+		NwkSKey:  &key,
+	}
+	respB, err := json.Marshal(resp)
+	assert.NoError(err)
+	ts.apiResponse = string(respB)
+
+	apiResp, err := ts.client.RejoinReq(context.Background(), req)
+	assert.NoError(err)
+	assert.Equal(resp, apiResp)
+
+	assert.Equal(string(reqB), ts.apiRequest)
+}
+
 func (ts *SyncClientTestSuite) TestPRStartReq() {
 	assert := require.New(ts.T())
 
@@ -419,6 +527,82 @@ func (ts *AysncClientTestSuite) TestWrongTransactionID() {
 
 	_, err := ts.client.PRStartReq(context.Background(), req)
 	assert.Equal(ErrAsyncTimeout, errors.Cause(err))
+}
+
+func (ts *AysncClientTestSuite) TestJoinReq() {
+	assert := require.New(ts.T())
+
+	req := JoinReqPayload{
+		BasePayload: BasePayload{
+			ProtocolVersion: ProtocolVersion1_0,
+			SenderID:        "010101",
+			ReceiverID:      "020202",
+			TransactionID:   123,
+			MessageType:     JoinReq,
+		},
+	}
+
+	ans := JoinAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				ReceiverID:      "010101",
+				SenderID:        "020202",
+				TransactionID:   123,
+				MessageType:     JoinAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	go func() {
+		time.Sleep(time.Millisecond * 10)
+		assert.NoError(ts.client.HandleAnswer(context.Background(), ans))
+	}()
+
+	resp, err := ts.client.JoinReq(context.Background(), req)
+	assert.NoError(err)
+	assert.Equal(ans, resp)
+}
+
+func (ts *AysncClientTestSuite) TestRejoinReq() {
+	assert := require.New(ts.T())
+
+	req := RejoinReqPayload{
+		BasePayload: BasePayload{
+			ProtocolVersion: ProtocolVersion1_0,
+			SenderID:        "010101",
+			ReceiverID:      "020202",
+			TransactionID:   123,
+			MessageType:     RejoinReq,
+		},
+	}
+
+	ans := RejoinAnsPayload{
+		BasePayloadResult: BasePayloadResult{
+			BasePayload: BasePayload{
+				ProtocolVersion: ProtocolVersion1_0,
+				ReceiverID:      "010101",
+				SenderID:        "020202",
+				TransactionID:   123,
+				MessageType:     RejoinAns,
+			},
+			Result: Result{
+				ResultCode: Success,
+			},
+		},
+	}
+
+	go func() {
+		time.Sleep(time.Millisecond * 10)
+		assert.NoError(ts.client.HandleAnswer(context.Background(), ans))
+	}()
+
+	resp, err := ts.client.RejoinReq(context.Background(), req)
+	assert.NoError(err)
+	assert.Equal(ans, resp)
 }
 
 func (ts *AysncClientTestSuite) TestPRStartReq() {
