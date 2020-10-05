@@ -117,6 +117,15 @@ func NewClient(config ClientConfig) (Client, error) {
 		}
 	}
 
+	config.Logger.WithFields(log.Fields{
+		"server":      config.Server,
+		"ca_cert":     config.CACert,
+		"tls_cert":    config.TLSCert,
+		"tls_key":     config.TLSKey,
+		"sender_id":   config.SenderID,
+		"receiver_id": config.ReceiverID,
+	}).Debug("lorawan/backend: new backend client")
+
 	return &client{
 		log:             config.Logger,
 		server:          config.Server,
