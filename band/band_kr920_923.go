@@ -18,7 +18,6 @@ func (b *kr920Band) GetDefaults() Defaults {
 	return Defaults{
 		RX2Frequency:     921900000,
 		RX2DataRate:      0,
-		MaxFCntGap:       16384,
 		ReceiveDelay1:    time.Second,
 		ReceiveDelay2:    time.Second * 2,
 		JoinAcceptDelay1: time.Second * 5,

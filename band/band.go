@@ -105,9 +105,6 @@ type Defaults struct {
 	// RX2DataRate defines the fixed data-rate for the RX2 receive window
 	RX2DataRate int
 
-	// MaxFcntGap defines the MAC_FCNT_GAP default value.
-	MaxFCntGap uint32
-
 	// ReceiveDelay1 defines the RECEIVE_DELAY1 default value.
 	ReceiveDelay1 time.Duration
 
