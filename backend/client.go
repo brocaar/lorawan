@@ -61,6 +61,9 @@ type ClientConfig struct {
 	CACert     string
 	TLSCert    string
 	TLSKey     string
+	// Authorization contains the value for the Authorization header. This may
+	// include a prefix, like Bearer, Key or Basic.
+	Authorization string
 
 	// RedisClient holds the optional Redis database client. When set the client
 	// will use the aysnc protocol scheme. In this case the client will wait
@@ -118,18 +121,20 @@ func NewClient(config ClientConfig) (Client, error) {
 	}
 
 	config.Logger.WithFields(log.Fields{
-		"server":      config.Server,
-		"ca_cert":     config.CACert,
-		"tls_cert":    config.TLSCert,
-		"tls_key":     config.TLSKey,
-		"sender_id":   config.SenderID,
-		"receiver_id": config.ReceiverID,
+		"server":        config.Server,
+		"ca_cert":       config.CACert,
+		"tls_cert":      config.TLSCert,
+		"tls_key":       config.TLSKey,
+		"authorization": config.Authorization,
+		"sender_id":     config.SenderID,
+		"receiver_id":   config.ReceiverID,
 	}).Debug("lorawan/backend: new backend client")
 
 	return &client{
 		log:             config.Logger,
 		server:          config.Server,
 		httpClient:      httpClient,
+		authorization:   config.Authorization,
 		senderID:        config.SenderID,
 		receiverID:      config.ReceiverID,
 		protocolVersion: ProtocolVersion1_0,
@@ -143,6 +148,7 @@ type client struct {
 	log             *log.Logger
 	server          string
 	httpClient      *http.Client
+	authorization   string
 	protocolVersion string
 	senderID        string
 	receiverID      string
@@ -341,11 +347,14 @@ func (c *client) request(ctx context.Context, pl Request, ans Answer) error {
 		}()
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", c.server, bytes.NewReader(b))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.server, bytes.NewReader(b))
 	if err != nil {
 		return errors.Wrap(err, "new request error")
 	}
 	req.Header.Add("Content-Type", "application/json")
+	if c.authorization != "" {
+		req.Header.Add("Authorization", c.authorization)
+	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -408,8 +417,16 @@ func (c *client) SendAnswer(ctx context.Context, pl Answer) error {
 		return errors.Wrap(err, "json marshal error")
 	}
 
-	// TODO add context for cancellation
-	resp, err := c.httpClient.Post(c.server, "application/json", bytes.NewReader(b))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.server, bytes.NewReader(b))
+	if err != nil {
+		return errors.Wrap(err, "new request error")
+	}
+	req.Header.Add("Content-Type", "application/json")
+	if c.authorization != "" {
+		req.Header.Add("Authorization", c.authorization)
+	}
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "http post error")
 	}

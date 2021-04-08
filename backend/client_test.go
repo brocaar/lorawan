@@ -31,9 +31,10 @@ func (ts *SyncClientTestSuite) SetupSuite() {
 	var err error
 	ts.server = httptest.NewServer(http.HandlerFunc(ts.apiHandler))
 	ts.client, err = NewClient(ClientConfig{
-		SenderID:   "010101",
-		ReceiverID: "020202",
-		Server:     ts.server.URL,
+		SenderID:      "010101",
+		ReceiverID:    "020202",
+		Server:        ts.server.URL,
+		Authorization: "Key secret",
 	})
 	assert.NoError(err)
 }
@@ -427,6 +428,11 @@ func (ts *SyncClientTestSuite) TestHomeNSReq() {
 }
 
 func (ts *SyncClientTestSuite) apiHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Authorization") != "Key secret" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
@@ -462,11 +468,12 @@ func (ts *AysncClientTestSuite) SetupSuite() {
 
 	ts.server = httptest.NewServer(http.HandlerFunc(ts.apiHandler))
 	ts.client, err = NewClient(ClientConfig{
-		SenderID:     "010101",
-		ReceiverID:   "020202",
-		Server:       ts.server.URL,
-		RedisClient:  ts.redisClient,
-		AsyncTimeout: time.Millisecond * 100,
+		SenderID:      "010101",
+		ReceiverID:    "020202",
+		Server:        ts.server.URL,
+		Authorization: "Key secret",
+		RedisClient:   ts.redisClient,
+		AsyncTimeout:  time.Millisecond * 100,
 	})
 	assert.NoError(err)
 }
@@ -821,6 +828,11 @@ func (ts *AysncClientTestSuite) TestSendAnswer() {
 }
 
 func (ts *AysncClientTestSuite) apiHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Authorization") != "Key secret" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
