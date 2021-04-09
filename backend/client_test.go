@@ -31,9 +31,10 @@ func (ts *SyncClientTestSuite) SetupSuite() {
 	var err error
 	ts.server = httptest.NewServer(http.HandlerFunc(ts.apiHandler))
 	ts.client, err = NewClient(ClientConfig{
-		SenderID:   "010101",
-		ReceiverID: "020202",
-		Server:     ts.server.URL,
+		SenderID:      "010101",
+		ReceiverID:    "020202",
+		Server:        ts.server.URL,
+		Authorization: "Key secret",
 	})
 	assert.NoError(err)
 }
@@ -427,6 +428,11 @@ func (ts *SyncClientTestSuite) TestHomeNSReq() {
 }
 
 func (ts *SyncClientTestSuite) apiHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Authorization") != "Key secret" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
@@ -440,7 +446,7 @@ func TestSyncClient(t *testing.T) {
 	suite.Run(t, new(SyncClientTestSuite))
 }
 
-type AysncClientTestSuite struct {
+type AsyncClientTestSuite struct {
 	suite.Suite
 
 	client      Client
@@ -451,7 +457,7 @@ type AysncClientTestSuite struct {
 	apiResponse string
 }
 
-func (ts *AysncClientTestSuite) SetupSuite() {
+func (ts *AsyncClientTestSuite) SetupSuite() {
 	assert := require.New(ts.T())
 	var err error
 
@@ -462,20 +468,21 @@ func (ts *AysncClientTestSuite) SetupSuite() {
 
 	ts.server = httptest.NewServer(http.HandlerFunc(ts.apiHandler))
 	ts.client, err = NewClient(ClientConfig{
-		SenderID:     "010101",
-		ReceiverID:   "020202",
-		Server:       ts.server.URL,
-		RedisClient:  ts.redisClient,
-		AsyncTimeout: time.Millisecond * 100,
+		SenderID:      "010101",
+		ReceiverID:    "020202",
+		Server:        ts.server.URL,
+		Authorization: "Key secret",
+		RedisClient:   ts.redisClient,
+		AsyncTimeout:  time.Millisecond * 100,
 	})
 	assert.NoError(err)
 }
 
-func (ts *AysncClientTestSuite) TearDownSuite() {
+func (ts *AsyncClientTestSuite) TearDownSuite() {
 	ts.redisClient.Close()
 }
 
-func (ts *AysncClientTestSuite) TestRequestTimeout() {
+func (ts *AsyncClientTestSuite) TestRequestTimeout() {
 	assert := require.New(ts.T())
 
 	req := PRStartReqPayload{
@@ -492,7 +499,7 @@ func (ts *AysncClientTestSuite) TestRequestTimeout() {
 	assert.Equal(ErrAsyncTimeout, errors.Cause(err))
 }
 
-func (ts *AysncClientTestSuite) TestWrongTransactionID() {
+func (ts *AsyncClientTestSuite) TestWrongTransactionID() {
 	assert := require.New(ts.T())
 
 	req := PRStartReqPayload{
@@ -529,7 +536,7 @@ func (ts *AysncClientTestSuite) TestWrongTransactionID() {
 	assert.Equal(ErrAsyncTimeout, errors.Cause(err))
 }
 
-func (ts *AysncClientTestSuite) TestJoinReq() {
+func (ts *AsyncClientTestSuite) TestJoinReq() {
 	assert := require.New(ts.T())
 
 	req := JoinReqPayload{
@@ -567,7 +574,7 @@ func (ts *AysncClientTestSuite) TestJoinReq() {
 	assert.Equal(ans, resp)
 }
 
-func (ts *AysncClientTestSuite) TestRejoinReq() {
+func (ts *AsyncClientTestSuite) TestRejoinReq() {
 	assert := require.New(ts.T())
 
 	req := RejoinReqPayload{
@@ -605,7 +612,7 @@ func (ts *AysncClientTestSuite) TestRejoinReq() {
 	assert.Equal(ans, resp)
 }
 
-func (ts *AysncClientTestSuite) TestPRStartReq() {
+func (ts *AsyncClientTestSuite) TestPRStartReq() {
 	assert := require.New(ts.T())
 
 	req := PRStartReqPayload{
@@ -643,7 +650,7 @@ func (ts *AysncClientTestSuite) TestPRStartReq() {
 	assert.Equal(ans, resp)
 }
 
-func (ts *AysncClientTestSuite) TestPRStopReq() {
+func (ts *AsyncClientTestSuite) TestPRStopReq() {
 	assert := require.New(ts.T())
 
 	req := PRStopReqPayload{
@@ -681,7 +688,7 @@ func (ts *AysncClientTestSuite) TestPRStopReq() {
 	assert.Equal(ans, resp)
 }
 
-func (ts *AysncClientTestSuite) TestXmitDataReq() {
+func (ts *AsyncClientTestSuite) TestXmitDataReq() {
 	assert := require.New(ts.T())
 
 	req := XmitDataReqPayload{
@@ -719,7 +726,7 @@ func (ts *AysncClientTestSuite) TestXmitDataReq() {
 	assert.Equal(ans, resp)
 }
 
-func (ts *AysncClientTestSuite) TestProfileReq() {
+func (ts *AsyncClientTestSuite) TestProfileReq() {
 	assert := require.New(ts.T())
 
 	req := ProfileReqPayload{
@@ -757,7 +764,7 @@ func (ts *AysncClientTestSuite) TestProfileReq() {
 	assert.Equal(ans, resp)
 }
 
-func (ts *AysncClientTestSuite) TestHomeNSReq() {
+func (ts *AsyncClientTestSuite) TestHomeNSReq() {
 	assert := require.New(ts.T())
 
 	req := HomeNSReqPayload{
@@ -795,7 +802,7 @@ func (ts *AysncClientTestSuite) TestHomeNSReq() {
 	assert.Equal(ans, resp)
 }
 
-func (ts *AysncClientTestSuite) TestSendAnswer() {
+func (ts *AsyncClientTestSuite) TestSendAnswer() {
 	assert := require.New(ts.T())
 
 	ans := HomeNSAnsPayload{
@@ -820,7 +827,12 @@ func (ts *AysncClientTestSuite) TestSendAnswer() {
 	assert.Equal(string(ansB), ts.apiRequest)
 }
 
-func (ts *AysncClientTestSuite) apiHandler(w http.ResponseWriter, r *http.Request) {
+func (ts *AsyncClientTestSuite) apiHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Authorization") != "Key secret" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
@@ -830,6 +842,6 @@ func (ts *AysncClientTestSuite) apiHandler(w http.ResponseWriter, r *http.Reques
 	w.Write([]byte(ts.apiResponse))
 }
 
-func TestAysncClient(t *testing.T) {
-	suite.Run(t, new(AysncClientTestSuite))
+func TestAsyncClient(t *testing.T) {
+	suite.Run(t, new(AsyncClientTestSuite))
 }
