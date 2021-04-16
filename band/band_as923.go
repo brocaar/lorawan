@@ -9,7 +9,8 @@ import (
 
 type as923Band struct {
 	band
-	dwellTime lorawan.DwellTime
+	dwellTime       lorawan.DwellTime
+	frequencyOffset int
 }
 
 func (b *as923Band) Name() string {
@@ -18,7 +19,7 @@ func (b *as923Band) Name() string {
 
 func (b *as923Band) GetDefaults() Defaults {
 	return Defaults{
-		RX2Frequency:     923200000,
+		RX2Frequency:     923200000 + b.frequencyOffset,
 		RX2DataRate:      2,
 		ReceiveDelay1:    time.Second,
 		ReceiveDelay2:    time.Second * 2,
@@ -36,7 +37,7 @@ func (b *as923Band) GetDefaultMaxUplinkEIRP() float32 {
 }
 
 func (b *as923Band) GetPingSlotFrequency(lorawan.DevAddr, time.Duration) (int, error) {
-	return 923400000, nil
+	return 923400000 + b.frequencyOffset, nil
 }
 
 func (b *as923Band) GetRX1ChannelIndexForUplinkChannelIndex(uplinkChannel int) (int, error) {
@@ -79,9 +80,10 @@ func (b *as923Band) ImplementsTXParamSetup(protocolVersion string) bool {
 	return true
 }
 
-func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
+func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime, frequencyOffset int) (Band, error) {
 	b := as923Band{
-		dwellTime: dt,
+		frequencyOffset: frequencyOffset,
+		dwellTime:       dt,
 		band: band{
 			supportsExtraChannels: true,
 			dataRates: map[int]DataRate{
@@ -106,12 +108,12 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 				-14, // 7
 			},
 			uplinkChannels: []Channel{
-				{Frequency: 923200000, MinDR: 0, MaxDR: 5, enabled: true},
-				{Frequency: 923400000, MinDR: 0, MaxDR: 5, enabled: true},
+				{Frequency: 923200000 + frequencyOffset, MinDR: 0, MaxDR: 5, enabled: true},
+				{Frequency: 923400000 + frequencyOffset, MinDR: 0, MaxDR: 5, enabled: true},
 			},
 			downlinkChannels: []Channel{
-				{Frequency: 923200000, MinDR: 0, MaxDR: 5, enabled: true},
-				{Frequency: 923400000, MinDR: 0, MaxDR: 5, enabled: true},
+				{Frequency: 923200000 + frequencyOffset, MinDR: 0, MaxDR: 5, enabled: true},
+				{Frequency: 923400000 + frequencyOffset, MinDR: 0, MaxDR: 5, enabled: true},
 			},
 		},
 	}

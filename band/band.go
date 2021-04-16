@@ -23,6 +23,7 @@ const (
 	LoRaWAN_1_0_1 = "1.0.1"
 	LoRaWAN_1_0_2 = "1.0.2"
 	LoRaWAN_1_0_3 = "1.0.3"
+	LoRaWAN_1_0_4 = "1.0.4"
 	LoRaWAN_1_1_0 = "1.1.0"
 )
 
@@ -51,16 +52,19 @@ const (
 
 // Available ISM bands (by common name).
 const (
-	EU868 Name = "EU868"
-	US915 Name = "US915"
-	CN779 Name = "CN779"
-	EU433 Name = "EU433"
-	AU915 Name = "AU915"
-	CN470 Name = "CN470"
-	AS923 Name = "AS923"
-	KR920 Name = "KR920"
-	IN865 Name = "IN865"
-	RU864 Name = "RU864"
+	EU868   Name = "EU868"
+	US915   Name = "US915"
+	CN779   Name = "CN779"
+	EU433   Name = "EU433"
+	AU915   Name = "AU915"
+	CN470   Name = "CN470"
+	AS923   Name = "AS923"   // Equal to AS923_1
+	AS923_1 Name = "AS923_1" // 0 MHz frequency offset
+	AS923_2 Name = "AS923_2" // -1.80 MHz frequency offset
+	AS923_3 Name = "AS923_3" // -6.60 MHz frequency offset
+	KR920   Name = "KR920"
+	IN865   Name = "IN865"
+	RU864   Name = "RU864"
 )
 
 // Modulation defines the modulation type.
@@ -637,8 +641,12 @@ func channelIsActive(channels []int, i int) bool {
 // of the repeater and dwell time arguments.
 func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 	switch name {
-	case AS_923, AS923:
-		return newAS923Band(repeaterCompatible, dt)
+	case AS_923, AS923, AS923_1:
+		return newAS923Band(repeaterCompatible, dt, 0)
+	case AS923_2:
+		return newAS923Band(repeaterCompatible, dt, -1800000)
+	case AS923_3:
+		return newAS923Band(repeaterCompatible, dt, -6600000)
 	case AU_915_928, AU915:
 		return newAU915Band(repeaterCompatible, dt)
 	case CN_470_510, CN470:

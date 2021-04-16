@@ -1,11 +1,8 @@
 .PHONY: lint test dev-requirements requirements
-PKGS := $(shell go list ./... | grep -v /vendor/)
 
 lint:
-	for pkg in $(PKGS) ; do \
-		golint $$pkg ; \
-	done
-	go vet $(PKGS)
+	golint ./...
+	go vet ./...
 
 test: lint
 	go test -cover -v ./...
