@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -370,6 +371,9 @@ func (c *client) request(ctx context.Context, pl Request, ans Answer) error {
 		} else {
 			responseChan <- bb
 		}
+	} else {
+		// By reading the complete body, Go will re-use the connection.
+		io.Copy(ioutil.Discard, resp.Body)
 	}
 
 	select {
