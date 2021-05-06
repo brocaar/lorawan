@@ -65,6 +65,7 @@ const (
 	KR920   Name = "KR920"
 	IN865   Name = "IN865"
 	RU864   Name = "RU864"
+	ISM2400 Name = "ISM2400"
 )
 
 // Modulation defines the modulation type.
@@ -241,6 +242,8 @@ type Band interface {
 
 type band struct {
 	supportsExtraChannels bool
+	cFListMinDR           int
+	cFListMaxDR           int
 	dataRates             map[int]DataRate
 	maxPayloadSizePerDR   map[string]map[string]map[int]MaxPayloadSize // LoRaWAN mac-version / Regional Parameters Revision / data-rate
 	rx1DataRateTable      map[int][]int
@@ -491,7 +494,7 @@ func (b *band) getCFListChannels() *lorawan.CFList {
 
 	var i int
 	for _, c := range b.uplinkChannels {
-		if c.custom && i < len(pl.Channels) && c.MinDR == 0 && c.MaxDR == 5 {
+		if c.custom && i < len(pl.Channels) && c.MinDR == b.cFListMinDR && c.MaxDR == b.cFListMaxDR {
 			pl.Channels[i] = uint32(c.Frequency)
 			i++
 		}
@@ -665,6 +668,8 @@ func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, 
 		return newUS902Band(repeaterCompatible)
 	case RU_864_870, RU864:
 		return newRU864Band(repeaterCompatible)
+	case ISM2400:
+		return newISM2400Band(repeaterCompatible)
 	default:
 		return nil, fmt.Errorf("lorawan/band: band %s is undefined", name)
 	}

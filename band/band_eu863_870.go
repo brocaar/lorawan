@@ -61,6 +61,8 @@ func newEU863Band(repeatedCompatible bool) (Band, error) {
 	b := eu863Band{
 		band: band{
 			supportsExtraChannels: true,
+			cFListMinDR:           0,
+			cFListMaxDR:           5,
 			dataRates: map[int]DataRate{
 				0: {Modulation: LoRaModulation, SpreadFactor: 12, Bandwidth: 125, uplink: true, downlink: true},
 				1: {Modulation: LoRaModulation, SpreadFactor: 11, Bandwidth: 125, uplink: true, downlink: true},
