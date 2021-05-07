@@ -95,7 +95,7 @@ type MaxPayloadSize struct {
 
 // Channel defines the channel structure
 type Channel struct {
-	Frequency int // frequency in Hz
+	Frequency uint32 // frequency in Hz
 	MinDR     int
 	MaxDR     int
 	enabled   bool
@@ -105,7 +105,7 @@ type Channel struct {
 // Defaults defines the default values defined by a band.
 type Defaults struct {
 	// RX2Frequency defines the fixed frequency for the RX2 receive window
-	RX2Frequency int
+	RX2Frequency uint32
 
 	// RX2DataRate defines the fixed data-rate for the RX2 receive window
 	RX2DataRate int
@@ -154,7 +154,7 @@ type Band interface {
 
 	// AddChannel adds an extra (user-configured) uplink / downlink channel.
 	// Note: this is not supported by every region.
-	AddChannel(frequency, minDR, maxDR int) error
+	AddChannel(frequency uint32, minDR, maxDR int) error
 
 	// GetUplinkChannel returns the uplink channel for the given index.
 	GetUplinkChannel(channel int) (Channel, error)
@@ -163,11 +163,11 @@ type Band interface {
 	// As it is possible that the same frequency occurs twice (eg. one time as
 	// a default LoRaWAN channel and one time as a custom channel using a 250 kHz
 	// data-rate), a bool must be given indicating this is a default channel.
-	GetUplinkChannelIndex(frequency int, defaultChannel bool) (int, error)
+	GetUplinkChannelIndex(frequency uint32, defaultChannel bool) (int, error)
 
 	// GetUplinkChannelIndexForFrequencyDR returns the uplink channel index given
 	// a frequency and data-rate.
-	GetUplinkChannelIndexForFrequencyDR(frequency int, dr int) (int, error)
+	GetUplinkChannelIndexForFrequencyDR(frequency uint32, dr int) (int, error)
 
 	// GetDownlinkChannel returns the downlink channel for the given index.
 	GetDownlinkChannel(channel int) (Channel, error)
@@ -200,10 +200,10 @@ type Band interface {
 
 	// GetRX1FrequencyForUplinkFrequency returns the frequency to use for RX1
 	// given the uplink frequency.
-	GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int, error)
+	GetRX1FrequencyForUplinkFrequency(uplinkFrequency uint32) (uint32, error)
 
 	// GetPingSlotFrequency returns the frequency to use for the Class-B ping-slot.
-	GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error)
+	GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (uint32, error)
 
 	// GetCFList returns the CFList used for OTAA activation.
 	// The CFList contains the extra channels (e.g. for the EU band) or the
@@ -227,7 +227,7 @@ type Band interface {
 	// GetDownlinkTXPower returns the TX power for downlink transmissions
 	// using the given frequency. Depending the band, it could return different
 	// values for different frequencies.
-	GetDownlinkTXPower(frequency int) int
+	GetDownlinkTXPower(frequency uint32) int
 
 	// GetDefaultMaxUplinkEIRP returns the default uplink EIRP as defined by the
 	// Regional Parameters.
@@ -323,7 +323,7 @@ func (b *band) GetTXPowerOffset(txPower int) (int, error) {
 	return b.txPowerOffsets[txPower], nil
 }
 
-func (b *band) AddChannel(frequency, minDR, maxDR int) error {
+func (b *band) AddChannel(frequency uint32, minDR, maxDR int) error {
 	if !b.supportsExtraChannels {
 		return errors.New("lorawan/band: band does not support extra channels")
 	}
@@ -349,7 +349,7 @@ func (b *band) GetUplinkChannel(channel int) (Channel, error) {
 	return b.uplinkChannels[channel], nil
 }
 
-func (b *band) GetUplinkChannelIndex(frequency int, defaultChannel bool) (int, error) {
+func (b *band) GetUplinkChannelIndex(frequency uint32, defaultChannel bool) (int, error) {
 	for i, channel := range b.uplinkChannels {
 		if frequency == channel.Frequency && channel.custom != defaultChannel {
 			return i, nil
@@ -359,7 +359,7 @@ func (b *band) GetUplinkChannelIndex(frequency int, defaultChannel bool) (int, e
 	return 0, fmt.Errorf("lorawan/band: unknown channel for frequency: %d", frequency)
 }
 
-func (b *band) GetUplinkChannelIndexForFrequencyDR(frequency int, dr int) (int, error) {
+func (b *band) GetUplinkChannelIndexForFrequencyDR(frequency uint32, dr int) (int, error) {
 	for _, defaultChannel := range []bool{true, false} {
 		i, err := b.GetUplinkChannelIndex(frequency, defaultChannel)
 		if err != nil {
@@ -495,7 +495,7 @@ func (b *band) getCFListChannels() *lorawan.CFList {
 	var i int
 	for _, c := range b.uplinkChannels {
 		if c.custom && i < len(pl.Channels) && c.MinDR == b.cFListMinDR && c.MaxDR == b.cFListMaxDR {
-			pl.Channels[i] = uint32(c.Frequency)
+			pl.Channels[i] = c.Frequency
 			i++
 		}
 	}

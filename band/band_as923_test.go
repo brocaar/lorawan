@@ -37,7 +37,7 @@ func TestAS923_1_Band(t *testing.T) {
 			assert := require.New(t)
 			freq, err := band.GetPingSlotFrequency(lorawan.DevAddr{}, 0)
 			assert.NoError(err)
-			assert.Equal(923400000, freq)
+			assert.EqualValues(923400000, freq)
 		})
 
 		t.Run("GetRX1ChannelIndexForUplinkChannelIndex", func(t *testing.T) {
@@ -51,7 +51,7 @@ func TestAS923_1_Band(t *testing.T) {
 			assert := require.New(t)
 			f, err := band.GetRX1FrequencyForUplinkFrequency(923200000)
 			assert.NoError(err)
-			assert.Equal(923200000, f)
+			assert.EqualValues(923200000, f)
 		})
 
 		t.Run("GetRX1DataRateIndex", func(t *testing.T) {
@@ -121,17 +121,17 @@ func TestAS923_2_Band(t *testing.T) {
 	band, err := GetConfig(AS923_2, true, lorawan.DwellTimeNoLimit)
 	assert.NoError(err)
 
-	assert.Equal(923200000-1800000, band.GetDefaults().RX2Frequency)
+	assert.EqualValues(923200000-1800000, band.GetDefaults().RX2Frequency)
 	freq, err := band.GetPingSlotFrequency(lorawan.DevAddr{}, 0)
 	assert.NoError(err)
-	assert.Equal(923400000-1800000, freq)
+	assert.EqualValues(923400000-1800000, freq)
 
 	bandd := band.(*as923Band)
 
-	assert.Equal(923200000-1800000, bandd.uplinkChannels[0].Frequency)
-	assert.Equal(923200000-1800000, bandd.downlinkChannels[0].Frequency)
-	assert.Equal(923400000-1800000, bandd.uplinkChannels[1].Frequency)
-	assert.Equal(923400000-1800000, bandd.downlinkChannels[1].Frequency)
+	assert.EqualValues(923200000-1800000, bandd.uplinkChannels[0].Frequency)
+	assert.EqualValues(923200000-1800000, bandd.downlinkChannels[0].Frequency)
+	assert.EqualValues(923400000-1800000, bandd.uplinkChannels[1].Frequency)
+	assert.EqualValues(923400000-1800000, bandd.downlinkChannels[1].Frequency)
 }
 
 func TestAS923_3_Band(t *testing.T) {
@@ -139,15 +139,15 @@ func TestAS923_3_Band(t *testing.T) {
 	band, err := GetConfig(AS923_3, true, lorawan.DwellTimeNoLimit)
 	assert.NoError(err)
 
-	assert.Equal(923200000-6600000, band.GetDefaults().RX2Frequency)
+	assert.EqualValues(923200000-6600000, band.GetDefaults().RX2Frequency)
 	freq, err := band.GetPingSlotFrequency(lorawan.DevAddr{}, 0)
 	assert.NoError(err)
-	assert.Equal(923400000-6600000, freq)
+	assert.EqualValues(923400000-6600000, freq)
 
 	bandd := band.(*as923Band)
 
-	assert.Equal(923200000-6600000, bandd.uplinkChannels[0].Frequency)
-	assert.Equal(923200000-6600000, bandd.downlinkChannels[0].Frequency)
-	assert.Equal(923400000-6600000, bandd.uplinkChannels[1].Frequency)
-	assert.Equal(923400000-6600000, bandd.downlinkChannels[1].Frequency)
+	assert.EqualValues(923200000-6600000, bandd.uplinkChannels[0].Frequency)
+	assert.EqualValues(923200000-6600000, bandd.downlinkChannels[0].Frequency)
+	assert.EqualValues(923400000-6600000, bandd.uplinkChannels[1].Frequency)
+	assert.EqualValues(923400000-6600000, bandd.downlinkChannels[1].Frequency)
 }

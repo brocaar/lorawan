@@ -25,7 +25,7 @@ func (b *ru864Band) GetDefaults() Defaults {
 	}
 }
 
-func (b *ru864Band) GetDownlinkTXPower(freq int) int {
+func (b *ru864Band) GetDownlinkTXPower(freq uint32) int {
 	return 14
 }
 
@@ -33,7 +33,7 @@ func (b *ru864Band) GetDefaultMaxUplinkEIRP() float32 {
 	return 16
 }
 
-func (b *ru864Band) GetPingSlotFrequency(lorawan.DevAddr, time.Duration) (int, error) {
+func (b *ru864Band) GetPingSlotFrequency(lorawan.DevAddr, time.Duration) (uint32, error) {
 	return 868900000, nil
 }
 
@@ -41,7 +41,7 @@ func (b *ru864Band) GetRX1ChannelIndexForUplinkChannelIndex(uplinkChannel int) (
 	return uplinkChannel, nil
 }
 
-func (b *ru864Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int, error) {
+func (b *ru864Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency uint32) (uint32, error) {
 	return uplinkFrequency, nil
 }
 

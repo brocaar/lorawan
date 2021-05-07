@@ -72,7 +72,7 @@ func TestEU863Band(t *testing.T) {
 		})
 
 		Convey("Given five extra channels", func() {
-			chans := []int{
+			chans := []uint32{
 				867100000,
 				867300000,
 				867500000,
@@ -158,7 +158,7 @@ func TestEU863Band(t *testing.T) {
 			})
 
 			Convey("Then GetUplinkChannelIndex takes the extra channels into consideration", func() {
-				tests := []int{
+				tests := []uint32{
 					868100000,
 					868300000,
 					868500000,
@@ -181,7 +181,7 @@ func TestEU863Band(t *testing.T) {
 			})
 
 			Convey("Then GetUplinkChannelIndexForFrequencyDR takes the extra channels into consideration", func() {
-				tests := []int{
+				tests := []uint32{
 					868100000,
 					868300000,
 					868500000,

@@ -75,9 +75,9 @@ func TestCN470Band(t *testing.T) {
 
 		Convey("When testing the downlink channels", func() {
 			testTable := []struct {
-				Frequency    int
+				Frequency    uint32
 				Channel      int
-				ExpFrequency int
+				ExpFrequency uint32
 			}{
 				{Frequency: 470300000, Channel: 0, ExpFrequency: 500300000},
 				{Frequency: 489300000, Channel: 95, ExpFrequency: 509700000},

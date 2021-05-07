@@ -19,7 +19,7 @@ func (b *as923Band) Name() string {
 
 func (b *as923Band) GetDefaults() Defaults {
 	return Defaults{
-		RX2Frequency:     923200000 + b.frequencyOffset,
+		RX2Frequency:     uint32(923200000 + b.frequencyOffset),
 		RX2DataRate:      2,
 		ReceiveDelay1:    time.Second,
 		ReceiveDelay2:    time.Second * 2,
@@ -28,7 +28,7 @@ func (b *as923Band) GetDefaults() Defaults {
 	}
 }
 
-func (b *as923Band) GetDownlinkTXPower(freq int) int {
+func (b *as923Band) GetDownlinkTXPower(freq uint32) int {
 	return 14
 }
 
@@ -36,15 +36,15 @@ func (b *as923Band) GetDefaultMaxUplinkEIRP() float32 {
 	return 16
 }
 
-func (b *as923Band) GetPingSlotFrequency(lorawan.DevAddr, time.Duration) (int, error) {
-	return 923400000 + b.frequencyOffset, nil
+func (b *as923Band) GetPingSlotFrequency(lorawan.DevAddr, time.Duration) (uint32, error) {
+	return uint32(923400000 + b.frequencyOffset), nil
 }
 
 func (b *as923Band) GetRX1ChannelIndexForUplinkChannelIndex(uplinkChannel int) (int, error) {
 	return uplinkChannel, nil
 }
 
-func (b *as923Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int, error) {
+func (b *as923Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency uint32) (uint32, error) {
 	return uplinkFrequency, nil
 }
 
@@ -110,12 +110,12 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime, frequencyOffset
 				-14, // 7
 			},
 			uplinkChannels: []Channel{
-				{Frequency: 923200000 + frequencyOffset, MinDR: 0, MaxDR: 5, enabled: true},
-				{Frequency: 923400000 + frequencyOffset, MinDR: 0, MaxDR: 5, enabled: true},
+				{Frequency: uint32(923200000 + frequencyOffset), MinDR: 0, MaxDR: 5, enabled: true},
+				{Frequency: uint32(923400000 + frequencyOffset), MinDR: 0, MaxDR: 5, enabled: true},
 			},
 			downlinkChannels: []Channel{
-				{Frequency: 923200000 + frequencyOffset, MinDR: 0, MaxDR: 5, enabled: true},
-				{Frequency: 923400000 + frequencyOffset, MinDR: 0, MaxDR: 5, enabled: true},
+				{Frequency: uint32(923200000 + frequencyOffset), MinDR: 0, MaxDR: 5, enabled: true},
+				{Frequency: uint32(923400000 + frequencyOffset), MinDR: 0, MaxDR: 5, enabled: true},
 			},
 		},
 	}

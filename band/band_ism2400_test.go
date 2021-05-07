@@ -35,7 +35,7 @@ func TestISM2400Band(t *testing.T) {
 		assert := require.New(t)
 		f, err := band.GetPingSlotFrequency(lorawan.DevAddr{}, 0)
 		assert.NoError(err)
-		assert.Equal(2424000000, f)
+		assert.EqualValues(2424000000, f)
 
 	})
 
@@ -50,11 +50,11 @@ func TestISM2400Band(t *testing.T) {
 		assert := require.New(t)
 		f, err := band.GetRX1FrequencyForUplinkFrequency(2425000000)
 		assert.NoError(err)
-		assert.Equal(2425000000, f)
+		assert.EqualValues(2425000000, f)
 	})
 
 	t.Run("Five extra channels", func(t *testing.T) {
-		chans := []int{
+		chans := []uint32{
 			2426000000,
 			2427000000,
 			2428000000,
@@ -142,7 +142,7 @@ func TestISM2400Band(t *testing.T) {
 		})
 
 		t.Run("GetUplinkChannelIndex", func(t *testing.T) {
-			tests := []int{
+			tests := []uint32{
 				2403000000,
 				2425000000,
 				2479000000,
@@ -166,7 +166,7 @@ func TestISM2400Band(t *testing.T) {
 		})
 
 		t.Run("GetUplinkChannelIndexForFrequencyDR", func(t *testing.T) {
-			tests := []int{
+			tests := []uint32{
 				2403000000,
 				2425000000,
 				2479000000,

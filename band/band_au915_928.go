@@ -28,7 +28,7 @@ func (b *au915Band) GetDefaults() Defaults {
 	}
 }
 
-func (b *au915Band) GetDownlinkTXPower(freq int) int {
+func (b *au915Band) GetDownlinkTXPower(freq uint32) int {
 	return 27
 }
 
@@ -36,7 +36,7 @@ func (b *au915Band) GetDefaultMaxUplinkEIRP() float32 {
 	return 30
 }
 
-func (b *au915Band) GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (int, error) {
+func (b *au915Band) GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (uint32, error) {
 	downlinkChannel := (int(binary.BigEndian.Uint32(devAddr[:])) + int(beaconTime/(128*time.Second))) % 8
 	return b.downlinkChannels[downlinkChannel].Frequency, nil
 }
@@ -45,7 +45,7 @@ func (b *au915Band) GetRX1ChannelIndexForUplinkChannelIndex(uplinkChannel int) (
 	return uplinkChannel % 8, nil
 }
 
-func (b *au915Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int, error) {
+func (b *au915Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency uint32) (uint32, error) {
 	uplinkChan, err := b.GetUplinkChannelIndex(uplinkFrequency, true)
 	if err != nil {
 		return 0, err
@@ -553,7 +553,7 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 	}
 
 	// initialize uplink channel 0 - 63
-	for i := 0; i < 64; i++ {
+	for i := uint32(0); i < 64; i++ {
 		b.uplinkChannels[i] = Channel{
 			Frequency: 915200000 + (i * 200000),
 			enabled:   true,
@@ -563,7 +563,7 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 	}
 
 	// initialize uplink channel 64 - 71
-	for i := 0; i < 8; i++ {
+	for i := uint32(0); i < 8; i++ {
 		b.uplinkChannels[i+64] = Channel{
 			Frequency: 915900000 + (i * 1600000),
 			MinDR:     6,
@@ -573,7 +573,7 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 	}
 
 	// initialize downlink channel 0 - 7
-	for i := 0; i < 8; i++ {
+	for i := uint32(0); i < 8; i++ {
 		b.downlinkChannels[i] = Channel{
 			Frequency: 923300000 + (i * 600000),
 			MinDR:     8,

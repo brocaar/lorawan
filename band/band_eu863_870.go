@@ -25,7 +25,7 @@ func (b *eu863Band) GetDefaults() Defaults {
 	}
 }
 
-func (b *eu863Band) GetDownlinkTXPower(freq int) int {
+func (b *eu863Band) GetDownlinkTXPower(freq uint32) int {
 	// NOTE: as there are currently no further boundary checks on the frequency, this check is sufficient.
 	// TODO: However, there should be some mechanism, that checks the frequency for compliance to regulations.
 	if 863000000 <= freq && freq < 869200000 {
@@ -41,7 +41,7 @@ func (b *eu863Band) GetDefaultMaxUplinkEIRP() float32 {
 	return 16
 }
 
-func (b *eu863Band) GetPingSlotFrequency(lorawan.DevAddr, time.Duration) (int, error) {
+func (b *eu863Band) GetPingSlotFrequency(lorawan.DevAddr, time.Duration) (uint32, error) {
 	return 869525000, nil
 }
 
@@ -49,7 +49,7 @@ func (b *eu863Band) GetRX1ChannelIndexForUplinkChannelIndex(uplinkChannel int) (
 	return uplinkChannel, nil
 }
 
-func (b *eu863Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency int) (int, error) {
+func (b *eu863Band) GetRX1FrequencyForUplinkFrequency(uplinkFrequency uint32) (uint32, error) {
 	return uplinkFrequency, nil
 }
 
