@@ -148,11 +148,21 @@ func newCN470Band(repeaterCompatible bool) (Band, error) {
 					4: {M: 230, N: 222},
 					5: {M: 230, N: 222},
 				},
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.1
+				RegParamRevRP002_1_0_1: map[int]MaxPayloadSize{
 					0: {M: 0, N: 0},
 					1: {M: 31, N: 23},
 					2: {M: 94, N: 86},
 					3: {M: 172, N: 164},
+					4: {M: 230, N: 222},
+					5: {M: 230, N: 222},
+					6: {M: 230, N: 222},
+					7: {M: 230, N: 222},
+				},
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.2
+					0: {M: 0, N: 0},
+					1: {M: 31, N: 23},
+					2: {M: 94, N: 86},
+					3: {M: 192, N: 184},
 					4: {M: 230, N: 222},
 					5: {M: 230, N: 222},
 					6: {M: 230, N: 222},
@@ -211,7 +221,7 @@ func newCN470Band(repeaterCompatible bool) (Band, error) {
 					4: {M: 250, N: 242},
 					5: {M: 250, N: 242},
 				},
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.1
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.1, RP002-1.0.2
 					0: {M: 0, N: 0},
 					1: {M: 31, N: 23},
 					2: {M: 94, N: 86},

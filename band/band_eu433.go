@@ -160,7 +160,7 @@ func newEU433Band(repeaterCompatible bool) (Band, error) {
 				},
 			},
 			latest: map[string]map[int]MaxPayloadSize{
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1, RP002-1.0.2
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},
@@ -235,7 +235,7 @@ func newEU433Band(repeaterCompatible bool) (Band, error) {
 				},
 			},
 			latest: map[string]map[int]MaxPayloadSize{
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1, RP002-1.0.2
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},

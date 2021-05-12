@@ -62,8 +62,6 @@ func newKR920Band(repeaterCompatible bool) (Band, error) {
 				3: {Modulation: LoRaModulation, SpreadFactor: 9, Bandwidth: 125, uplink: true, downlink: true},
 				4: {Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 125, uplink: true, downlink: true},
 				5: {Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 125, uplink: true, downlink: true},
-				6: {},
-				7: {Modulation: FSKModulation, BitRate: 50000, uplink: true, downlink: true},
 			},
 			rx1DataRateTable: map[int][]int{
 				0: {0, 0, 0, 0, 0, 0, 1, 2},
@@ -140,15 +138,13 @@ func newKR920Band(repeaterCompatible bool) (Band, error) {
 					4: {M: 230, N: 222},
 					5: {M: 230, N: 222},
 				},
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.1
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.1, RP002-1.0.2
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},
 					3: {M: 123, N: 115},
 					4: {M: 230, N: 222},
 					5: {M: 230, N: 222},
-					6: {M: 230, N: 222},
-					7: {M: 230, N: 222},
 				},
 			},
 		}
@@ -193,15 +189,13 @@ func newKR920Band(repeaterCompatible bool) (Band, error) {
 					4: {M: 250, N: 242},
 					5: {M: 250, N: 242},
 				},
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.1
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.1, RP002-1.0.2
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},
 					3: {M: 123, N: 115},
 					4: {M: 250, N: 242},
 					5: {M: 250, N: 242},
-					6: {M: 250, N: 242},
-					7: {M: 250, N: 242},
 				},
 			},
 		}

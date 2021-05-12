@@ -13,8 +13,10 @@ func TestAS923_1_Band(t *testing.T) {
 	t.Run("400ms dwell-time", func(t *testing.T) {
 		assert := require.New(t)
 
-		band, err := GetConfig(AS923_1, true, lorawan.DwellTime400ms)
+		band, err := GetConfig(AS923, true, lorawan.DwellTime400ms)
 		assert.NoError(err)
+
+		assert.Equal("AS923", band.Name())
 
 		t.Run("GetDefaults", func(t *testing.T) {
 			assert := require.New(t)
@@ -121,6 +123,8 @@ func TestAS923_2_Band(t *testing.T) {
 	band, err := GetConfig(AS923_2, true, lorawan.DwellTimeNoLimit)
 	assert.NoError(err)
 
+	assert.Equal("AS923-2", band.Name())
+
 	assert.EqualValues(923200000-1800000, band.GetDefaults().RX2Frequency)
 	freq, err := band.GetPingSlotFrequency(lorawan.DevAddr{}, 0)
 	assert.NoError(err)
@@ -138,6 +142,8 @@ func TestAS923_3_Band(t *testing.T) {
 	assert := require.New(t)
 	band, err := GetConfig(AS923_3, true, lorawan.DwellTimeNoLimit)
 	assert.NoError(err)
+
+	assert.Equal("AS923-3", band.Name())
 
 	assert.EqualValues(923200000-6600000, band.GetDefaults().RX2Frequency)
 	freq, err := band.GetPingSlotFrequency(lorawan.DevAddr{}, 0)

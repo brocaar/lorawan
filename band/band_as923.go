@@ -9,12 +9,13 @@ import (
 
 type as923Band struct {
 	band
+	nameSuffix      string
 	dwellTime       lorawan.DwellTime
 	frequencyOffset int
 }
 
 func (b *as923Band) Name() string {
-	return "AS923"
+	return "AS923" + b.nameSuffix
 }
 
 func (b *as923Band) GetDefaults() Defaults {
@@ -80,8 +81,9 @@ func (b *as923Band) ImplementsTXParamSetup(protocolVersion string) bool {
 	return true
 }
 
-func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime, frequencyOffset int) (Band, error) {
+func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime, frequencyOffset int, nameSuffix string) (Band, error) {
 	b := as923Band{
+		nameSuffix:      nameSuffix,
 		frequencyOffset: frequencyOffset,
 		dwellTime:       dt,
 		band: band{
@@ -161,7 +163,7 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime, frequencyOffset
 					},
 				},
 				latest: map[string]map[int]MaxPayloadSize{
-					latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1
+					latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1, RP002-1.0.2
 						0: {M: 0, N: 0},
 						1: {M: 0, N: 0},
 						2: {M: 19, N: 11},
@@ -213,7 +215,7 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime, frequencyOffset
 					},
 				},
 				latest: map[string]map[int]MaxPayloadSize{
-					latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1
+					latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1, RP002-1.0.2
 						0: {M: 0, N: 0},
 						1: {M: 0, N: 0},
 						2: {M: 19, N: 11},
@@ -277,7 +279,7 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime, frequencyOffset
 						6: {M: 230, N: 222},
 						7: {M: 230, N: 222},
 					},
-					latest: map[int]MaxPayloadSize{ // RP002-1.0.1
+					latest: map[int]MaxPayloadSize{ // RP002-1.0.1, RP002-1.0.2
 						0: {M: 59, N: 51},
 						1: {M: 59, N: 51},
 						2: {M: 123, N: 115},
@@ -341,7 +343,7 @@ func newAS923Band(repeaterCompatible bool, dt lorawan.DwellTime, frequencyOffset
 					},
 				},
 				latest: map[string]map[int]MaxPayloadSize{
-					latest: map[int]MaxPayloadSize{ // RP002-1.0.1
+					latest: map[int]MaxPayloadSize{ // RP002-1.0.1, RP002-1.0.2
 						0: {M: 59, N: 51},
 						1: {M: 59, N: 51},
 						2: {M: 123, N: 115},

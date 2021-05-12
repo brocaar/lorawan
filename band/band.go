@@ -34,6 +34,7 @@ const (
 	RegParamRevC           = "C"
 	RegParamRevRP002_1_0_0 = "RP002-1.0.0"
 	RegParamRevRP002_1_0_1 = "RP002-1.0.1"
+	RegParamRevRP002_1_0_2 = "RP002-1.0.2"
 )
 
 // Available ISM bands (deprecated, use the common name).
@@ -58,10 +59,9 @@ const (
 	EU433   Name = "EU433"
 	AU915   Name = "AU915"
 	CN470   Name = "CN470"
-	AS923   Name = "AS923"   // Equal to AS923_1
-	AS923_1 Name = "AS923_1" // 0 MHz frequency offset
-	AS923_2 Name = "AS923_2" // -1.80 MHz frequency offset
-	AS923_3 Name = "AS923_3" // -6.60 MHz frequency offset
+	AS923   Name = "AS923"   // 0 MHz frequency offset
+	AS923_2 Name = "AS923-2" // -1.80 MHz frequency offset
+	AS923_3 Name = "AS923-3" // -6.60 MHz frequency offset
 	KR920   Name = "KR920"
 	IN865   Name = "IN865"
 	RU864   Name = "RU864"
@@ -73,18 +73,23 @@ type Modulation string
 
 // Possible modulation types.
 const (
-	LoRaModulation Modulation = "LORA"
-	FSKModulation  Modulation = "FSK"
+	LoRaModulation   Modulation = "LORA"
+	FSKModulation    Modulation = "FSK"
+	LRFHSSModulation Modulation = "LR_FHSS"
 )
 
 // DataRate defines a data rate
 type DataRate struct {
-	uplink       bool       // data-rate can be used for uplink
-	downlink     bool       // data-rate can be used for downlink
-	Modulation   Modulation `json:"modulation"`
-	SpreadFactor int        `json:"spreadFactor,omitempty"` // used for LoRa
-	Bandwidth    int        `json:"bandwidth,omitempty"`    // in kHz, used for LoRa
-	BitRate      int        `json:"bitRate,omitempty"`      // bits per second, used for FSK
+	uplink                bool       // data-rate can be used for uplink
+	downlink              bool       // data-rate can be used for downlink
+	Modulation            Modulation `json:"modulation"`
+	SpreadFactor          int        `json:"spreadFactor,omitempty"` // used for LoRa
+	Bandwidth             int        `json:"bandwidth,omitempty"`    // in kHz, used for LoRa
+	BitRate               int        `json:"bitRate,omitempty"`      // bits per second, used for FSK
+	CodingRate            string     `json:"codingRate,omitempty"`
+	OccupiedBandwidth     int        `json:"occupiedBandwidth,omitempty"` // LR-FHSS in Hz
+	OperatingChannelWidth int        `json:"operatingChannelWidth"`       // LR-FHSS in Hz
+	HoppingWidth          int        `json:"hoppingWidth,omitempty"`      // LR-FHSS in Hz (25.4 kHz in FCC like regions, 3.9 kHz otherwise)
 }
 
 // MaxPayloadSize defines the max payload size
@@ -644,12 +649,12 @@ func channelIsActive(channels []int, i int) bool {
 // of the repeater and dwell time arguments.
 func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 	switch name {
-	case AS_923, AS923, AS923_1:
-		return newAS923Band(repeaterCompatible, dt, 0)
+	case AS_923, AS923:
+		return newAS923Band(repeaterCompatible, dt, 0, "")
 	case AS923_2:
-		return newAS923Band(repeaterCompatible, dt, -1800000)
+		return newAS923Band(repeaterCompatible, dt, -1800000, "-2")
 	case AS923_3:
-		return newAS923Band(repeaterCompatible, dt, -6600000)
+		return newAS923Band(repeaterCompatible, dt, -6600000, "-3")
 	case AU_915_928, AU915:
 		return newAU915Band(repeaterCompatible, dt)
 	case CN_470_510, CN470:

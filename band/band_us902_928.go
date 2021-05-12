@@ -166,7 +166,9 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 				2: {Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 125, uplink: true},
 				3: {Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 125, uplink: true},
 				4: {Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 500, uplink: true},
-				// 5 - 7
+				5: {Modulation: LRFHSSModulation, CodingRate: "1/3", OccupiedBandwidth: 488, OperatingChannelWidth: 1523000, HoppingWidth: 25400, uplink: true, downlink: false},
+				6: {Modulation: LRFHSSModulation, CodingRate: "2/3", OccupiedBandwidth: 448, OperatingChannelWidth: 1523000, HoppingWidth: 25400, uplink: true, downlink: false},
+				// 7
 				8:  {Modulation: LoRaModulation, SpreadFactor: 12, Bandwidth: 500, downlink: true},
 				9:  {Modulation: LoRaModulation, SpreadFactor: 11, Bandwidth: 500, downlink: true},
 				10: {Modulation: LoRaModulation, SpreadFactor: 10, Bandwidth: 500, downlink: true},
@@ -180,7 +182,9 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 				2: {12, 11, 10, 9},
 				3: {13, 12, 11, 10},
 				4: {13, 13, 12, 11},
-				// 5 - 7
+				5: {10, 9, 8, 8},
+				6: {11, 10, 9, 8},
+				// 7
 				8:  {8, 8, 8, 8},
 				9:  {9, 8, 8, 8},
 				10: {10, 9, 8, 8},
@@ -289,7 +293,7 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 				},
 			},
 			latest: map[string]map[int]MaxPayloadSize{
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1
+				RegParamRevRP002_1_0_0: map[int]MaxPayloadSize{
 					0: {M: 19, N: 11},
 					1: {M: 61, N: 53},
 					2: {M: 133, N: 125},
@@ -298,6 +302,36 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 					// 5-7
 					8:  {M: 41, N: 33},
 					9:  {M: 117, N: 109},
+					10: {M: 230, N: 222},
+					11: {M: 230, N: 222},
+					12: {M: 230, N: 222},
+					13: {M: 230, N: 222},
+				},
+				RegParamRevRP002_1_0_1: map[int]MaxPayloadSize{
+					0: {M: 19, N: 11},
+					1: {M: 61, N: 53},
+					2: {M: 133, N: 125},
+					3: {M: 230, N: 222},
+					4: {M: 230, N: 222},
+					// 5-7
+					8:  {M: 41, N: 33},
+					9:  {M: 117, N: 109},
+					10: {M: 230, N: 222},
+					11: {M: 230, N: 222},
+					12: {M: 230, N: 222},
+					13: {M: 230, N: 222},
+				},
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.2
+					0: {M: 19, N: 11},
+					1: {M: 61, N: 53},
+					2: {M: 133, N: 125},
+					3: {M: 230, N: 222},
+					4: {M: 230, N: 222},
+					5: {M: 58, N: 50},
+					6: {M: 133, N: 125},
+					// 5-7
+					8:  {M: 61, N: 53},
+					9:  {M: 137, N: 129},
 					10: {M: 230, N: 222},
 					11: {M: 230, N: 222},
 					12: {M: 230, N: 222},
@@ -388,13 +422,43 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 				},
 			},
 			latest: map[string]map[int]MaxPayloadSize{
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1
+				RegParamRevRP002_1_0_0: map[int]MaxPayloadSize{
 					0: {M: 19, N: 11},
 					1: {M: 61, N: 53},
 					2: {M: 133, N: 125},
 					3: {M: 250, N: 242},
 					4: {M: 250, N: 242},
 					// 5-7
+					8:  {M: 61, N: 53},
+					9:  {M: 137, N: 129},
+					10: {M: 250, N: 242},
+					11: {M: 250, N: 242},
+					12: {M: 250, N: 242},
+					13: {M: 250, N: 242},
+				},
+				RegParamRevRP002_1_0_1: map[int]MaxPayloadSize{
+					0: {M: 19, N: 11},
+					1: {M: 61, N: 53},
+					2: {M: 133, N: 125},
+					3: {M: 250, N: 242},
+					4: {M: 250, N: 242},
+					// 5-7
+					8:  {M: 61, N: 53},
+					9:  {M: 137, N: 129},
+					10: {M: 250, N: 242},
+					11: {M: 250, N: 242},
+					12: {M: 250, N: 242},
+					13: {M: 250, N: 242},
+				},
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.2
+					0: {M: 19, N: 11},
+					1: {M: 61, N: 53},
+					2: {M: 133, N: 125},
+					3: {M: 250, N: 242},
+					4: {M: 250, N: 242},
+					5: {M: 58, N: 50},
+					6: {M: 133, N: 125},
+					// 7
 					8:  {M: 61, N: 53},
 					9:  {M: 137, N: 129},
 					10: {M: 250, N: 242},
