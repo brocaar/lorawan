@@ -11,7 +11,7 @@ import (
 
 	"github.com/brocaar/lorawan"
 	"github.com/brocaar/lorawan/band"
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -464,7 +464,7 @@ func (ts *AsyncClientTestSuite) SetupSuite() {
 	ts.redisClient = redis.NewClient(&redis.Options{
 		Addr: "redis:6379",
 	})
-	assert.NoError(ts.redisClient.Ping().Err())
+	assert.NoError(ts.redisClient.Ping(context.Background()).Err())
 
 	ts.server = httptest.NewServer(http.HandlerFunc(ts.apiHandler))
 	ts.client, err = NewClient(ClientConfig{

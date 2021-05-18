@@ -14,7 +14,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -407,7 +407,7 @@ func (c *client) HandleAnswer(ctx context.Context, pl Answer) error {
 		return errors.Wrap(err, "marshal answer error")
 	}
 
-	err = c.redisClient.Publish(c.getAsyncKey(pl.GetBasePayload().TransactionID), b).Err()
+	err = c.redisClient.Publish(ctx, c.getAsyncKey(pl.GetBasePayload().TransactionID), b).Err()
 	if err != nil {
 		return errors.Wrap(err, "publish answer error")
 	}
@@ -458,7 +458,7 @@ func (c *client) getAsyncKey(id uint32) string {
 }
 
 func (c *client) readAsync(ctx context.Context, key string) ([]byte, error) {
-	sub := c.redisClient.Subscribe(key)
+	sub := c.redisClient.Subscribe(ctx, key)
 	defer sub.Close()
 
 	ch := sub.Channel()
