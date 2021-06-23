@@ -80,16 +80,14 @@ const (
 
 // DataRate defines a data rate
 type DataRate struct {
-	uplink                bool       // data-rate can be used for uplink
-	downlink              bool       // data-rate can be used for downlink
-	Modulation            Modulation `json:"modulation"`
-	SpreadFactor          int        `json:"spreadFactor,omitempty"` // used for LoRa
-	Bandwidth             int        `json:"bandwidth,omitempty"`    // in kHz, used for LoRa
-	BitRate               int        `json:"bitRate,omitempty"`      // bits per second, used for FSK
-	CodingRate            string     `json:"codingRate,omitempty"`
-	OccupiedBandwidth     int        `json:"occupiedBandwidth,omitempty"` // LR-FHSS in Hz
-	OperatingChannelWidth int        `json:"operatingChannelWidth"`       // LR-FHSS in Hz
-	HoppingWidth          int        `json:"hoppingWidth,omitempty"`      // LR-FHSS in Hz (25.4 kHz in FCC like regions, 3.9 kHz otherwise)
+	uplink               bool       // data-rate can be used for uplink
+	downlink             bool       // data-rate can be used for downlink
+	Modulation           Modulation `json:"modulation"`
+	SpreadFactor         int        `json:"spreadFactor,omitempty"` // used for LoRa
+	Bandwidth            int        `json:"bandwidth,omitempty"`    // in kHz, used for LoRa
+	BitRate              int        `json:"bitRate,omitempty"`      // bits per second, used for FSK
+	CodingRate           string     `json:"codingRate,omitempty"`   // LR-FHSS (only for LR-FHSS it is used to determine the DR, for LoRa 2.4 GHz it is not specified per data-rate).
+	OccupiedChannelWidth int        `json:"occupiedChannelWidth"`   // LR-FHSS in Hz
 }
 
 // MaxPayloadSize defines the max payload size
@@ -262,12 +260,12 @@ func (b *band) GetDataRateIndex(uplink bool, dataRate DataRate) (int, error) {
 		// some bands implement different data-rates with the same parameters
 		// for uplink and downlink
 		if uplink {
-			if d.uplink == true && d.Modulation == dataRate.Modulation && d.Bandwidth == dataRate.Bandwidth && d.BitRate == dataRate.BitRate && d.SpreadFactor == dataRate.SpreadFactor {
+			if d.uplink == true && d.Modulation == dataRate.Modulation && d.Bandwidth == dataRate.Bandwidth && d.BitRate == dataRate.BitRate && d.SpreadFactor == dataRate.SpreadFactor && d.OccupiedChannelWidth == dataRate.OccupiedChannelWidth && d.CodingRate == dataRate.CodingRate {
 				return i, nil
 			}
 		}
 		if !uplink {
-			if d.downlink == true && d.Modulation == dataRate.Modulation && d.Bandwidth == dataRate.Bandwidth && d.BitRate == dataRate.BitRate && d.SpreadFactor == dataRate.SpreadFactor {
+			if d.downlink == true && d.Modulation == dataRate.Modulation && d.Bandwidth == dataRate.Bandwidth && d.BitRate == dataRate.BitRate && d.SpreadFactor == dataRate.SpreadFactor && d.OccupiedChannelWidth == dataRate.OccupiedChannelWidth && d.CodingRate == dataRate.CodingRate {
 				return i, nil
 			}
 		}

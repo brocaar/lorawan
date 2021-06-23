@@ -177,7 +177,7 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 				4:  {Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 125, uplink: true},
 				5:  {Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 125, uplink: true},
 				6:  {Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 500, uplink: true},
-				7:  {Modulation: LRFHSSModulation, CodingRate: "1/3", OccupiedBandwidth: 488, OperatingChannelWidth: 1523000, HoppingWidth: 25400, uplink: true, downlink: false},
+				7:  {Modulation: LRFHSSModulation, CodingRate: "1/3", OccupiedChannelWidth: 1523000, uplink: true, downlink: false},
 				8:  {Modulation: LoRaModulation, SpreadFactor: 12, Bandwidth: 500, downlink: true},
 				9:  {Modulation: LoRaModulation, SpreadFactor: 11, Bandwidth: 500, downlink: true},
 				10: {Modulation: LoRaModulation, SpreadFactor: 10, Bandwidth: 500, downlink: true},

@@ -166,8 +166,8 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 				2: {Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 125, uplink: true},
 				3: {Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 125, uplink: true},
 				4: {Modulation: LoRaModulation, SpreadFactor: 8, Bandwidth: 500, uplink: true},
-				5: {Modulation: LRFHSSModulation, CodingRate: "1/3", OccupiedBandwidth: 488, OperatingChannelWidth: 1523000, HoppingWidth: 25400, uplink: true, downlink: false},
-				6: {Modulation: LRFHSSModulation, CodingRate: "2/3", OccupiedBandwidth: 448, OperatingChannelWidth: 1523000, HoppingWidth: 25400, uplink: true, downlink: false},
+				5: {Modulation: LRFHSSModulation, CodingRate: "1/3", OccupiedChannelWidth: 1523000, uplink: true, downlink: false},
+				6: {Modulation: LRFHSSModulation, CodingRate: "2/3", OccupiedChannelWidth: 1523000, uplink: true, downlink: false},
 				// 7
 				8:  {Modulation: LoRaModulation, SpreadFactor: 12, Bandwidth: 500, downlink: true},
 				9:  {Modulation: LoRaModulation, SpreadFactor: 11, Bandwidth: 500, downlink: true},

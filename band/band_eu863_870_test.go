@@ -71,6 +71,61 @@ func TestEU863Band(t *testing.T) {
 			So(f, ShouldEqual, 868500000)
 		})
 
+		Convey("Then GetDataRateIndex returns the exepected values", func() {
+			tests := []struct {
+				DataRate   DataRate
+				Uplink     bool
+				ExpectedDR int
+			}{
+				{
+					DataRate:   DataRate{Modulation: LoRaModulation, SpreadFactor: 12, Bandwidth: 125},
+					Uplink:     true,
+					ExpectedDR: 0,
+				},
+				{
+					DataRate:   DataRate{Modulation: LoRaModulation, SpreadFactor: 12, Bandwidth: 125},
+					Uplink:     false,
+					ExpectedDR: 0,
+				},
+				{
+					DataRate:   DataRate{Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 125},
+					Uplink:     true,
+					ExpectedDR: 5,
+				},
+				{
+					DataRate:   DataRate{Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 125},
+					Uplink:     false,
+					ExpectedDR: 5,
+				},
+				{
+					DataRate:   DataRate{Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 250},
+					Uplink:     true,
+					ExpectedDR: 6,
+				},
+				{
+					DataRate:   DataRate{Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 250},
+					Uplink:     false,
+					ExpectedDR: 6,
+				},
+				{
+					DataRate:   DataRate{Modulation: LRFHSSModulation, CodingRate: "1/3", OccupiedChannelWidth: 137000},
+					Uplink:     true,
+					ExpectedDR: 8,
+				},
+				{
+					DataRate:   DataRate{Modulation: LRFHSSModulation, CodingRate: "2/3", OccupiedChannelWidth: 336000},
+					Uplink:     true,
+					ExpectedDR: 11,
+				},
+			}
+
+			for _, t := range tests {
+				dr, err := band.GetDataRateIndex(t.Uplink, t.DataRate)
+				So(err, ShouldBeNil)
+				So(dr, ShouldEqual, t.ExpectedDR)
+			}
+		})
+
 		Convey("Given five extra channels", func() {
 			chans := []uint32{
 				867100000,
