@@ -60,8 +60,8 @@ func TestUS902Band(t *testing.T) {
 			}{
 				{Channel: 0, Frequency: 902300000, MinDR: 0, MaxDR: 3},
 				{Channel: 63, Frequency: 914900000, MinDR: 0, MaxDR: 3},
-				{Channel: 64, Frequency: 903000000, MinDR: 4, MaxDR: 4},
-				{Channel: 71, Frequency: 914200000, MinDR: 4, MaxDR: 4},
+				{Channel: 64, Frequency: 903000000, MinDR: 4, MaxDR: 6},
+				{Channel: 71, Frequency: 914200000, MinDR: 4, MaxDR: 6},
 			}
 
 			for _, test := range testTable {

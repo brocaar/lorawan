@@ -696,7 +696,7 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 		b.uplinkChannels[i+64] = Channel{
 			Frequency: 915900000 + (i * 1600000),
 			MinDR:     6,
-			MaxDR:     6,
+			MaxDR:     7,
 			enabled:   true,
 		}
 	}

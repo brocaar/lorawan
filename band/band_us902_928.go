@@ -485,7 +485,7 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 		b.uplinkChannels[i+64] = Channel{
 			Frequency: 903000000 + (i * 1600000),
 			MinDR:     4,
-			MaxDR:     4,
+			MaxDR:     6,
 			enabled:   true,
 		}
 	}
