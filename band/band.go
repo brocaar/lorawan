@@ -35,6 +35,7 @@ const (
 	RegParamRevRP002_1_0_0 = "RP002-1.0.0"
 	RegParamRevRP002_1_0_1 = "RP002-1.0.1"
 	RegParamRevRP002_1_0_2 = "RP002-1.0.2"
+	RegParamRevRP002_1_0_3 = "RP002-1.0.3"
 )
 
 // Available ISM bands (deprecated, use the common name).
@@ -62,6 +63,7 @@ const (
 	AS923   Name = "AS923"   // 0 MHz frequency offset
 	AS923_2 Name = "AS923-2" // -1.80 MHz frequency offset
 	AS923_3 Name = "AS923-3" // -6.60 MHz frequency offset
+	AS923_4 Name = "AS923_4" // -5.90 MHz frequency offset
 	KR920   Name = "KR920"
 	IN865   Name = "IN865"
 	RU864   Name = "RU864"
@@ -653,6 +655,8 @@ func GetConfig(name Name, repeaterCompatible bool, dt lorawan.DwellTime) (Band, 
 		return newAS923Band(repeaterCompatible, dt, -1800000, "-2")
 	case AS923_3:
 		return newAS923Band(repeaterCompatible, dt, -6600000, "-3")
+	case AS923_4:
+		return newAS923Band(repeaterCompatible, dt, -5900000, "-4")
 	case AU_915_928, AU915:
 		return newAU915Band(repeaterCompatible, dt)
 	case CN_470_510, CN470:

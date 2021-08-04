@@ -522,7 +522,7 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 						12: {M: 250, N: 242},
 						13: {M: 250, N: 242},
 					},
-					latest: map[int]MaxPayloadSize{ // RP002-1.0.2
+					latest: map[int]MaxPayloadSize{ // RP002-1.0.2, RP002-1.0.3
 						0:  {M: 0, N: 0},
 						1:  {M: 0, N: 0},
 						2:  {M: 19, N: 11},
@@ -660,7 +660,7 @@ func newAU915Band(repeaterCompatible bool, dt lorawan.DwellTime) (Band, error) {
 						12: {M: 250, N: 242},
 						13: {M: 250, N: 242},
 					},
-					latest: map[int]MaxPayloadSize{ // RP002-1.0.2
+					latest: map[int]MaxPayloadSize{ // RP002-1.0.2, RP002-1.0.3
 						0:  {M: 59, N: 51},
 						1:  {M: 59, N: 51},
 						2:  {M: 59, N: 51},

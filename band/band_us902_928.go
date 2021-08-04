@@ -321,7 +321,7 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 					12: {M: 230, N: 222},
 					13: {M: 230, N: 222},
 				},
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.2
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.2, RP002-1.0.3
 					0: {M: 19, N: 11},
 					1: {M: 61, N: 53},
 					2: {M: 133, N: 125},
@@ -450,7 +450,7 @@ func newUS902Band(repeaterCompatible bool) (Band, error) {
 					12: {M: 250, N: 242},
 					13: {M: 250, N: 242},
 				},
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.2
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.2, RP002-1.0.3
 					0: {M: 19, N: 11},
 					1: {M: 61, N: 53},
 					2: {M: 133, N: 125},

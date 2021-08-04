@@ -141,7 +141,7 @@ func newIN865Band(repeaterCompatible bool) (Band, error) {
 				},
 			},
 			latest: map[string]map[int]MaxPayloadSize{
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1, RP002-1.0.2
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1, RP002-1.0.2, RP002-1.0.3
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},
@@ -192,7 +192,7 @@ func newIN865Band(repeaterCompatible bool) (Band, error) {
 				},
 			},
 			latest: map[string]map[int]MaxPayloadSize{
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1, RP002-1.0.2
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.0, RP002-1.0.1, RP002-1.0.2, RP002-1.0.3
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},

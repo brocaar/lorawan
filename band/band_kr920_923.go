@@ -138,7 +138,7 @@ func newKR920Band(repeaterCompatible bool) (Band, error) {
 					4: {M: 230, N: 222},
 					5: {M: 230, N: 222},
 				},
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.1, RP002-1.0.2
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.1, RP002-1.0.2, RP002-1.0.3
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},
@@ -189,7 +189,7 @@ func newKR920Band(repeaterCompatible bool) (Band, error) {
 					4: {M: 250, N: 242},
 					5: {M: 250, N: 242},
 				},
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.1, RP002-1.0.2
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.1, RP002-1.0.2, RP002-1.0.3
 					0: {M: 59, N: 51},
 					1: {M: 59, N: 51},
 					2: {M: 59, N: 51},

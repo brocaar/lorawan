@@ -197,7 +197,7 @@ func newEU863Band(repeatedCompatible bool) (Band, error) {
 					6: {M: 230, N: 222},
 					7: {M: 230, N: 222},
 				},
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.2
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.2, RP002-1.0.3
 					0:  {M: 59, N: 51},
 					1:  {M: 59, N: 51},
 					2:  {M: 59, N: 51},
@@ -284,7 +284,7 @@ func newEU863Band(repeatedCompatible bool) (Band, error) {
 					6: {M: 250, N: 242},
 					7: {M: 250, N: 242},
 				},
-				latest: map[int]MaxPayloadSize{ // RP002-1.0.2
+				latest: map[int]MaxPayloadSize{ // RP002-1.0.2, RP002-1.0.3
 					0:  {M: 59, N: 51},
 					1:  {M: 59, N: 51},
 					2:  {M: 59, N: 51},
