@@ -63,7 +63,7 @@ const (
 	AS923   Name = "AS923"   // 0 MHz frequency offset
 	AS923_2 Name = "AS923-2" // -1.80 MHz frequency offset
 	AS923_3 Name = "AS923-3" // -6.60 MHz frequency offset
-	AS923_4 Name = "AS923_4" // -5.90 MHz frequency offset
+	AS923_4 Name = "AS923-4" // -5.90 MHz frequency offset
 	KR920   Name = "KR920"
 	IN865   Name = "IN865"
 	RU864   Name = "RU864"
