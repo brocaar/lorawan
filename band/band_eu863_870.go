@@ -73,9 +73,9 @@ func newEU863Band(repeatedCompatible bool) (Band, error) {
 				6:  {Modulation: LoRaModulation, SpreadFactor: 7, Bandwidth: 250, uplink: true, downlink: true},
 				7:  {Modulation: FSKModulation, BitRate: 50000, uplink: true, downlink: true},
 				8:  {Modulation: LRFHSSModulation, CodingRate: "1/3", OccupiedChannelWidth: 137000, uplink: true, downlink: false},
-				9:  {Modulation: LRFHSSModulation, CodingRate: "2/3", OccupiedChannelWidth: 137000, uplink: true, downlink: false},
+				9:  {Modulation: LRFHSSModulation, CodingRate: "4/6", OccupiedChannelWidth: 137000, uplink: true, downlink: false},
 				10: {Modulation: LRFHSSModulation, CodingRate: "1/3", OccupiedChannelWidth: 336000, uplink: true, downlink: false},
-				11: {Modulation: LRFHSSModulation, CodingRate: "2/3", OccupiedChannelWidth: 336000, uplink: true, downlink: false},
+				11: {Modulation: LRFHSSModulation, CodingRate: "4/6", OccupiedChannelWidth: 336000, uplink: true, downlink: false},
 			},
 			rx1DataRateTable: map[int][]int{
 				0:  {0, 0, 0, 0, 0, 0},

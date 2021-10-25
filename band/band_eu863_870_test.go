@@ -113,7 +113,7 @@ func TestEU863Band(t *testing.T) {
 					ExpectedDR: 8,
 				},
 				{
-					DataRate:   DataRate{Modulation: LRFHSSModulation, CodingRate: "2/3", OccupiedChannelWidth: 336000},
+					DataRate:   DataRate{Modulation: LRFHSSModulation, CodingRate: "4/6", OccupiedChannelWidth: 336000},
 					Uplink:     true,
 					ExpectedDR: 11,
 				},
