@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // DevAddr represents the device address.
@@ -156,7 +157,7 @@ func (a DevAddr) MarshalText() ([]byte, error) {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (a *DevAddr) UnmarshalText(text []byte) error {
-	b, err := hex.DecodeString(string(text))
+	b, err := hex.DecodeString(strings.TrimPrefix(string(text), "0x"))
 	if err != nil {
 		return err
 	}

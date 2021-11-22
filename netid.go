@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // NetID represents the NetID.
@@ -62,7 +63,7 @@ func (n NetID) MarshalText() ([]byte, error) {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (n *NetID) UnmarshalText(text []byte) error {
-	b, err := hex.DecodeString(string(text))
+	b, err := hex.DecodeString(strings.TrimPrefix(string(text), "0x"))
 	if err != nil {
 		return err
 	}
