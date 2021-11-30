@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/brocaar/lorawan"
+	"github.com/dsMartyn/lorawan"
 )
 
 // getFNwkSIntKey returns the FNwkSIntKey.

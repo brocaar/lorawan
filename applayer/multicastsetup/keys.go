@@ -4,7 +4,7 @@ import (
 	"crypto/aes"
 	"fmt"
 
-	"github.com/brocaar/lorawan"
+	"github.com/dsMartyn/lorawan"
 )
 
 // GetMcRootKeyForGenAppKey returns the McRootKey given a GenAppKey.

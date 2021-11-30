@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/brocaar/lorawan"
-	"github.com/brocaar/lorawan/backend"
+	"github.com/dsMartyn/lorawan"
+	"github.com/dsMartyn/lorawan/backend"
 )
 
 type JoinServerTestSuite struct {

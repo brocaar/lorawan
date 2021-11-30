@@ -11,8 +11,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/brocaar/lorawan"
-	"github.com/brocaar/lorawan/backend"
+	"github.com/dsMartyn/lorawan"
+	"github.com/dsMartyn/lorawan/backend"
 )
 
 // DeviceKeys holds the device (root) keys and the join-nonce to be used

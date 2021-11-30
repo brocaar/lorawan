@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/brocaar/lorawan"
+	"github.com/dsMartyn/lorawan"
 )
 
 func TestAS923_1_Band(t *testing.T) {

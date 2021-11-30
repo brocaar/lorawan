@@ -1,7 +1,7 @@
 # LoRaWAN (Go)
 
-![Tests](https://github.com/brocaar/lorawan/actions/workflows/main.yml/badge.svg?branch=master)
-[![GoDoc](https://godoc.org/github.com/brocaar/lorawan?status.svg)](https://godoc.org/github.com/brocaar/lorawan)
+![Tests](https://github.com/dsMartyn/lorawan/actions/workflows/main.yml/badge.svg?branch=master)
+[![GoDoc](https://godoc.org/github.com/dsMartyn/lorawan?status.svg)](https://godoc.org/github.com/dsMartyn/lorawan)
 
 Package lorawan provides structures and tools to read and write LoRaWAN
 1.0 and 1.1 frames from and to a slice of bytes.
@@ -80,7 +80,7 @@ The following MAC commands (and their optional payloads) are implemented:
 
 ## Documentation
 
-See https://godoc.org/github.com/brocaar/lorawan. There is also an [examples](https://godoc.org/github.com/brocaar/lorawan#pkg-examples)
+See https://godoc.org/github.com/dsMartyn/lorawan. There is also an [examples](https://godoc.org/github.com/dsMartyn/lorawan#pkg-examples)
 section with usage examples. When using this package, knowledge about the LoRaWAN specification is needed.
 You can download the LoRaWAN specification here: https://lora-alliance.org/lorawan-for-developers
 
