@@ -64,6 +64,10 @@ func (m Major) MarshalText() ([]byte, error) {
 // AES128Key represents a 128 bit AES key.
 type AES128Key [16]byte
 
+// AES256Key represents a 256 bit AES key.
+type AES256Key [32]byte
+
+
 // String implements fmt.Stringer.
 func (k AES128Key) String() string {
 	return hex.EncodeToString(k[:])
@@ -128,6 +132,73 @@ func (k *AES128Key) UnmarshalBinary(data []byte) error {
 
 	return nil
 }
+
+
+// String implements fmt.Stringer.
+func (k AES256Key) String() string {
+	return hex.EncodeToString(k[:])
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (k AES256Key) MarshalText() ([]byte, error) {
+	return []byte(k.String()), nil
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (k *AES256Key) UnmarshalText(text []byte) error {
+	b, err := hex.DecodeString(strings.TrimPrefix(string(text), "0x"))
+	if err != nil {
+		return err
+	}
+	if len(b) != len(k) {
+		return fmt.Errorf("lorawan: exactly %d bytes are expected", len(k))
+	}
+	copy(k[:], b)
+	return nil
+}
+
+// Scan implements sql.Scanner.
+func (k *AES256Key) Scan(src interface{}) error {
+	b, ok := src.([]byte)
+	if !ok {
+		return errors.New("lorawan: []byte type expected")
+	}
+	if len(b) != len(k) {
+		return fmt.Errorf("lorawan []byte must have length %d", len(k))
+	}
+	copy(k[:], b)
+	return nil
+}
+
+// Value implements driver.Valuer.
+func (k AES256Key) Value() (driver.Value, error) {
+	return k[:], nil
+}
+
+// MarshalBinary encodes the key to a slice of bytes.
+func (k AES256Key) MarshalBinary() ([]byte, error) {
+	b := make([]byte, len(k))
+	for i, v := range k {
+		// little endian
+		b[len(k)-i-1] = v
+	}
+	return b, nil
+}
+
+// UnmarshalBinary decodes the key from a slice of bytes.
+func (k *AES256Key) UnmarshalBinary(data []byte) error {
+	if len(data) != len(k) {
+		return fmt.Errorf("lorawan: %d bytes of data are expected", len(k))
+	}
+
+	for i, v := range data {
+		// little endian
+		k[len(k)-i-1] = v
+	}
+
+	return nil
+}
+
 
 // MIC represents the message integrity code.
 type MIC [4]byte
@@ -849,6 +920,50 @@ func (p *PHYPayload) calculateDownlinkDataMIC(macVersion MACVersion, confFCnt ui
 
 	copy(mic[:], hb[0:4])
 	return mic, nil
+}
+
+
+// Encrypt256Payload encrypts the FRMPayload (slice of bytes).
+// Note that EncryptFRMPayload is used for both encryption and decryption.
+func Encrypt256Payload(key AES256Key, uplink bool, devAddr lorawan.DevAddr, fCnt uint32, data []byte) ([]byte, error) {
+	pLen := len(data)
+	if pLen%16 != 0 {
+		// append with empty bytes so that len(data) is a multiple of 16
+		data = append(data, make([]byte, 16-(pLen%16))...)
+	}
+
+	block, err := aes.NewCipher(key[:])
+	if err != nil {
+		return nil, err
+	}
+	if block.BlockSize() != 16 {
+		return nil, errors.New("lorawan: block size of 16 was expected")
+	}
+
+	s := make([]byte, 16)
+	a := make([]byte, 16)
+	a[0] = 0x01
+	if !uplink {
+		a[5] = 0x01
+	}
+
+	b, err := devAddr.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	copy(a[6:10], b)
+	binary.LittleEndian.PutUint32(a[10:14], uint32(fCnt))
+
+	for i := 0; i < len(data)/16; i++ {
+		a[15] = byte(i + 1)
+		block.Encrypt(s, a)
+
+		for j := 0; j < len(s); j++ {
+			data[i*16+j] = data[i*16+j] ^ s[j]
+		}
+	}
+
+	return data[0:pLen], nil
 }
 
 // EncryptFRMPayload encrypts the FRMPayload (slice of bytes).
