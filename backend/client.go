@@ -337,13 +337,20 @@ func (c *client) request(ctx context.Context, pl Request, ans Answer) error {
 	// request has returned.
 	if c.IsAsync() {
 		key := c.getAsyncKey(pl.GetBasePayload().TransactionID)
+		sub := c.redisClient.Subscribe(ctx, key)
+		if _, err := sub.Receive(ctx); err != nil {
+			return errors.Wrap(err, "async response subscription error")
+		}
+		ch := sub.Channel()
 
 		go func() {
-			bb, err := c.readAsync(ctx, key)
-			if err != nil {
-				errorChan <- err
-			} else {
-				responseChan <- bb
+			defer sub.Close()
+
+			select {
+			case msg := <-ch:
+				responseChan <- []byte(msg.Payload)
+			case <-time.After(c.asyncTimeout):
+				errorChan <- ErrAsyncTimeout
 			}
 		}()
 	}
@@ -455,18 +462,4 @@ func (c *client) GetRandomTransactionID() uint32 {
 
 func (c *client) getAsyncKey(id uint32) string {
 	return fmt.Sprintf("lora:backend:async:%d", id)
-}
-
-func (c *client) readAsync(ctx context.Context, key string) ([]byte, error) {
-	sub := c.redisClient.Subscribe(ctx, key)
-	defer sub.Close()
-
-	ch := sub.Channel()
-
-	select {
-	case msg := <-ch:
-		return []byte(msg.Payload), nil
-	case <-time.After(c.asyncTimeout):
-		return nil, ErrAsyncTimeout
-	}
 }
