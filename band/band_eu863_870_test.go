@@ -25,6 +25,11 @@ func TestEU863Band(t *testing.T) {
 			})
 		})
 
+		Convey("Then the expected enabled uplink data-rates are returned", func() {
+			upDR := band.GetEnabledUplinkDataRates()
+			So(upDR, ShouldResemble, []int{0, 1, 2, 3, 4, 5})
+		})
+
 		Convey("Then GetDownlinkTXPower returns the expected value for 863.000000 MHz", func() {
 			So(band.GetDownlinkTXPower(863000000), ShouldEqual, 14)
 		})

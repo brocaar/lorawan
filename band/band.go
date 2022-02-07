@@ -199,6 +199,9 @@ type Band interface {
 	// GetDisabledUplinkChannelIndices returns the disabled uplink channel indices.
 	GetDisabledUplinkChannelIndices() []int
 
+	// GetEnabledUplinkDataRates returns the list of enabled uplink data-rates.
+	GetEnabledUplinkDataRates() []int
+
 	// GetRX1ChannelIndexForUplinkChannelIndex returns the channel to use for RX1
 	// given the uplink channel index.
 	GetRX1ChannelIndexForUplinkChannelIndex(uplinkChannel int) (int, error)
@@ -457,6 +460,23 @@ func (b *band) GetDisabledUplinkChannelIndices() []int {
 			out = append(out, i)
 		}
 	}
+	return out
+}
+
+func (b *band) GetEnabledUplinkDataRates() []int {
+	outS := make(map[int]struct{})
+	for _, c := range b.uplinkChannels {
+		for i := c.MinDR; i <= c.MaxDR; i++ {
+			outS[i] = struct{}{}
+
+		}
+	}
+
+	out := make([]int, 0, len(outS))
+	for k := range outS {
+		out = append(out, k)
+	}
+	sort.Ints(out)
 	return out
 }
 

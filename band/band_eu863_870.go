@@ -102,9 +102,9 @@ func newEU863Band(repeatedCompatible bool) (Band, error) {
 				-14,
 			},
 			uplinkChannels: []Channel{
-				{Frequency: 868100000, MinDR: 0, MaxDR: 11, enabled: true},
-				{Frequency: 868300000, MinDR: 0, MaxDR: 11, enabled: true},
-				{Frequency: 868500000, MinDR: 0, MaxDR: 11, enabled: true},
+				{Frequency: 868100000, MinDR: 0, MaxDR: 5, enabled: true},
+				{Frequency: 868300000, MinDR: 0, MaxDR: 5, enabled: true},
+				{Frequency: 868500000, MinDR: 0, MaxDR: 5, enabled: true},
 			},
 			downlinkChannels: []Channel{
 				{Frequency: 868100000, MinDR: 0, MaxDR: 5, enabled: true},
