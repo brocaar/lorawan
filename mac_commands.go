@@ -612,7 +612,16 @@ type NewChannelReqPayload struct {
 // MarshalBinary marshals the object in binary form.
 func (p NewChannelReqPayload) MarshalBinary() ([]byte, error) {
 	b := make([]byte, 5)
-	if p.Freq/100 >= 16777216 { // 2^24
+	freq := p.Freq
+
+	// Support LoRaWAN 2.4GHz, in which case the stepping is 200Hz:
+	// See Frequency Encoding in MAC Commands
+	// https://lora-developers.semtech.com/documentation/tech-papers-and-guides/physical-layer-proposal-2.4ghz/
+	if freq >= 2400000000 {
+		freq = freq / 2
+	}
+
+	if freq/100 >= 16777216 { // 2^24
 		return b, errors.New("lorawan: max value of Freq is 2^24 - 1")
 	}
 	if p.Freq%100 != 0 {
@@ -627,7 +636,7 @@ func (p NewChannelReqPayload) MarshalBinary() ([]byte, error) {
 
 	// we're borrowing the last byte b[4] because PutUint32 needs 4 bytes,
 	// the last byte b[4] will be set to 0 because max Freq = 2^24 - 1
-	binary.LittleEndian.PutUint32(b[1:5], p.Freq/100)
+	binary.LittleEndian.PutUint32(b[1:5], freq/100)
 	b[0] = p.ChIndex
 	b[4] = p.MinDR ^ (p.MaxDR << 4)
 
@@ -646,7 +655,15 @@ func (p *NewChannelReqPayload) UnmarshalBinary(data []byte) error {
 	b := make([]byte, len(data))
 	copy(b, data)
 	b[4] = byte(0)
-	p.Freq = binary.LittleEndian.Uint32(b[1:5]) * 100
+
+	freq := binary.LittleEndian.Uint32(b[1:5])
+	if freq >= 12000000 {
+		// 2.4GHz frequency
+		p.Freq = freq * 200
+	} else {
+		p.Freq = freq * 100
+	}
+
 	return nil
 }
 

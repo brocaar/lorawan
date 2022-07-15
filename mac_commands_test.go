@@ -581,6 +581,15 @@ func TestNewChannelReqPayload(t *testing.T) {
 			})
 		})
 
+		Convey("Given Freq = 2.4GHz", func() {
+			p.Freq = 2400000000
+			Convey("MarshalBinary returns []byte{0, 0, 27, 183, 0}", func() {
+				b, err := p.MarshalBinary()
+				So(err, ShouldBeNil)
+				So(b, ShouldResemble, []byte{0, 0, 27, 183, 0})
+			})
+		})
+
 		Convey("Given MaxDR > 15", func() {
 			p.MaxDR = 16
 			Convey("MarshalBinary returns an error", func() {
