@@ -19,7 +19,8 @@ func (a DevAddr) NetIDType() int {
 			return 7 - i
 		}
 	}
-	panic("NetIDType bug!")
+
+	return -1
 }
 
 // NwkID returns the NwkID bits of the DevAddr.
