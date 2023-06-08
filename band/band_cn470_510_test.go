@@ -38,7 +38,7 @@ func TestCN470Band(t *testing.T) {
 				{
 					DevAddr:           lorawan.DevAddr{3, 20, 207, 54},
 					BeaconTime:        "334382h51m44s",
-					ExpectedFrequency: 501100000,
+					ExpectedFrequency: 509100000,
 				},
 			}
 
