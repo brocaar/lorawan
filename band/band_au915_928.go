@@ -38,6 +38,8 @@ func (b *au915Band) GetDefaultMaxUplinkEIRP() float32 {
 
 func (b *au915Band) GetPingSlotFrequency(devAddr lorawan.DevAddr, beaconTime time.Duration) (uint32, error) {
 	downlinkChannel := (int(binary.BigEndian.Uint32(devAddr[:])) + int(beaconTime/(128*time.Second))) % 8
+	// Beaconing is performed on the same channel that normal downstream traffic as
+	// defined in the Class A specification.
 	return b.downlinkChannels[downlinkChannel].Frequency, nil
 }
 
