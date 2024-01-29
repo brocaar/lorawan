@@ -14,8 +14,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
+	"github.com/redis/go-redis/v9"
 	log "github.com/sirupsen/logrus"
 )
 

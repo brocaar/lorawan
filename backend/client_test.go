@@ -11,8 +11,8 @@ import (
 
 	"github.com/brocaar/lorawan"
 	"github.com/brocaar/lorawan/band"
-	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
