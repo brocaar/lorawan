@@ -394,8 +394,10 @@ type DevUpgradeImageAnsPayloadStatus struct {
 	UpImageStatus UpImageStatus
 }
 
+// UpImageStatus enumerate status of firmware upgrade on device
 type UpImageStatus uint8
 
+// Possible UpImageStatus values
 const (
 	NoFirmwarePresent                 UpImageStatus = 0
 	FirmwareCorruptOrInvalidSignature UpImageStatus = 1
@@ -411,7 +413,7 @@ func (p DevUpgradeImageAnsPayload) Size() int {
 	return 1
 }
 
-// Is Firmware image valid
+// IsFirmwareImageValid returns whether UpImageStatus==FirmwareValid stating update is present and valid
 func (p DevUpgradeImageAnsPayloadStatus) IsFirmwareImageValid() bool {
 	return p.UpImageStatus == FirmwareValid
 }
@@ -481,11 +483,11 @@ func (p *DevDeleteImageReqPayload) UnmarshalBinary(data []byte) error {
 
 // DevDeleteImageAnsPayload implements the DevDeleteImageAns payload.
 type DevDeleteImageAnsPayload struct {
-	Status DevDeleteImageAnsStatus
+	Status DevDeleteImageAnsPayloadStatus
 }
 
 // DevDeleteImageAnsPayloadStatus implements the DevDeleteImageAns payload Status field.
-type DevDeleteImageAnsStatus struct {
+type DevDeleteImageAnsPayloadStatus struct {
 	ErrorInvalidVersion uint8
 	ErrorNoValidImage   uint8
 }

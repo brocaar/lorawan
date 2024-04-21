@@ -220,7 +220,7 @@ func TestFragmentation(t *testing.T) {
 			Command: Command{
 				CID: DevDeleteImageAns,
 				Payload: &DevDeleteImageAnsPayload{
-					Status: DevDeleteImageAnsStatus{
+					Status: DevDeleteImageAnsPayloadStatus{
 						ErrorInvalidVersion: 1,
 						ErrorNoValidImage:   1,
 					},
