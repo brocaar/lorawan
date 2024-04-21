@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFragmentation(t *testing.T) {
+func TestFirmwareManagement(t *testing.T) {
 	nextFirmwareVersion := uint32(262657)
 
 	tests := []struct {
