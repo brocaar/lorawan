@@ -76,6 +76,7 @@ The following MAC commands (and their optional payloads) are implemented:
 * `applayer/clocksync` Application Layer Clock Synchronization over LoRaWAN
 * `applayer/multicastsetup` Application Layer Remote Multicast Setup over LoRaWAN
 * `applayer/fragmentation` Fragmented Data Block Transport over LoRaWAN
+* `applayer/firmwaremanagement` Firmware Management Protocol over LoRaWAN
 * `gps` functions to handle Time <> GPS Epoch time conversion
 
 ## Documentation
